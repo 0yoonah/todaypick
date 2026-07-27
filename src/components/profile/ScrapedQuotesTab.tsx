@@ -10,34 +10,48 @@ export default function ScrapedQuotesTab() {
   const [loading, setLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
 
-  const fetchScrapedQuotes = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/quotes");
-
-      if (!response.ok) {
-        throw new Error("스크랩된 명언을 불러오는데 실패했습니다.");
-      }
-
-      const data = await response.json();
-
-      setQuotes(() =>
-        data.map((quote: ScrapedQuote) => ({
-          ...quote,
-          is_scraped: true,
-        }))
-      );
-    } catch (err) {
-      console.error("스크랩된 명언을 불러오는 중 오류가 발생했습니다.", err);
-      alert("스크랩된 명언을 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchScrapedQuotes();
-  }, [fetchScrapedQuotes]);
+    let cancelled = false;
+
+    const fetchScrapedQuotes = async () => {
+      try {
+        const response = await fetch("/api/quotes");
+
+        if (!response.ok) {
+          throw new Error("스크랩된 명언을 불러오는데 실패했습니다.");
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setQuotes(
+            data.map((quote: ScrapedQuote) => ({
+              ...quote,
+              is_scraped: true,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error(
+          "스크랩된 명언을 불러오는 중 오류가 발생했습니다.",
+          err
+        );
+        if (!cancelled) {
+          alert("스크랩된 명언을 불러오는 중 오류가 발생했습니다.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchScrapedQuotes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleCopyToClipboard = useCallback(async (quote: ScrapedQuote) => {
     const text = `"${quote.quote.text}" - ${quote.quote.author}`;

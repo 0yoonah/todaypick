@@ -16,28 +16,38 @@ export default function TodayQuote() {
   const router = useRouter();
   const todayQuote = getTodayQuote();
 
-  const fetchQuote = useCallback(async () => {
-    try {
-      if (!user) return;
-
-      const response = await fetch(`/api/quotes?quoteId=${todayQuote.id}`);
-
-      if (!response.ok && response.status !== 401) {
-        throw new Error();
-      }
-
-      const scraped = await response.json();
-      setIsScraped(scraped);
-    } catch (err) {
-      console.error("명언을 불러오는 중 오류가 발생했습니다.", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, todayQuote]);
-
   useEffect(() => {
-    fetchQuote();
-  }, [fetchQuote]);
+    let cancelled = false;
+
+    const fetchQuote = async () => {
+      try {
+        if (!user) return;
+
+        const response = await fetch(`/api/quotes?quoteId=${todayQuote.id}`);
+
+        if (!response.ok && response.status !== 401) {
+          throw new Error();
+        }
+
+        const scraped = await response.json();
+        if (!cancelled) {
+          setIsScraped(scraped);
+        }
+      } catch (err) {
+        console.error("명언을 불러오는 중 오류가 발생했습니다.", err);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchQuote();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, todayQuote]);
 
   const handleCopyToClipboard = useCallback(async () => {
     if (!todayQuote) return;

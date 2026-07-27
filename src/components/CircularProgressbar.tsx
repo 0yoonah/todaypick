@@ -105,22 +105,34 @@ export function SegmentedProgressRing({
   const circumference = 2 * Math.PI * radius;
   const totalValue = values.reduce((sum, val) => sum + val, 0);
 
-  let currentOffset = 0;
-  const segments = values.map((value, index) => {
+  const segments = values.reduce<
+    Array<{
+      value: number;
+      strokeDasharray: number;
+      strokeDashoffset: number;
+      color: string;
+      label: string;
+    }>
+  >((acc, value, index) => {
     const progress = Math.min(Math.max(value, 0), max);
-    const strokeDasharray = circumference;
-    const strokeDashoffset = circumference - (progress / max) * circumference;
-    const startOffset = currentOffset;
-    currentOffset += strokeDashoffset;
+    const previousOffset =
+      acc.length === 0
+        ? 0
+        : acc[acc.length - 1].strokeDashoffset +
+          (circumference -
+            (acc[acc.length - 1].value / max) * circumference);
 
-    return {
-      value: progress,
-      strokeDasharray,
-      strokeDashoffset: startOffset,
-      color: colors[index] || "#6b7280",
-      label: labels[index] || `항목 ${index + 1}`,
-    };
-  });
+    return [
+      ...acc,
+      {
+        value: progress,
+        strokeDasharray: circumference,
+        strokeDashoffset: previousOffset,
+        color: colors[index] || "#6b7280",
+        label: labels[index] || `항목 ${index + 1}`,
+      },
+    ];
+  }, []);
 
   return (
     <div
