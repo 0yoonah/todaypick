@@ -8,25 +8,18 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Feed, FeedCategory } from "@/types/feed";
-import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
+import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { feedService } from "@/services/feedService";
+import {
+  type InfiniteFeedData,
+  type FeedPage,
+  updateFeedScrapCache,
+} from "@/utils/feedCacheUtils";
 
 interface UseInfiniteFeedProps {
   category: FeedCategory;
   limit: number;
-}
-
-interface FeedPage {
-  feeds: Feed[];
-  currentPage: number;
-  totalCount: number;
-  totalPages: number;
-}
-
-interface InfiniteFeedData {
-  pages: FeedPage[];
-  pageParams: number[];
 }
 
 type FeedQuerySnapshot = [readonly unknown[], InfiniteFeedData | undefined];
@@ -109,33 +102,12 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
 
         queryClient.setQueryData<InfiniteFeedData>(queryKey, (old) => {
           if (!old) return old;
-
-          const shouldRemoveFromScraped =
-            feed.is_scraped &&
-            cachedCategory === FEED_CATEGORY.SCRAPED &&
-            old.pages.some((page) =>
-              page.feeds.some((cachedFeed) => cachedFeed.id === feed.id)
-            );
-
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              feeds: shouldRemoveFromScraped
-                  ? page.feeds.filter((cachedFeed) => cachedFeed.id !== feed.id)
-                  : page.feeds.map((cachedFeed) =>
-                      cachedFeed.id === feed.id
-                        ? { ...cachedFeed, is_scraped: !feed.is_scraped }
-                        : cachedFeed
-                    ),
-              totalCount: shouldRemoveFromScraped
-                  ? Math.max(0, page.totalCount - 1)
-                  : page.totalCount,
-              totalPages: shouldRemoveFromScraped
-                  ? Math.ceil(Math.max(0, page.totalCount - 1) / cachedLimit)
-                  : page.totalPages,
-            })),
-          };
+          return updateFeedScrapCache(
+            old,
+            feed,
+            cachedCategory,
+            cachedLimit
+          );
         });
       });
 
