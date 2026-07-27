@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { FiEdit3, FiX } from "react-icons/fi";
 import { useAuthStore } from "@/stores/authStore";
 import { useProfileMutation } from "@/hooks/useProfileMutation";
@@ -25,13 +25,6 @@ export default function ProfileHeader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isEditing) {
-      profileMutation.reset();
-    }
-    setPreviewUrl(avatarUrl);
-  }, [isEditing, avatarUrl]);
-
   const handleSaveProfile = useCallback(async () => {
     if (!user) return;
     if (!editNickname.trim()) {
@@ -54,7 +47,8 @@ export default function ProfileHeader() {
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsEditing(false);
-  }, [userProfile]);
+    profileMutation.reset();
+  }, [userProfile, profileMutation]);
 
   const handleRemoveAvatar = useCallback(() => {
     setSelectedFile(null);
@@ -172,7 +166,12 @@ export default function ProfileHeader() {
                     {nickname}
                   </h1>
                   <Button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      profileMutation.reset();
+                      setEditNickname(nickname || "");
+                      setPreviewUrl(null);
+                      setIsEditing(true);
+                    }}
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
