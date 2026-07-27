@@ -16,28 +16,48 @@ export default function TodayQuote() {
   const router = useRouter();
   const todayQuote = getTodayQuote();
 
-  const fetchQuote = useCallback(async () => {
-    try {
-      if (!user) return;
-
-      const response = await fetch(`/api/quotes?quoteId=${todayQuote.id}`);
-
-      if (!response.ok && response.status !== 401) {
-        throw new Error();
-      }
-
-      const scraped = await response.json();
-      setIsScraped(scraped);
-    } catch (err) {
-      console.error("명언을 불러오는 중 오류가 발생했습니다.", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, todayQuote]);
-
   useEffect(() => {
-    fetchQuote();
-  }, [fetchQuote]);
+    let cancelled = false;
+
+    const fetchQuote = async () => {
+      try {
+        if (!user) return;
+
+        const [response, activityResponse] = await Promise.all([
+          fetch(`/api/quotes?quoteId=${todayQuote.id}`),
+          fetch("/api/daily-activities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ activity: "quote_viewed" }),
+          }),
+        ]);
+
+        if (!response.ok && response.status !== 401) {
+          throw new Error();
+        }
+        if (!activityResponse.ok && activityResponse.status !== 401) {
+          console.error("명언 조회 활동을 기록하지 못했습니다.");
+        }
+
+        const scraped = await response.json();
+        if (!cancelled) {
+          setIsScraped(scraped);
+        }
+      } catch (err) {
+        console.error("명언을 불러오는 중 오류가 발생했습니다.", err);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchQuote();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, todayQuote]);
 
   const handleCopyToClipboard = useCallback(async () => {
     if (!todayQuote) return;

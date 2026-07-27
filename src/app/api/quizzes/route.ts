@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getTodayQuiz } from "@/utils/quizUtils";
 import { quizzes } from "@/data/quizzes";
+import { getSeoulDateKey } from "@/utils/dateUtils";
+import { recordDailyActivity } from "@/services/dailyActivityService";
 
 export async function GET(request: NextRequest) {
   try {
@@ -131,16 +133,11 @@ export async function POST(request: NextRequest) {
 
     // 퀴즈 완료 활동 기록
     try {
-      await supabase.from("daily_activities").upsert(
-        {
-          user_id: user.user.id,
-          date: new Date().toISOString().split("T")[0],
-          quiz_completed: true,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id,date",
-        }
+      await recordDailyActivity(
+        supabase,
+        user.user.id,
+        getSeoulDateKey(),
+        "quiz_completed"
       );
     } catch (activityError) {
       console.error("활동 기록 저장 실패:", activityError);

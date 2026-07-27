@@ -18,7 +18,8 @@ export interface AuthState {
 // 프로필 업데이트를 위한 타입 추가
 export interface ProfileUpdateData {
   nickname: string;
-  avatar_url?: string | null;
+  file?: File;
+  removeAvatar?: boolean;
 }
 
 // 학습 통계를 위한 타입 추가

@@ -12,7 +12,7 @@ interface AuthStore extends AuthState {
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   // 초기 상태
   user: null,
   loading: true,

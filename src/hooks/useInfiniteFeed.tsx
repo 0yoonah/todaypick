@@ -11,11 +11,18 @@ import { Feed, FeedCategory } from "@/types/feed";
 import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { feedService } from "@/services/feedService";
+import {
+  type InfiniteFeedData,
+  type FeedPage,
+  updateFeedScrapCache,
+} from "@/utils/feedCacheUtils";
 
 interface UseInfiniteFeedProps {
   category: FeedCategory;
   limit: number;
 }
+
+type FeedQuerySnapshot = [readonly unknown[], InfiniteFeedData | undefined];
 
 const fetchFeeds = async ({
   category,
@@ -33,7 +40,12 @@ const fetchFeeds = async ({
   });
 
   const response = await fetch(`/api/feeds?${params}`);
-  return response.json();
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.error || "피드를 불러오는데 실패했습니다.");
+  }
+
+  return response.json() as Promise<FeedPage>;
 };
 
 export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
@@ -75,12 +87,41 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
         await feedService.scrapFeed(feed);
       }
     },
-    onError: (error: Error) => {
+    onMutate: async (feed: Feed) => {
+      await queryClient.cancelQueries({
+        queryKey: ["feeds"],
+      });
+
+      const snapshots = queryClient.getQueriesData<InfiniteFeedData>({
+        queryKey: ["feeds"],
+      }) as FeedQuerySnapshot[];
+
+      snapshots.forEach(([queryKey]) => {
+        const cachedCategory = queryKey[1] as FeedCategory | undefined;
+        const cachedLimit = Number(queryKey[2]) || limit;
+
+        queryClient.setQueryData<InfiniteFeedData>(queryKey, (old) => {
+          if (!old) return old;
+          return updateFeedScrapCache(
+            old,
+            feed,
+            cachedCategory,
+            cachedLimit
+          );
+        });
+      });
+
+      return { snapshots };
+    },
+    onError: (error: Error, _feed, context) => {
+      context?.snapshots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       console.error("스크랩 처리 중 오류:", error);
     },
-    onSettled: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["feeds", activeTab, limit, user?.id],
+        queryKey: ["feeds"],
       });
     },
   });
@@ -92,7 +133,11 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
       // 중복 클릭 방지
       if (scrapMutation.isPending) return;
 
-      await scrapMutation.mutateAsync(feed);
+      try {
+        await scrapMutation.mutateAsync(feed);
+      } catch {
+        // onError에서 캐시 복원과 오류 기록을 처리합니다.
+      }
     },
     [user, router, scrapMutation]
   );

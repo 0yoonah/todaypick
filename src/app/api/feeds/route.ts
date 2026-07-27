@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { feedService } from "@/services/feedService";
 import { FeedCategory } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import { FEED_CATEGORY } from "@/config/constants";
+import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
 
 const parseFeedParams = (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category") as FeedCategory;
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "12");
+  const categoryValue = searchParams.get("category");
+  const categories = Object.values(FEED_CATEGORY) as string[];
+
+  if (!categoryValue || !categories.includes(categoryValue)) {
+    throw new TypeError("유효한 피드 카테고리가 필요합니다.");
+  }
+
+  const page = Number(searchParams.get("page") || "1");
+  const limit = Number(searchParams.get("limit") || "12");
+
+  if (!Number.isInteger(page) || page < 1) {
+    throw new TypeError("page는 1 이상의 정수여야 합니다.");
+  }
+
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    throw new TypeError("limit은 1 이상 50 이하의 정수여야 합니다.");
+  }
+
+  const category = categoryValue as FeedCategory;
   return { category, page, limit };
 };
 
@@ -55,11 +71,7 @@ export async function GET(request: NextRequest) {
       const result = await getScrapedFeeds(user.id, page, limit);
       return NextResponse.json(result, { status: 200 });
     } else {
-      const result = await feedService.getFeedsWithPagination(
-        category,
-        page,
-        limit
-      );
+      const result = await getRSSFeedsWithPagination(category, page, limit);
 
       if (!user) {
         return NextResponse.json({
@@ -82,6 +94,10 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error("피드 API 오류:", error);
+    if (error instanceof TypeError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
     return NextResponse.json(
       {
         error:

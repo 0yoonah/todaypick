@@ -36,8 +36,8 @@ TodayPick은 매일 IT 뉴스, 퀴즈, 명언을 제공하여 개발자들이 �
 
 ### Frontend
 
-- **Next.js 15.5.2** - React 기반 풀스택 프레임워크
-- **React 19.1.0** - 사용자 인터페이스 라이브러리
+- **Next.js 16.2.12** - React 기반 풀스택 프레임워크
+- **React 19.2.8** - 사용자 인터페이스 라이브러리
 - **TypeScript** - 타입 안전성
 - **Tailwind CSS 4** - 유틸리티 우선 CSS 프레임워크
 
@@ -94,18 +94,30 @@ src/
 # 저장소 클론 및 의존성 설치
 git clone <repository-url>
 cd todaypick
+nvm use
 npm install
 
-# 환경 변수 설정 (.env.local 파일 생성)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# 환경 변수 설정
+cp .env.example .env.local
 
 # 개발 서버 실행
 npm run dev
 ```
 
 ## 🗄 데이터베이스 스키마
+
+Supabase CLI로 로컬 프로젝트를 연결한 뒤 마이그레이션을 적용합니다.
+
+```bash
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+```
+
+`supabase/migrations`는 테이블, 인덱스, 회원 프로필 생성 트리거,
+RLS 정책과 `avatars` Storage 정책의 기준 소스입니다. Dashboard에서 직접
+스키마를 변경했다면 `npx supabase db diff -f <migration-name>`으로 변경 이력을
+먼저 저장합니다.
 
 ### 주요 테이블
 
@@ -118,7 +130,7 @@ npm run dev
 ## 🔧 개발 스크립트
 
 ```bash
-# 개발 서버 실행 (Turbopack 사용)
+# 개발 서버 실행 (Next.js 16은 Turbopack을 기본 사용)
 npm run dev
 
 # 프로덕션 빌드
@@ -129,6 +141,10 @@ npm run start
 
 # 린팅
 npm run lint
+
+# 타입 검사
+npm run type-check
+
 ```
 
 ## 📱 주요 페이지

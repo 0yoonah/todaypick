@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
     const { data: user } = await supabase.auth.getUser();
@@ -64,129 +64,127 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Content-Type에 따라 처리 방식 분기
+    const { data: existingProfile, error: profileLookupError } = await supabase
+      .from("users")
+      .select("avatar_url")
+      .eq("id", user.user.id)
+      .single();
+
+    if (profileLookupError && profileLookupError.code !== "PGRST116") {
+      throw profileLookupError;
+    }
+
+    const existingAvatarPath = existingProfile?.avatar_url || null;
     const contentType = request.headers.get("content-type");
+    let nickname = "";
+    let file: File | null = null;
+    let removeAvatar = false;
 
     if (contentType?.includes("multipart/form-data")) {
-      // 파일 업로드가 포함된 경우
       const formData = await request.formData();
-      const file = formData.get("file") as File;
-      const nickname = formData.get("nickname") as string;
+      nickname = String(formData.get("nickname") || "").trim();
+      const formFile = formData.get("file");
+      file = formFile instanceof File && formFile.size > 0 ? formFile : null;
+      removeAvatar = formData.get("removeAvatar") === "true";
+    } else {
+      const body: { nickname?: string; removeAvatar?: boolean } =
+        await request.json();
+      nickname = body.nickname?.trim() || "";
+      removeAvatar = body.removeAvatar === true;
+    }
 
-      if (!nickname) {
+    if (!nickname) {
+      return NextResponse.json(
+        { error: "닉네임이 필요합니다." },
+        { status: 400 }
+      );
+    }
+
+    if (file && removeAvatar) {
+      return NextResponse.json(
+        { error: "이미지 변경과 제거를 동시에 요청할 수 없습니다." },
+        { status: 400 }
+      );
+    }
+
+    const allowedImageTypes: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+    };
+
+    if (file && !allowedImageTypes[file.type]) {
+      return NextResponse.json(
+        { error: "JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (file && file.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "파일 크기는 5MB 이하여야 합니다." },
+        { status: 400 }
+      );
+    }
+
+    let nextAvatarPath = removeAvatar ? null : existingAvatarPath;
+    let uploadedAvatarPath: string | null = null;
+
+    if (file) {
+      const extension = allowedImageTypes[file.type];
+      uploadedAvatarPath = `${user.user.id}-${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(uploadedAvatarPath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("프로필 이미지 업로드 실패:", uploadError);
         return NextResponse.json(
-          { error: "닉네임이 필요합니다." },
-          { status: 400 }
+          { error: "파일 업로드에 실패했습니다." },
+          { status: 500 }
         );
       }
 
-      // 파일이 있으면 업로드
-      if (file) {
-        // 파일 타입 검증
-        if (!file.type.startsWith("image/")) {
-          return NextResponse.json(
-            { error: "이미지 파일만 업로드할 수 있습니다." },
-            { status: 400 }
-          );
-        }
+      nextAvatarPath = uploadedAvatarPath;
+    }
 
-        // 파일 크기 검증 (5MB 제한)
-        if (file.size > 5 * 1024 * 1024) {
-          return NextResponse.json(
-            { error: "파일 크기는 5MB 이하여야 합니다." },
-            { status: 400 }
-          );
-        }
+    const { error: profileError } = await supabase.from("users").upsert({
+      id: user.user.id,
+      email: user.user.email,
+      nickname,
+      avatar_url: nextAvatarPath,
+    });
 
-        // 기존 프로필 이미지 삭제
-        const { data: existingFiles } = await supabase.storage
-          .from("avatars")
-          .list("");
-
-        if (existingFiles && existingFiles.length > 0) {
-          const fileNamesToDelete = existingFiles
-            .filter((file) => file.name.startsWith(user.user.id))
-            .map((file) => file.name);
-
-          if (fileNamesToDelete.length > 0) {
-            const { error: deleteError } = await supabase.storage
-              .from("avatars")
-              .remove(fileNamesToDelete);
-
-            if (deleteError) {
-              console.warn("기존 파일 삭제 실패:", deleteError);
-            } else {
-              console.log("기존 파일 삭제 성공:", fileNamesToDelete);
-            }
-          }
-        }
-
-        // 파일명 생성 (사용자ID.확장자) - 고정 파일명으로 덮어쓰기
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${user.user.id}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, file, {
-            cacheControl: "0", // 캐시 비활성화
-            upsert: true, // 기존 파일 덮어쓰기
-          });
-
-        if (uploadError) {
-          console.error("파일 업로드 실패:", uploadError);
-          return NextResponse.json(
-            { error: "파일 업로드에 실패했습니다." },
-            { status: 500 }
-          );
-        } else {
-          console.log("파일 업로드 성공:", fileName);
-        }
-
-        // users 테이블에 저장
-        const { error: profileError } = await supabase.from("users").upsert({
-          id: user.user.id,
-          email: user.user.email,
-          nickname: nickname,
-          avatar_url: fileName,
-        });
-
-        if (profileError) {
-          console.error("DB 저장 실패:", profileError);
-          throw profileError;
-        } else {
-          console.log("DB 저장 성공:", fileName);
-        }
-      } else {
-        const { error: profileError } = await supabase.from("users").upsert({
-          id: user.user.id,
-          email: user.user.email,
-          nickname: nickname,
-          avatar_url: null,
-        });
-
-        if (profileError) {
-          throw profileError;
-        }
+    if (profileError) {
+      if (uploadedAvatarPath) {
+        await supabase.storage.from("avatars").remove([uploadedAvatarPath]);
       }
-    } else {
-      // JSON 데이터인 경우 (닉네임만 업데이트)
-      const body: { nickname: string } = await request.json();
-      const nickname = body.nickname || "";
+      throw profileError;
+    }
 
-      // users 테이블에 저장 (avatar_url은 null로 설정)
-      const { error: profileError } = await supabase.from("users").upsert({
-        id: user.user.id,
-        email: user.user.email,
-        nickname: nickname,
-        avatar_url: null,
-      });
+    if (
+      existingAvatarPath &&
+      existingAvatarPath !== nextAvatarPath &&
+      (removeAvatar || uploadedAvatarPath)
+    ) {
+      const { error: deleteError } = await supabase.storage
+        .from("avatars")
+        .remove([existingAvatarPath]);
 
-      if (profileError) {
-        throw profileError;
+      if (deleteError) {
+        console.warn("기존 프로필 이미지 정리 실패:", deleteError);
       }
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json(
+      { success: true, avatarUpdated: nextAvatarPath !== existingAvatarPath },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("프로필 업데이트 오류:", error);
     return NextResponse.json(

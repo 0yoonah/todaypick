@@ -7,7 +7,7 @@ export const useProfileMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (profileData: ProfileUpdateData & { file?: File }) => {
+    mutationFn: async (profileData: ProfileUpdateData) => {
       let response: Response;
 
       if (profileData.file) {
@@ -15,6 +15,7 @@ export const useProfileMutation = () => {
         const formData = new FormData();
         formData.append("nickname", profileData.nickname || "");
         formData.append("file", profileData.file);
+        formData.append("removeAvatar", "false");
 
         response = await fetch("/api/profile", {
           method: "PUT",
@@ -29,6 +30,7 @@ export const useProfileMutation = () => {
           },
           body: JSON.stringify({
             nickname: profileData.nickname,
+            removeAvatar: profileData.removeAvatar || false,
           }),
         });
       }
@@ -41,8 +43,7 @@ export const useProfileMutation = () => {
       return response.json();
     },
     onSuccess: async () => {
-      // 성공하면 프로필 데이터 무효화
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error) => {
       console.error("프로필 업데이트 실패:", error);
