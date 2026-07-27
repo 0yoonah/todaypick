@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { LearningStatistics } from "@/types/auth";
+import {
+  getCurrentWeekDateKeys,
+  getSeoulDateKey,
+} from "@/utils/dateUtils";
 
 export async function GET() {
   try {
@@ -76,31 +80,10 @@ export async function GET() {
       }
     }
 
-    // 주간 통계 생성
-    const getCurrentWeekDates = () => {
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + mondayOffset);
-
-      const weekDates = [];
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(monday);
-        date.setDate(monday.getDate() + i);
-        weekDates.push(date);
-      }
-
-      return weekDates;
-    };
-
-    const currentWeekDates = getCurrentWeekDates();
+    const currentWeekDates = getCurrentWeekDateKeys();
     const weeklyStatistics = [];
 
-    for (const date of currentWeekDates) {
-      const dateStr = date.toISOString().split("T")[0];
-
+    for (const dateStr of currentWeekDates) {
       // 해당 날짜의 일일 활동 찾기
       const dayActivity = dailyActivities?.find(
         (activity) => activity.date === dateStr
@@ -114,15 +97,21 @@ export async function GET() {
 
       // 기존 데이터에서 해당 날짜의 수치들 계산
       const dayQuizzes =
-        quizResults?.filter((q) => q.answered_at.startsWith(dateStr)).length ||
+        quizResults?.filter(
+          (q) => getSeoulDateKey(new Date(q.answered_at)) === dateStr
+        ).length ||
         0;
 
       const dayFeedsScraped =
-        scrapedFeeds?.filter((f) => f.created_at.startsWith(dateStr)).length ||
+        scrapedFeeds?.filter(
+          (f) => getSeoulDateKey(new Date(f.created_at)) === dateStr
+        ).length ||
         0;
 
       const dayQuotesScraped =
-        scrapedQuotes?.filter((q) => q.created_at.startsWith(dateStr)).length ||
+        scrapedQuotes?.filter(
+          (q) => getSeoulDateKey(new Date(q.created_at)) === dateStr
+        ).length ||
         0;
 
       weeklyStatistics.push({

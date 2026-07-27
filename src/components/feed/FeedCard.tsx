@@ -8,6 +8,7 @@ import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import { Feed } from "@/types/feed";
 import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
+import { getSeoulDateKey } from "@/utils/dateUtils";
 
 interface FeedCardProps {
   feed: Feed;
@@ -26,7 +27,7 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
         },
         body: JSON.stringify({
           activity: "feed_clicked",
-          date: new Date().toISOString().split("T")[0],
+          date: getSeoulDateKey(),
         }),
       });
     } catch (error) {
