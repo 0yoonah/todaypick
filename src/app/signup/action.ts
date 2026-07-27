@@ -68,6 +68,11 @@ export async function signup(
   } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
+    options: {
+      data: {
+        nickname: data.nickname,
+      },
+    },
   });
 
   if (error) {
@@ -75,19 +80,6 @@ export async function signup(
       user: null,
       error: formatAuthError(error.message),
     };
-  }
-
-  // 회원가입 성공 시 users 테이블에 프로필 생성
-  if (user) {
-    const { error: profileError } = await supabase.from("users").insert({
-      id: user.id,
-      email: user.email,
-      nickname: data.nickname,
-    });
-
-    if (profileError) {
-      console.error("프로필 생성 실패:", profileError);
-    }
   }
 
   revalidatePath(ROUTE_PATH.HOME, "layout");

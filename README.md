@@ -97,15 +97,27 @@ cd todaypick
 nvm use
 npm install
 
-# 환경 변수 설정 (.env.local 파일 생성)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# 환경 변수 설정
+cp .env.example .env.local
 
 # 개발 서버 실행
 npm run dev
 ```
 
 ## 🗄 데이터베이스 스키마
+
+Supabase CLI로 로컬 프로젝트를 연결한 뒤 마이그레이션을 적용합니다.
+
+```bash
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+```
+
+`supabase/migrations`는 테이블, 인덱스, 회원 프로필 생성 트리거,
+RLS 정책과 `avatars` Storage 정책의 기준 소스입니다. Dashboard에서 직접
+스키마를 변경했다면 `npx supabase db diff -f <migration-name>`으로 변경 이력을
+먼저 저장합니다.
 
 ### 주요 테이블
 
@@ -129,6 +141,10 @@ npm run start
 
 # 린팅
 npm run lint
+
+# 타입 검사
+npm run type-check
+
 ```
 
 ## 📱 주요 페이지
