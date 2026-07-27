@@ -5,6 +5,7 @@ import {
   getCurrentWeekDateKeys,
   getSeoulDateKey,
 } from "@/utils/dateUtils";
+import { calculateLearningStreaks } from "@/utils/streakUtils";
 
 export async function GET() {
   try {
@@ -54,31 +55,10 @@ export async function GET() {
     const totalScrapedFeeds = scrapedFeeds?.length || 0;
     const totalScrapedQuotes = scrapedQuotes?.length || 0;
 
-    // 연속 학습일 계산
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-
-    const sortedActivities =
-      dailyActivities?.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      ) || [];
-
-    for (let i = 0; i < sortedActivities.length; i++) {
-      const activity = sortedActivities[i];
-      const hasLearned =
-        activity.feed_clicked ||
-        activity.quiz_completed ||
-        activity.quote_viewed;
-
-      if (hasLearned) {
-        tempStreak++;
-        if (i === 0) currentStreak = tempStreak;
-        longestStreak = Math.max(longestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-      }
-    }
+    const { currentStreak, longestStreak } = calculateLearningStreaks(
+      dailyActivities || [],
+      getSeoulDateKey()
+    );
 
     const currentWeekDates = getCurrentWeekDateKeys();
     const weeklyStatistics = [];

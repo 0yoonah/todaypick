@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getSeoulDateKey, isValidDateKey } from "@/utils/dateUtils";
+import {
+  isDailyActivityType,
+  recordDailyActivity,
+} from "@/services/dailyActivityService";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,58 +71,14 @@ export async function POST(request: NextRequest) {
     const { activity } = body;
     const date = getSeoulDateKey();
 
-    if (!activity) {
-      return NextResponse.json(
-        { error: "활동이 필요합니다." },
-        { status: 400 }
-      );
-    }
-
-    const validActivities = ["feed_clicked", "quiz_completed", "quote_viewed"];
-
-    if (!validActivities.includes(activity)) {
+    if (!isDailyActivityType(activity)) {
       return NextResponse.json(
         { error: "유효하지 않은 활동입니다." },
         { status: 400 }
       );
     }
 
-    // 해당 날짜의 활동 업데이트 또는 생성
-    const updateData: {
-      user_id: string;
-      date: string;
-      updated_at: string;
-      feed_clicked?: boolean;
-      quiz_completed?: boolean;
-      quote_viewed?: boolean;
-    } = {
-      user_id: user.user.id,
-      date: date,
-      updated_at: new Date().toISOString(),
-    };
-
-    // 활동별 필드 업데이트
-    switch (activity) {
-      case "feed_clicked":
-        updateData.feed_clicked = true;
-        break;
-      case "quiz_completed":
-        updateData.quiz_completed = true;
-        break;
-      case "quote_viewed":
-        updateData.quote_viewed = true;
-        break;
-    }
-
-    const { error } = await supabase
-      .from("daily_activities")
-      .upsert(updateData, {
-        onConflict: "user_id,date",
-      });
-
-    if (error) {
-      throw error;
-    }
+    await recordDailyActivity(supabase, user.user.id, date, activity);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
