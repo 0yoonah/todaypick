@@ -1,4 +1,9 @@
 import { LearningStatistics } from "@/types/auth";
+import {
+  dateKeyToDate,
+  getCurrentWeekDateKeys,
+  getSeoulDateKey,
+} from "@/utils/dateUtils";
 
 export const getInitials = (nickname: string) => {
   return nickname.slice(0, 2).toUpperCase();
@@ -6,21 +11,7 @@ export const getInitials = (nickname: string) => {
 
 // 현재 주의 월요일부터 일요일까지 계산
 export const getCurrentWeekDates = () => {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    weekDates.push(date);
-  }
-
-  return weekDates;
+  return getCurrentWeekDateKeys().map(dateKeyToDate);
 };
 
 // 주차 계산
@@ -53,7 +44,7 @@ export const getLearningProgressByDate = (
 ) => {
   return (
     statistics.weeklyStatistics.find(
-      (day) => day.date === date.toISOString().split("T")[0]
+      (day) => day.date === getSeoulDateKey(date)
     )?.dailyProgress || {
       feedClick: false,
       quizComplete: false,
@@ -82,7 +73,7 @@ export const getProgressPercentage = (completedActivities: number) => {
 
 // 오늘 날짜인지 확인
 export const isToday = (date: Date) => {
-  return date.toDateString() === new Date().toDateString();
+  return getSeoulDateKey(date) === getSeoulDateKey();
 };
 
 // 요일 이름 가져오기

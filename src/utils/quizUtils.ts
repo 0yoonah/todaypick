@@ -1,13 +1,13 @@
 import { Quiz, QuizCategory } from "@/types/quiz";
 import { quizzes } from "@/data/quizzes";
+import { getSeoulDateKey } from "@/utils/dateUtils";
 
 export function getTodayQuiz(): Quiz {
   if (!quizzes || quizzes.length === 0) {
     throw new Error("퀴즈 데이터가 없습니다.");
   }
 
-  const today = new Date();
-  const dateString = today.toISOString().split("T")[0];
+  const dateString = getSeoulDateKey();
   const dateNumber = parseInt(dateString.replace(/-/g, ""));
 
   return quizzes[dateNumber % quizzes.length];

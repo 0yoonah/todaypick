@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getTodayQuiz } from "@/utils/quizUtils";
 import { quizzes } from "@/data/quizzes";
+import { getSeoulDateKey } from "@/utils/dateUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
       await supabase.from("daily_activities").upsert(
         {
           user_id: user.user.id,
-          date: new Date().toISOString().split("T")[0],
+          date: getSeoulDateKey(),
           quiz_completed: true,
           updated_at: new Date().toISOString(),
         },

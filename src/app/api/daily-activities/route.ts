@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { getSeoulDateKey, isValidDateKey } from "@/utils/dateUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const searchParams = new URL(request.url).searchParams;
     const date = searchParams.get("date");
 
-    if (!date) {
+    if (!date || !isValidDateKey(date)) {
       return NextResponse.json(
         { error: "날짜가 필요합니다." },
         { status: 400 }
@@ -63,11 +64,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { activity, date } = body;
+    const { activity } = body;
+    const date = getSeoulDateKey();
 
-    if (!activity || !date) {
+    if (!activity) {
       return NextResponse.json(
-        { error: "활동과 날짜가 필요합니다." },
+        { error: "활동이 필요합니다." },
         { status: 400 }
       );
     }
