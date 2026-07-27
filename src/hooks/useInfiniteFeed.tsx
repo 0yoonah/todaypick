@@ -17,6 +17,16 @@ interface UseInfiniteFeedProps {
   limit: number;
 }
 
+interface FeedPage {
+  feeds: Feed[];
+  currentPage: number;
+  totalPages: number;
+}
+interface InfiniteFeedData {
+  pages: FeedPage[];
+  pageParams: number[];
+}
+
 const fetchFeeds = async ({
   category,
   pageParam,
@@ -75,10 +85,44 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
         await feedService.scrapFeed(feed);
       }
     },
+    onMutate: async (feed: Feed) => {
+      await queryClient.cancelQueries({
+        queryKey: ["feeds", activeTab, limit, user?.id],
+      });
+
+      // 이전 데이터 백업 (롤백용)
+      const previousFeeds = queryClient.getQueryData([
+        "feeds",
+        activeTab,
+        limit,
+        user?.id,
+      ]);
+
+      // 낙관적으로 UI 업데이트
+      queryClient.setQueryData<InfiniteFeedData>(
+        ["feeds", activeTab, limit, user?.id],
+        (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              feeds: page.feeds.map((f: Feed) =>
+                f.id === feed.id ? { ...f, is_scraped: !f.is_scraped } : f
+              ),
+            })),
+          };
+        }
+      );
+
+      // 롤백용 데이터 반환
+      return { previousFeeds };
+    },
     onError: (error: Error) => {
       console.error("스크랩 처리 중 오류:", error);
     },
-    onSettled: () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["feeds", activeTab, limit, user?.id],
       });
