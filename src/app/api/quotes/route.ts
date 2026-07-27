@@ -150,14 +150,22 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 명언 스크랩 해제
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("scraped_quotes")
       .delete()
       .eq("user_id", user.user.id)
-      .eq("quote->>id", quoteId);
+      .eq("quote->>id", quoteId)
+      .select("id");
 
     if (error) {
       throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: "스크랩한 명언을 찾을 수 없습니다." },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
