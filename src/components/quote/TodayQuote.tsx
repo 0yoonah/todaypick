@@ -23,10 +23,20 @@ export default function TodayQuote() {
       try {
         if (!user) return;
 
-        const response = await fetch(`/api/quotes?quoteId=${todayQuote.id}`);
+        const [response, activityResponse] = await Promise.all([
+          fetch(`/api/quotes?quoteId=${todayQuote.id}`),
+          fetch("/api/daily-activities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ activity: "quote_viewed" }),
+          }),
+        ]);
 
         if (!response.ok && response.status !== 401) {
           throw new Error();
+        }
+        if (!activityResponse.ok && activityResponse.status !== 401) {
+          console.error("명언 조회 활동을 기록하지 못했습니다.");
         }
 
         const scraped = await response.json();
