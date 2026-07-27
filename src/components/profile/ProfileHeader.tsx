@@ -24,6 +24,14 @@ export default function ProfileHeader() {
   const [editNickname, setEditNickname] = useState<string>(nickname);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+
+  const clearPreviewUrl = useCallback(() => {
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+  }, [previewUrl]);
 
   const handleSaveProfile = useCallback(async () => {
     if (!user) return;
@@ -31,42 +39,60 @@ export default function ProfileHeader() {
       return;
     }
 
-    await profileMutation.mutateAsync({
-      nickname: editNickname.trim(),
-      file: selectedFile || undefined,
-    });
+    try {
+      await profileMutation.mutateAsync({
+        nickname: editNickname.trim(),
+        file: selectedFile || undefined,
+        removeAvatar,
+      });
+    } catch {
+      return;
+    }
+
     setSelectedFile(null);
-    setPreviewUrl(null);
+    clearPreviewUrl();
+    setRemoveAvatar(false);
     setIsEditing(false);
-  }, [editNickname, selectedFile, profileMutation, user]);
+  }, [
+    editNickname,
+    selectedFile,
+    removeAvatar,
+    profileMutation,
+    user,
+    clearPreviewUrl,
+  ]);
 
   const handleCancelEdit = useCallback(() => {
     if (userProfile) {
       setEditNickname(userProfile.nickname);
     }
     setSelectedFile(null);
-    setPreviewUrl(null);
+    clearPreviewUrl();
+    setRemoveAvatar(false);
     setIsEditing(false);
     profileMutation.reset();
-  }, [userProfile, profileMutation]);
+  }, [userProfile, profileMutation, clearPreviewUrl]);
 
   const handleRemoveAvatar = useCallback(() => {
     setSelectedFile(null);
-    setPreviewUrl(null);
-  }, []);
+    clearPreviewUrl();
+    setRemoveAvatar(true);
+  }, [clearPreviewUrl]);
 
   const handleFileSelect = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (file) {
+        clearPreviewUrl();
         setSelectedFile(file);
+        setRemoveAvatar(false);
 
         // 미리보기 URL 생성 (blob URL은 임시이므로 미리보기용으로만 사용)
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
       }
     },
-    []
+    [clearPreviewUrl]
   );
 
   if (!user) return null;
@@ -81,8 +107,11 @@ export default function ProfileHeader() {
                 <label htmlFor="input-file" className="cursor-pointer">
                   <Avatar className="h-24 w-24 ring-4 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
                     <AvatarImage
-                      key={previewUrl || "default"}
-                      src={previewUrl || undefined}
+                      key={previewUrl || avatarUrl || "default"}
+                      src={
+                        previewUrl ||
+                        (!removeAvatar ? avatarUrl || undefined : undefined)
+                      }
                     />
                     <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
                       {getInitials(editNickname || nickname || "사용자")}
@@ -96,15 +125,17 @@ export default function ProfileHeader() {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <Button
-                  onClick={handleRemoveAvatar}
-                  variant="destructive"
-                  size="sm"
-                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 cursor-pointer"
-                  title="이미지 제거"
-                >
-                  <FiX className="h-3 w-3" />
-                </Button>
+                {(selectedFile || (!removeAvatar && avatarUrl)) && (
+                  <Button
+                    onClick={handleRemoveAvatar}
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 cursor-pointer"
+                    title="이미지 제거"
+                  >
+                    <FiX className="h-3 w-3" />
+                  </Button>
+                )}
               </>
             ) : (
               <Avatar className="h-24 w-24 ring-4 ring-primary/20">
@@ -169,7 +200,9 @@ export default function ProfileHeader() {
                     onClick={() => {
                       profileMutation.reset();
                       setEditNickname(nickname || "");
-                      setPreviewUrl(null);
+                      clearPreviewUrl();
+                      setSelectedFile(null);
+                      setRemoveAvatar(false);
                       setIsEditing(true);
                     }}
                     variant="ghost"
