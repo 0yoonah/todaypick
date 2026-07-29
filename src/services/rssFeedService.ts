@@ -5,6 +5,11 @@ import Parser from "rss-parser";
 import { FEED_CATEGORY } from "@/config/constants";
 import { feedSources } from "@/data/feeds";
 import type { Feed, FeedCategory, FeedSource } from "@/types/feed";
+import type { InterestId } from "@/config/interests";
+import {
+  inferFeedInterests,
+  sortFeedsByInterests,
+} from "@/utils/feedInterestUtils";
 
 const RSS_REVALIDATE_SECONDS = 15 * 60;
 const RSS_TIMEOUT_MS = 8_000;
@@ -61,7 +66,7 @@ async function fetchRSSFeed(source: FeedSource): Promise<Feed[]> {
         const url = item.link ? normalizeUrl(item.link) : "";
         const publishedAt = item.pubDate || item.isoDate || "";
 
-        return {
+        const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
           title: item.title || "제목 없음",
           description: cleanDescription(
@@ -78,6 +83,8 @@ async function fetchRSSFeed(source: FeedSource): Promise<Feed[]> {
             "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center",
           author: item.creator || source.name,
         };
+        feed.interests = inferFeedInterests(feed);
+        return feed;
       });
   } catch (error) {
     console.error(`RSS 피드 수집 실패 (${source.name}):`, error);
@@ -119,13 +126,17 @@ const getCachedCategoryFeeds = unstable_cache(
 export async function getRSSFeedsWithPagination(
   category: FeedCategory,
   page: number,
-  limit: number
+  limit: number,
+  selectedInterests: InterestId[] = []
 ) {
   if (category === FEED_CATEGORY.SCRAPED) {
     throw new Error("스크랩 피드는 RSS 수집 대상이 아닙니다.");
   }
 
-  const feeds = await getCachedCategoryFeeds(category);
+  const feeds = sortFeedsByInterests(
+    await getCachedCategoryFeeds(category),
+    selectedInterests
+  );
   const totalCount = feeds.length;
   const startIndex = (page - 1) * limit;
 

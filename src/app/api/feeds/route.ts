@@ -3,6 +3,8 @@ import { FeedCategory } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import { FEED_CATEGORY } from "@/config/constants";
 import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
+import { parseInterestIds } from "@/config/interests";
+import type { InterestId } from "@/config/interests";
 
 const parseFeedParams = (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -71,7 +73,22 @@ export async function GET(request: NextRequest) {
       const result = await getScrapedFeeds(user.id, page, limit);
       return NextResponse.json(result, { status: 200 });
     } else {
-      const result = await getRSSFeedsWithPagination(category, page, limit);
+      let interests: InterestId[] = [];
+      if (user) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("interests")
+          .eq("id", user.id)
+          .maybeSingle();
+        interests = parseInterestIds(profile?.interests);
+      }
+
+      const result = await getRSSFeedsWithPagination(
+        category,
+        page,
+        limit,
+        interests
+      );
 
       if (!user) {
         return NextResponse.json({
