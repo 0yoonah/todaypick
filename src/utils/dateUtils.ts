@@ -43,6 +43,14 @@ export const getCurrentWeekDateKeys = (date: Date = new Date()): string[] => {
   );
 };
 
+export const getWeekDateKeys = (
+  date: Date = new Date(),
+  weekOffset = 0
+): string[] =>
+  getCurrentWeekDateKeys(date).map((dateKey) =>
+    addDaysToDateKey(dateKey, weekOffset * 7)
+  );
+
 export const dateKeyToDate = (dateKey: string): Date =>
   new Date(`${dateKey}T12:00:00+09:00`);
 

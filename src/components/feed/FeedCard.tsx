@@ -34,7 +34,13 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
         },
         body: JSON.stringify({
           activity: "feed_clicked",
-          date: getSeoulDateKey(),
+          feed: {
+            id: feed.id,
+            title: feed.title,
+            source: feed.source,
+            url: feed.url,
+            interests: feed.interests ?? [],
+          },
         }),
       });
       if (!response.ok) return;
@@ -48,7 +54,15 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
     } catch (error) {
       console.error("피드 클릭 기록 저장 실패:", error);
     }
-  }, [queryClient, user]);
+  }, [
+    feed.id,
+    feed.interests,
+    feed.source,
+    feed.title,
+    feed.url,
+    queryClient,
+    user,
+  ]);
 
   const handleScrapClick = (e: React.MouseEvent) => {
     e.preventDefault();
