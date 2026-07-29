@@ -5,6 +5,7 @@ import {
   isDailyActivityType,
   recordDailyActivity,
 } from "@/services/dailyActivityService";
+import { parseInterestIds } from "@/config/interests";
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { activity } = body;
+    const { activity, feed } = body;
     const date = getSeoulDateKey();
 
     if (!isDailyActivityType(activity)) {
@@ -79,6 +80,34 @@ export async function POST(request: NextRequest) {
     }
 
     await recordDailyActivity(supabase, user.user.id, date, activity);
+
+    if (
+      activity === "feed_clicked" &&
+      feed &&
+      typeof feed.id === "string" &&
+      typeof feed.title === "string" &&
+      typeof feed.url === "string"
+    ) {
+      const { error: feedReadError } = await supabase.from("feed_reads").upsert(
+        {
+          user_id: user.user.id,
+          feed_id: feed.id,
+          read_date: date,
+          feed: {
+            id: feed.id,
+            title: feed.title,
+            source: typeof feed.source === "string" ? feed.source : "",
+            url: feed.url,
+            interests: parseInterestIds(feed.interests),
+          },
+        },
+        { onConflict: "user_id,feed_id,read_date" }
+      );
+
+      if (feedReadError) {
+        console.error("피드 읽기 기록 저장 실패:", feedReadError);
+      }
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
