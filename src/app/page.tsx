@@ -7,7 +7,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
-        <DailyLearningChecklist />
+        <div className="mx-auto max-w-4xl">
+          <DailyLearningChecklist />
+        </div>
 
         {/* 오늘의 피드 */}
         <section id="today-feed" className="scroll-mt-24">
