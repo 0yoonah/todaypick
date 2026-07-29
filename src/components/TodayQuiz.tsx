@@ -14,6 +14,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import TodayQuizResult from "@/components/TodayQuizResult";
 import { useAuthStore } from "@/stores/authStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { getSeoulDateKey } from "@/utils/dateUtils";
+import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 
 export default function TodayQuiz() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -23,6 +26,7 @@ export default function TodayQuiz() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -89,6 +93,12 @@ export default function TodayQuiz() {
 
       setIsCorrect(result.isCorrect);
       setShowResult(true);
+      markDailyActivityCompleted(
+        queryClient,
+        user.id,
+        getSeoulDateKey(),
+        "quiz_completed"
+      );
     } catch (error) {
       console.error("답안 제출 실패:", error);
       alert(
@@ -99,7 +109,7 @@ export default function TodayQuiz() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedAnswer, user, router]);
+  }, [selectedAnswer, user, router, queryClient]);
 
   const renderSkeletonCard = useMemo(() => {
     return (
