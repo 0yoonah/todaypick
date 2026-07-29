@@ -6,6 +6,7 @@ import { LearningStatistics } from "@/types/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import SkeletonLearningStatisticsTab from "@/components/profile/SkeletonLearningStatisticsTab";
 import WeeklyLearningProgress from "@/components/profile/WeeklyLearningProgress";
+import WeeklyLearningReport from "@/components/profile/WeeklyLearningReport";
 
 export default function LearningStatisticsTab() {
   const [statistics, setStatistics] = useState<LearningStatistics | null>(null);
@@ -42,6 +43,11 @@ export default function LearningStatisticsTab() {
 
   return (
     <div className="space-y-6">
+      <WeeklyLearningReport
+        current={statistics.weeklyReport.current}
+        comparison={statistics.weeklyReport.comparison}
+      />
+
       {/* 주요 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>

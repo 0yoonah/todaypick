@@ -1,4 +1,5 @@
 import { User } from "@supabase/supabase-js";
+import type { InterestId } from "@/config/interests";
 
 export interface LoginData {
   email: string;
@@ -42,4 +43,29 @@ export interface LearningStatistics {
       quoteView: boolean;
     };
   }[];
+  weeklyReport: {
+    current: WeeklyReportSummary;
+    previous: WeeklyReportSummary;
+    comparison: WeeklyReportComparison;
+  };
+}
+
+export interface WeeklyReportSummary {
+  startDate: string;
+  endDate: string;
+  learningDays: number;
+  completedGoalDays: number;
+  quizzesCompleted: number;
+  correctQuizzes: number;
+  accuracyRate: number;
+  feedReads: number;
+  feedsScraped: number;
+  feedsEngaged: number;
+  topInterest: InterestId | null;
+}
+
+export interface WeeklyReportComparison {
+  learningDays: number;
+  quizzesCompleted: number;
+  feedsEngaged: number;
 }

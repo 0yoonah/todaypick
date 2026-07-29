@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDaysToDateKey,
   getCurrentWeekDateKeys,
+  getWeekDateKeys,
   getSeoulDateKey,
   isValidDateKey,
 } from "./dateUtils";
@@ -35,6 +36,18 @@ describe("서울 기준 날짜", () => {
       "2026-07-31",
       "2026-08-01",
       "2026-08-02",
+    ]);
+  });
+
+  it("지난주 날짜 범위를 월요일부터 일요일까지 반환한다", () => {
+    expect(getWeekDateKeys(new Date("2026-07-29T03:00:00.000Z"), -1)).toEqual([
+      "2026-07-20",
+      "2026-07-21",
+      "2026-07-22",
+      "2026-07-23",
+      "2026-07-24",
+      "2026-07-25",
+      "2026-07-26",
     ]);
   });
 
