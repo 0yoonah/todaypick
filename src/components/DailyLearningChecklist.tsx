@@ -57,7 +57,7 @@ export default function DailyLearningChecklist() {
   if (!user) {
     return (
       <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
-        <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="p-6">
           <div className="space-y-2">
             <p className="text-sm font-semibold text-primary">
               나만의 하루 10분 학습 루틴
@@ -70,9 +70,6 @@ export default function DailyLearningChecklist() {
               진행률을 확인할 수 있어요.
             </p>
           </div>
-          <Button asChild size="lg" className="shrink-0">
-            <Link href="/login">로그인하고 시작하기</Link>
-          </Button>
         </CardContent>
       </Card>
     );
