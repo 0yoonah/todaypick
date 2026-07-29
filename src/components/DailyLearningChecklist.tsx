@@ -56,7 +56,7 @@ export default function DailyLearningChecklist() {
 
   if (!user) {
     return (
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card shadow-sm">
+      <Card className="overflow-hidden bg-card shadow-sm">
         <CardContent className="p-6">
           <div className="space-y-2">
             <p className="text-sm font-semibold text-primary">
