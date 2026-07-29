@@ -11,6 +11,7 @@ import ScrapedFeedsTab from "@/components/profile/ScrapedFeedsTab";
 import QuizRecordsTab from "@/components/profile/QuizRecordsTab";
 import ScrapedQuotesTab from "@/components/profile/ScrapedQuotesTab";
 import LearningStatisticsTab from "@/components/profile/LearningStatisticsTab";
+import InterestSettings from "@/components/profile/InterestSettings";
 
 export default function ProfileContainer() {
   const { loading } = useAuthStore();
@@ -63,6 +64,7 @@ export default function ProfileContainer() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* 프로필 헤더 */}
       <ProfileHeader />
+      <InterestSettings />
       {/* 탭 내비게이션 */}
       <ProfileTabs activeTab={activeTab} handleChangeTab={handleChangeTab} />
       {/* 탭 컨텐츠 */}
