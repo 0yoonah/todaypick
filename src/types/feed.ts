@@ -1,4 +1,5 @@
 import { FEED_CATEGORY } from "@/config/constants";
+import type { InterestId } from "@/config/interests";
 
 export type FeedCategory = (typeof FEED_CATEGORY)[keyof typeof FEED_CATEGORY];
 
@@ -13,6 +14,7 @@ export type Feed = {
   is_scraped?: boolean;
   image_url?: string;
   author?: string;
+  interests?: InterestId[];
 };
 
 export type FeedSource = {

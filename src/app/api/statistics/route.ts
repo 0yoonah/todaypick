@@ -4,8 +4,15 @@ import { LearningStatistics } from "@/types/auth";
 import {
   getCurrentWeekDateKeys,
   getSeoulDateKey,
+  getWeekDateKeys,
 } from "@/utils/dateUtils";
 import { calculateLearningStreaks } from "@/utils/streakUtils";
+import { parseInterestIds } from "@/config/interests";
+import {
+  compareWeeklyReports,
+  createWeeklyReport,
+  type DatedFeedActivity,
+} from "@/utils/weeklyReportUtils";
 
 export async function GET() {
   try {
@@ -29,7 +36,7 @@ export async function GET() {
 
     const { data: scrapedFeeds, error: feedsError } = await supabase
       .from("scraped_feeds")
-      .select("id, created_at")
+      .select("id, feed, created_at")
       .eq("user_id", userId);
 
     const { data: scrapedQuotes, error: quotesError } = await supabase
@@ -43,7 +50,12 @@ export async function GET() {
       .eq("user_id", userId)
       .order("date", { ascending: false });
 
-    if (quizError || feedsError || quotesError || dailyError) {
+    const { data: feedReads, error: feedReadsError } = await supabase
+      .from("feed_reads")
+      .select("feed_id, feed, read_date, read_at")
+      .eq("user_id", userId);
+
+    if (quizError || feedsError || quotesError || dailyError || feedReadsError) {
       throw new Error("데이터 조회 중 오류가 발생했습니다.");
     }
 
@@ -61,6 +73,7 @@ export async function GET() {
     );
 
     const currentWeekDates = getCurrentWeekDateKeys();
+    const previousWeekDates = getWeekDateKeys(new Date(), -1);
     const weeklyStatistics = [];
 
     for (const dateStr of currentWeekDates) {
@@ -103,6 +116,36 @@ export async function GET() {
       });
     }
 
+    const feedActivities: DatedFeedActivity[] = [
+      ...(feedReads ?? []).map((read) => ({
+        feedId: read.feed_id,
+        date: read.read_date,
+        interests: parseInterestIds(read.feed?.interests),
+        kind: "read" as const,
+      })),
+      ...(scrapedFeeds ?? []).map((scrap) => ({
+        feedId: String(scrap.feed?.id ?? scrap.id),
+        date: getSeoulDateKey(new Date(scrap.created_at)),
+        interests: parseInterestIds(scrap.feed?.interests),
+        kind: "scraped" as const,
+      })),
+    ];
+    const toDateKey = (value: string) => getSeoulDateKey(new Date(value));
+    const currentReport = createWeeklyReport(
+      currentWeekDates,
+      dailyActivities || [],
+      quizResults || [],
+      feedActivities,
+      toDateKey
+    );
+    const previousReport = createWeeklyReport(
+      previousWeekDates,
+      dailyActivities || [],
+      quizResults || [],
+      feedActivities,
+      toDateKey
+    );
+
     const statistics: LearningStatistics = {
       totalQuizzes,
       correctQuizzes,
@@ -112,6 +155,11 @@ export async function GET() {
       currentStreak,
       longestStreak,
       weeklyStatistics,
+      weeklyReport: {
+        current: currentReport,
+        previous: previousReport,
+        comparison: compareWeeklyReports(currentReport, previousReport),
+      },
     };
 
     return NextResponse.json(statistics, { status: 200 });
