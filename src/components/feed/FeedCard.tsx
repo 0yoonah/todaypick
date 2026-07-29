@@ -3,12 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import { Feed } from "@/types/feed";
 import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
 import { getSeoulDateKey } from "@/utils/dateUtils";
+import { useAuthStore } from "@/stores/authStore";
+import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 
 interface FeedCardProps {
   feed: Feed;
@@ -17,10 +20,14 @@ interface FeedCardProps {
 
 export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const handleFeedClick = useCallback(async () => {
+    if (!user) return;
+
     try {
-      await fetch("/api/daily-activities", {
+      const response = await fetch("/api/daily-activities", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,10 +37,18 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
           date: getSeoulDateKey(),
         }),
       });
+      if (!response.ok) return;
+
+      markDailyActivityCompleted(
+        queryClient,
+        user.id,
+        getSeoulDateKey(),
+        "feed_clicked"
+      );
     } catch (error) {
       console.error("피드 클릭 기록 저장 실패:", error);
     }
-  }, []);
+  }, [queryClient, user]);
 
   const handleScrapClick = (e: React.MouseEvent) => {
     e.preventDefault();

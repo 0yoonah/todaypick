@@ -7,6 +7,9 @@ import { ROUTE_PATH } from "@/config/constants";
 import { getTodayQuote } from "@/utils/quoteUtils";
 import QuoteCard from "@/components/quote/QuoteCard";
 import SkeletonQuoteCard from "@/components/quote/SkeletonQuoteCard";
+import { useQueryClient } from "@tanstack/react-query";
+import { getSeoulDateKey } from "@/utils/dateUtils";
+import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 
 export default function TodayQuote() {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +17,7 @@ export default function TodayQuote() {
   const [isScraped, setIsScraped] = useState(false);
   const { user } = useAuthStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const todayQuote = getTodayQuote();
 
   useEffect(() => {
@@ -37,6 +41,13 @@ export default function TodayQuote() {
         }
         if (!activityResponse.ok && activityResponse.status !== 401) {
           console.error("명언 조회 활동을 기록하지 못했습니다.");
+        } else if (activityResponse.ok) {
+          markDailyActivityCompleted(
+            queryClient,
+            user.id,
+            getSeoulDateKey(),
+            "quote_viewed"
+          );
         }
 
         const scraped = await response.json();
@@ -57,7 +68,7 @@ export default function TodayQuote() {
     return () => {
       cancelled = true;
     };
-  }, [user, todayQuote]);
+  }, [user, todayQuote, queryClient]);
 
   const handleCopyToClipboard = useCallback(async () => {
     if (!todayQuote) return;
