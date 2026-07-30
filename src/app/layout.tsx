@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
+import MobileBottomNavigation from "@/components/MobileBottomNavigation";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B4F6C",
+  themeColor: "#4263C7",
 };
 
 export default function RootLayout({
@@ -29,6 +30,7 @@ export default function RootLayout({
           <AuthProvider>
             <Header />
             {children}
+            <MobileBottomNavigation />
           </AuthProvider>
         </QueryProvider>
       </body>

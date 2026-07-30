@@ -21,8 +21,8 @@ export default function CircularProgressbar({
   className,
   children,
   showValue = true,
-  color = "#3b82f6", // 기본 파란색
-  backgroundColor = "#e5e7eb", // 기본 회색
+  color = "var(--primary)",
+  backgroundColor = "var(--muted)",
 }: CircularProgressbarProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -98,7 +98,7 @@ export function SegmentedProgressRing({
   size = 120,
   strokeWidth = 8,
   className,
-  colors = ["#3b82f6", "#10b981", "#8b5cf6"], // 직접 색상 지정
+  colors = ["var(--primary)", "var(--success)", "var(--info)"],
   labels = ["피드", "퀴즈", "명언"],
 }: SegmentedProgressRingProps) {
   const radius = (size - strokeWidth) / 2;
@@ -128,7 +128,7 @@ export function SegmentedProgressRing({
         value: progress,
         strokeDasharray: circumference,
         strokeDashoffset: previousOffset,
-        color: colors[index] || "#6b7280",
+        color: colors[index] || "var(--muted-foreground)",
         label: labels[index] || `항목 ${index + 1}`,
       },
     ];
@@ -152,7 +152,7 @@ export function SegmentedProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#e5e7eb"
+          stroke="var(--muted)"
           strokeWidth={strokeWidth}
           fill="none"
         />

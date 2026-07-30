@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 
 interface QuizRecordWithInfo extends QuizResult {
   quiz: Quiz | null;
@@ -45,19 +44,21 @@ export default function QuizRecordsTab() {
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const parts = new Intl.DateTimeFormat("ko-KR", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date(dateString));
+    const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value ?? "";
+
+    return `${getPart("year")}.${getPart("month")}.${getPart("day")}`;
   };
 
   const getScoreColor = (isCorrect: boolean) => {
     return isCorrect
-      ? "bg-green-100 text-green-800 border-green-200"
-      : "bg-red-100 text-red-800 border-red-200";
+      ? "border-correct/25 bg-correct/10 text-correct"
+      : "border-destructive/25 bg-destructive/10 text-destructive";
   };
 
   const toggleExpanded = (recordId: string) => {
@@ -97,7 +98,7 @@ export default function QuizRecordsTab() {
     return (
       <Card>
         <CardContent className="p-6 text-center">
-          <p className="text-red-600">{error}</p>
+          <p className="text-destructive">{error}</p>
         </CardContent>
       </Card>
     );
@@ -120,97 +121,109 @@ export default function QuizRecordsTab() {
           const isExpanded = expandedItems.has(record.id);
 
           return (
-            <Card key={record.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    {record.quiz && (
-                      <Badge
-                        className={cn(
-                          "text-xs font-medium border",
-                          getCategoryColor(record.quiz.category)
-                        )}
-                      >
-                        {getCategoryLabel(record.quiz.category)}
-                      </Badge>
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(record.answered_at)}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      className={cn(
-                        "text-xs font-medium border",
-                        getScoreColor(record.is_correct)
-                      )}
-                    >
-                      {record.is_correct ? "정답" : "오답"}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleExpanded(record.id)}
-                      className="h-6 w-6 p-0"
-                    >
-                      {isExpanded ? (
-                        <FiChevronUp className="h-4 w-4" />
-                      ) : (
-                        <FiChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {record.quiz ? (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm line-clamp-2">
-                      {record.quiz.question}
-                    </h4>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>
-                        선택한 답:{" "}
-                        <span
+            <Card
+              key={record.id}
+              className="overflow-hidden transition-colors hover:border-primary/30"
+            >
+              <button
+                type="button"
+                onClick={() => toggleExpanded(record.id)}
+                aria-expanded={isExpanded}
+                className="block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-center space-x-2">
+                      {record.quiz && (
+                        <Badge
                           className={cn(
-                            "font-medium",
-                            record.is_correct
-                              ? "text-green-600"
-                              : "text-red-600"
+                            "text-xs font-medium border max-[360px]:hidden",
+                            getCategoryColor(record.quiz.category)
                           )}
                         >
-                          {String.fromCharCode(65 + record.selected_answer)}.{" "}
-                          {record.quiz.options[record.selected_answer]}
-                        </span>
-                      </p>
-                      <p>
-                        정답:{" "}
-                        <span className="font-medium text-green-600">
-                          {String.fromCharCode(65 + record.quiz.correct_answer)}
-                          . {record.quiz.options[record.quiz.correct_answer]}
-                        </span>
-                      </p>
+                          {getCategoryLabel(record.quiz.category)}
+                        </Badge>
+                      )}
+                      <span className="truncate text-sm text-muted-foreground">
+                        {formatDate(record.answered_at)}
+                      </span>
                     </div>
-
-                    {isExpanded && (
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          <h5 className="font-medium text-sm mb-2 text-foreground">
-                            해설
-                          </h5>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {record.quiz.explanation}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex shrink-0 items-center space-x-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-xs font-medium border",
+                          getScoreColor(record.is_correct)
+                        )}
+                      >
+                        {record.is_correct ? "정답" : "오답"}
+                      </Badge>
+                      {isExpanded ? (
+                        <FiChevronUp
+                          className="h-4 w-4 text-muted-foreground"
+                          aria-hidden
+                        />
+                      ) : (
+                        <FiChevronDown
+                          className="h-4 w-4 text-muted-foreground"
+                          aria-hidden
+                        />
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    퀴즈 정보를 불러올 수 없습니다.
-                  </p>
-                )}
-              </CardContent>
+                </CardHeader>
+                <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+                  {record.quiz ? (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm line-clamp-2">
+                        {record.quiz.question}
+                      </h4>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <p>
+                          선택한 답:{" "}
+                          <span
+                            className={cn(
+                              "font-medium",
+                              record.is_correct
+                                ? "text-correct"
+                                : "text-destructive"
+                            )}
+                          >
+                            {String.fromCharCode(65 + record.selected_answer)}.{" "}
+                            {record.quiz.options[record.selected_answer]}
+                          </span>
+                        </p>
+                        <p>
+                          정답:{" "}
+                          <span className="font-medium text-correct">
+                            {String.fromCharCode(
+                              65 + record.quiz.correct_answer
+                            )}
+                            . {record.quiz.options[record.quiz.correct_answer]}
+                          </span>
+                        </p>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-border">
+                          <div className="bg-muted/50 rounded-lg p-4">
+                            <h5 className="font-medium text-sm mb-2 text-foreground">
+                              해설
+                            </h5>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {record.quiz.explanation}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      퀴즈 정보를 불러올 수 없습니다.
+                    </p>
+                  )}
+                </CardContent>
+              </button>
             </Card>
           );
         })}

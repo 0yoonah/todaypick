@@ -49,16 +49,18 @@ export default function LearningStatisticsTab() {
       />
 
       {/* 주요 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <FiTarget className="h-6 w-6 text-blue-500" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="mb-2 flex items-center space-x-2">
+              <FiTarget className="size-5 text-primary sm:size-6" />
               <span className="text-sm font-medium text-muted-foreground">
                 총 퀴즈
               </span>
             </div>
-            <div className="text-2xl font-bold">{statistics.totalQuizzes}</div>
+            <div className="text-xl font-bold sm:text-2xl">
+              {statistics.totalQuizzes}
+            </div>
             <div className="text-xs text-muted-foreground">
               정답률 {statistics.accuracyRate}%
             </div>
@@ -66,14 +68,14 @@ export default function LearningStatisticsTab() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <FiTrendingUp className="h-6 w-6 text-green-500" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="mb-2 flex items-center space-x-2">
+              <FiTrendingUp className="size-5 text-success sm:size-6" />
               <span className="text-sm font-medium text-muted-foreground">
                 연속 학습
               </span>
             </div>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold sm:text-2xl">
               {statistics.currentStreak}일
             </div>
             <div className="text-xs text-muted-foreground">

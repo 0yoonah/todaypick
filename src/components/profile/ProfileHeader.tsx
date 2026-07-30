@@ -6,7 +6,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { useProfileMutation } from "@/hooks/useProfileMutation";
 import { useProfileQuery } from "@/hooks/useProfileQuery";
 import { getInitials } from "@/utils/profileUtils";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -98,14 +97,13 @@ export default function ProfileHeader() {
   if (!user) return null;
 
   return (
-    <Card className="mb-6 shadow-sm">
-      <CardContent className="p-8">
-        <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 mb-6">
+    <section className="p-5 sm:p-6" aria-labelledby="profile-summary-title">
+      <div className="flex items-start gap-4 sm:items-center sm:gap-5">
           <div className="relative">
             {isEditing ? (
               <>
                 <label htmlFor="input-file" className="cursor-pointer">
-                  <Avatar className="h-24 w-24 ring-4 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
+                  <Avatar className="size-16 border-2 border-background ring-1 ring-border transition-colors hover:ring-primary sm:size-20">
                     <AvatarImage
                       key={previewUrl || avatarUrl || "default"}
                       src={
@@ -113,7 +111,7 @@ export default function ProfileHeader() {
                         (!removeAvatar ? avatarUrl || undefined : undefined)
                       }
                     />
-                    <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-primary text-lg font-bold text-primary-foreground">
                       {getInitials(editNickname || nickname || "사용자")}
                     </AvatarFallback>
                   </Avatar>
@@ -130,7 +128,7 @@ export default function ProfileHeader() {
                     onClick={handleRemoveAvatar}
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 cursor-pointer"
+                    className="absolute -right-1 -top-1 size-6 cursor-pointer rounded-full p-0"
                     title="이미지 제거"
                   >
                     <FiX className="h-3 w-3" />
@@ -138,23 +136,23 @@ export default function ProfileHeader() {
                 )}
               </>
             ) : (
-              <Avatar className="h-24 w-24 ring-4 ring-primary/20">
+              <Avatar className="size-16 border-2 border-background ring-1 ring-border sm:size-20">
                 <AvatarImage
                   key={avatarUrl || "default"}
                   src={previewUrl || avatarUrl || undefined}
                 />
-                <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+                <AvatarFallback className="bg-primary text-lg font-bold text-primary-foreground">
                   {getInitials(editNickname || nickname || "사용자")}
                 </AvatarFallback>
               </Avatar>
             )}
           </div>
 
-          <div className="text-center md:text-left flex-1">
+          <div className="min-w-0 flex-1">
             {isEditing ? (
-              <div className="space-y-4">
+              <div className="max-w-md space-y-3">
                 <div>
-                  <Label className="block text-sm font-medium text-foreground mb-2">
+                  <Label className="mb-2 block text-sm font-medium text-foreground">
                     닉네임
                   </Label>
                   <Input
@@ -164,7 +162,7 @@ export default function ProfileHeader() {
                     placeholder="닉네임을 입력하세요"
                   />
                   {profileMutation.error && (
-                    <span className="text-red-500 text-sm">
+                    <span className="text-sm text-destructive">
                       {profileMutation.error instanceof Error
                         ? profileMutation.error.message
                         : "프로필 업데이트에 실패했습니다."}
@@ -172,7 +170,7 @@ export default function ProfileHeader() {
                   )}
                 </div>
 
-                <div className="flex space-x-2 justify-center md:justify-start">
+                <div className="flex gap-2">
                   <Button
                     onClick={handleSaveProfile}
                     size="sm"
@@ -191,33 +189,41 @@ export default function ProfileHeader() {
                 </div>
               </div>
             ) : (
-              <>
-                <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">
-                    {nickname}
-                  </h1>
-                  <Button
-                    onClick={() => {
-                      profileMutation.reset();
-                      setEditNickname(nickname || "");
-                      clearPreviewUrl();
-                      setSelectedFile(null);
-                      setRemoveAvatar(false);
-                      setIsEditing(true);
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                    내 프로필
+                  </p>
+                  <h2
+                    id="profile-summary-title"
+                    className="truncate text-xl font-bold tracking-[-0.02em] text-foreground"
                   >
-                    <FiEdit3 className="h-4 w-4" />
-                  </Button>
+                    {nickname}
+                  </h2>
+                  <p className="mt-1 truncate text-sm text-muted-foreground">
+                    {user.email}
+                  </p>
                 </div>
-                <p className="text-muted-foreground mb-4">{user.email}</p>
-              </>
+                <Button
+                  onClick={() => {
+                    profileMutation.reset();
+                    setEditNickname(nickname || "");
+                    clearPreviewUrl();
+                    setSelectedFile(null);
+                    setRemoveAvatar(false);
+                    setIsEditing(true);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-fit cursor-pointer"
+                >
+                  <FiEdit3 className="h-4 w-4" />
+                  프로필 수정
+                </Button>
+              </div>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
