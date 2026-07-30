@@ -11,6 +11,7 @@ import {
 import { Quiz } from "@/types/quiz";
 import { ROUTE_PATH } from "@/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import TodayQuizResult from "@/components/TodayQuizResult";
 import { useAuthStore } from "@/stores/authStore";
@@ -136,20 +137,20 @@ export default function TodayQuiz() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+        <h2 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
           오늘의 IT 퀴즈
         </h2>
-        <p className="text-muted-foreground text-sm">
-          매일 자정에 새로운 퀴즈가 업데이트됩니다.
+        <p className="mt-2 text-sm text-muted-foreground">
+          한 문제로 오늘의 IT 상식을 확인해보세요.
         </p>
       </div>
 
       {!quiz ? (
         renderSkeletonCard
       ) : (
-        <Card className="w-full shadow-sm">
+        <Card className="w-full shadow-none">
           <CardHeader>
             <div className="flex items-center justify-between">
               <span
@@ -187,10 +188,10 @@ export default function TodayQuiz() {
                     onClick={() => !showResult && handleAnswerSelect(index)}
                     disabled={showResult}
                     className={cn(
-                      "w-full p-4 text-left rounded-lg border transition-all duration-200",
+                      "w-full rounded-lg border p-4 text-left transition-colors duration-150",
                       showResult
                         ? isCorrectAnswer
-                          ? "border-success bg-success/10 text-success"
+                          ? "border-correct bg-correct/10 text-correct"
                           : isWrong
                           ? "border-destructive bg-destructive/10 text-destructive"
                           : "border-border bg-muted/50 text-muted-foreground"
@@ -209,13 +210,13 @@ export default function TodayQuiz() {
             </div>
 
             {!showResult && selectedAnswer !== null && (
-              <button
+              <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed text-primary-foreground font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                className="h-11 w-full"
               >
                 {isSubmitting ? "제출 중..." : "답안 제출"}
-              </button>
+              </Button>
             )}
 
             {/* 결과 표시 */}

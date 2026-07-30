@@ -9,6 +9,7 @@ interface QuoteCardProps {
   quote: Quote | null;
   isScraped: boolean;
   isCopied: boolean;
+  compact?: boolean;
   handleScrap: () => void;
   handleCopyToClipboard: () => void;
 }
@@ -17,67 +18,77 @@ export default function QuoteCard({
   quote,
   isScraped,
   isCopied,
+  compact = false,
   handleScrap,
   handleCopyToClipboard,
 }: QuoteCardProps) {
   if (!quote) return null;
 
   return (
-    <Card className="relative w-full mx-auto shadow-sm border overflow-hidden">
+    <Card className="relative mx-auto w-full overflow-hidden border-0 bg-secondary shadow-none">
       <button
-        className="absolute top-6 right-6 z-10 p-2 rounded-full bg-background/90 backdrop-blur-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200 cursor-pointer"
+        className={cn(
+          "absolute z-10 flex items-center justify-center rounded-md border border-border/80 bg-card text-muted-foreground transition-colors hover:text-primary",
+          compact
+            ? "right-4 top-4 size-8"
+            : "right-4 top-4 size-8 sm:right-5 sm:top-5 sm:size-9"
+        )}
         onClick={handleScrap}
         aria-label={isScraped ? "스크랩 해제" : "스크랩 추가"}
       >
         {isScraped ? (
-          <GoBookmarkFill className="text-2xl text-primary" />
+          <GoBookmarkFill className="text-lg text-primary" />
         ) : (
-          <GoBookmark className="text-2xl text-muted-foreground hover:text-primary" />
+          <GoBookmark className="text-lg" />
         )}
       </button>
 
-      <CardContent className="relative p-12">
-        <div className="relative flex flex-col text-center mb-8">
-          <div className="absolute -top-6 -left-6 text-7xl text-muted-foreground/20 font-serif select-none">
-            &quot;
-          </div>
-          <div className="absolute -bottom-10 -right-6 text-7xl text-muted-foreground/20 font-serif select-none">
-            &quot;
-          </div>
-
-          <blockquote className="text-2xl leading-relaxed text-card-foreground mb-8 px-8 font-medium">
+      <CardContent className="relative p-5 sm:p-6">
+        <div
+          className={cn(
+            "flex flex-col justify-between",
+            compact ? "gap-4 pr-10" : "min-h-40 gap-3 sm:min-h-56 sm:gap-0"
+          )}
+        >
+          <span
+            className={cn(
+              "font-serif leading-none text-primary/30",
+              compact ? "text-3xl" : "text-3xl sm:text-4xl"
+            )}
+            aria-hidden
+          >
+            “
+          </span>
+          <blockquote
+            className={cn(
+              "font-semibold leading-relaxed tracking-tight text-card-foreground",
+              compact
+                ? "text-base sm:text-lg"
+                : "my-3 text-lg sm:my-4 sm:text-xl"
+            )}
+          >
             {quote.text}
           </blockquote>
 
-          <div className="flex items-center justify-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-primary-foreground font-bold text-sm">
-                {quote.author.charAt(0)}
-              </span>
-            </div>
-            <cite className="text-muted-foreground text-lg font-medium">
-              - {quote.author} -
+          <div className="flex items-end justify-between gap-4">
+            <cite className="text-sm font-medium not-italic text-muted-foreground">
+              {quote.author}
             </cite>
+            <Button
+              onClick={handleCopyToClipboard}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "cursor-pointer",
+                isCopied ? "text-success" : "text-muted-foreground"
+              )}
+              aria-label="복사하기"
+            >
+              <FaCopy />
+              <span>{isCopied ? "복사됨" : "복사"}</span>
+            </Button>
           </div>
         </div>
-
-        <Button
-          onClick={handleCopyToClipboard}
-          variant="outline"
-          size="lg"
-          className={cn(
-            "absolute bottom-6 right-6 flex items-center space-x-2 transition-all duration-200 transform hover:scale-105 bg-background/90 backdrop-blur-sm border shadow-sm hover:shadow-md cursor-pointer",
-            isCopied
-              ? "text-success bg-success/10"
-              : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-          )}
-          aria-label="복사하기"
-        >
-          <FaCopy className="text-lg" />
-          <span className="font-medium">
-            {isCopied ? "복사됨" : "복사하기"}
-          </span>
-        </Button>
       </CardContent>
     </Card>
   );

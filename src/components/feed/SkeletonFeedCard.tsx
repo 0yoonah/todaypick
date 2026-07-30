@@ -3,12 +3,12 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 export default function SkeletonFeedCard() {
   return (
-    <Card className="h-full shadow-lg border-0 bg-white/90 backdrop-blur-sm overflow-hidden relative">
+    <Card className="h-full overflow-hidden border bg-card shadow-sm">
       {/* 스크랩 버튼 스켈레톤 - 우측 상단 */}
       <Skeleton className="absolute top-3 right-3 w-10 h-10 rounded-full z-20" />
 
       {/* 이미지 스켈레톤 */}
-      <div className="relative w-full h-48 overflow-hidden">
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
         <Skeleton className="w-full h-full" />
       </div>
 
