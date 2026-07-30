@@ -37,20 +37,20 @@ export const getCategoryLabel = (category: QuizCategory) => {
 export const getCategoryColor = (category: QuizCategory) => {
   switch (category) {
     case "programming":
-      return "text-blue-600 bg-blue-50 border-blue-200";
+      return "border-primary/25 bg-primary/10 text-primary";
     case "web":
-      return "text-green-600 bg-green-50 border-green-200";
+      return "border-info/25 bg-info/10 text-info";
     case "database":
-      return "text-purple-600 bg-purple-50 border-purple-200";
+      return "border-info/25 bg-info/10 text-info";
     case "security":
-      return "text-red-600 bg-red-50 border-red-200";
+      return "border-destructive/25 bg-destructive/10 text-destructive";
     case "cloud":
-      return "text-orange-600 bg-orange-50 border-orange-200";
+      return "border-warning/30 bg-warning/10 text-foreground";
     case "algorithm":
-      return "text-indigo-600 bg-indigo-50 border-indigo-200";
+      return "border-primary/25 bg-accent text-accent-foreground";
     case "devops":
-      return "text-cyan-600 bg-cyan-50 border-cyan-200";
+      return "border-border bg-secondary text-secondary-foreground";
     default:
-      return "text-gray-600 bg-gray-50 border-gray-200";
+      return "border-border bg-muted text-muted-foreground";
   }
 };
