@@ -85,7 +85,7 @@ export function SignUpForm() {
           <button
             type="button"
             onClick={handleTogglePasswordVisibility}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-0.5 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
           >
             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
@@ -113,7 +113,7 @@ export function SignUpForm() {
           <button
             type="button"
             onClick={handleToggleConfirmPasswordVisibility}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-0.5 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={
               showConfirmPassword ? "비밀번호 확인 숨기기" : "비밀번호 확인 보기"
             }
