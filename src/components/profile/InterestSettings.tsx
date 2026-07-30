@@ -1,29 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiCheck, FiSliders } from "react-icons/fi";
 import { INTERESTS, parseInterestIds, type InterestId } from "@/config/interests";
 import { useInterestMutation } from "@/hooks/useInterestMutation";
 import { useProfileQuery } from "@/hooks/useProfileQuery";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InterestSettings() {
   const { data: profile, isLoading } = useProfileQuery();
-  const savedInterests = parseInterestIds(profile?.interests);
+  const savedInterests = useMemo(
+    () => parseInterestIds(profile?.interests),
+    [profile?.interests]
+  );
 
   if (isLoading) {
-    return <Skeleton className="h-56 w-full rounded-xl" />;
+    return (
+      <div className="px-5 py-4 sm:px-6">
+        <Skeleton className="h-16 w-full rounded-lg" />
+      </div>
+    );
   }
 
-  return (
-    <InterestSettingsForm
-      key={savedInterests.slice().sort().join(",")}
-      initialInterests={savedInterests}
-    />
-  );
+  return <InterestSettingsForm initialInterests={savedInterests} />;
 }
 
 function InterestSettingsForm({
@@ -32,94 +32,104 @@ function InterestSettingsForm({
   initialInterests: InterestId[];
 }) {
   const mutation = useInterestMutation();
-  const [selected, setSelected] =
-    useState<InterestId[]>(initialInterests);
+  const {
+    mutate,
+    reset,
+    isPending,
+    isSuccess,
+    error,
+  } = mutation;
+  const [selected, setSelected] = useState<InterestId[]>(initialInterests);
+  const initialKey = [...initialInterests].sort().join(",");
+  const selectedKey = [...selected].sort().join(",");
 
   const toggleInterest = (interest: InterestId) => {
+    if (isPending) return;
+
     setSelected((current) =>
       current.includes(interest)
         ? current.filter((item) => item !== interest)
         : [...current, interest]
     );
-    mutation.reset();
+    reset();
   };
 
-  const hasChanges =
-    [...selected].sort().join(",") !==
-    [...initialInterests].sort().join(",");
+  useEffect(() => {
+    if (selectedKey === initialKey || isPending) return;
+
+    const nextInterests = [...selected];
+    const timer = window.setTimeout(() => {
+      mutate(nextInterests, {
+        onError: () => {
+          setSelected(initialInterests);
+        },
+      });
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    initialInterests,
+    initialKey,
+    isPending,
+    mutate,
+    selected,
+    selectedKey,
+  ]);
 
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <FiSliders className="text-primary" />
-              <h2 className="text-lg font-bold">관심 분야</h2>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              여러 분야를 선택하면 관련 콘텐츠를 최신 피드 안에서 먼저
-              보여드려요.
-            </p>
-          </div>
-          <Button
-            onClick={() => mutation.mutate(selected)}
-            disabled={!hasChanges || mutation.isPending}
-            className="shrink-0"
-          >
-            {mutation.isPending ? "저장 중..." : "관심 분야 저장"}
-          </Button>
+    <section
+      className="px-5 pb-5 pt-2 sm:px-6 sm:pb-6"
+      aria-labelledby="interest-settings-title"
+    >
+      <div className="flex min-h-8 items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <FiSliders className="size-4 text-primary" />
+          <h2 id="interest-settings-title" className="text-sm font-bold">
+            관심 분야
+          </h2>
         </div>
+        <span
+          className={cn(
+            "text-xs",
+            error ? "text-destructive" : "text-muted-foreground"
+          )}
+          role={error ? "alert" : "status"}
+          aria-live="polite"
+        >
+          {isPending
+            ? "저장 중…"
+            : isSuccess
+              ? "저장됨"
+              : error
+                ? "저장 실패"
+                : ""}
+        </span>
+      </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {INTERESTS.map((interest) => {
-            const isSelected = selected.includes(interest.id);
+      <div className="mt-3 flex flex-wrap gap-2">
+        {INTERESTS.map((interest) => {
+          const isSelected = selected.includes(interest.id);
 
-            return (
-              <button
-                key={interest.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => toggleInterest(interest.id)}
-                className={cn(
-                  "flex items-start gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  isSelected
-                    ? "border-primary bg-primary/10"
-                    : "hover:border-primary/30 hover:bg-muted/50"
-                )}
-              >
-                <span
-                  className={cn(
-                    "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
-                    isSelected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-muted-foreground/40"
-                  )}
-                >
-                  {isSelected && <FiCheck className="size-3" />}
-                </span>
-                <span>
-                  <span className="block font-semibold">{interest.label}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {interest.description}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {mutation.isSuccess && (
-          <p className="mt-4 text-sm text-success" role="status">
-            관심 분야를 저장했어요. 피드 우선순위에 바로 반영됩니다.
-          </p>
-        )}
-        {mutation.error && (
-          <p className="mt-4 text-sm text-destructive" role="alert">
-            {mutation.error.message}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          return (
+            <button
+              key={interest.id}
+              type="button"
+              aria-pressed={isSelected}
+              disabled={isPending}
+              onClick={() => toggleInterest(interest.id)}
+              className={cn(
+                "inline-flex h-10 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait sm:h-8",
+                isSelected
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {isSelected && <FiCheck className="size-3" />}
+              <span>{interest.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }

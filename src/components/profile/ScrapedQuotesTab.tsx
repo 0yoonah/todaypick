@@ -119,7 +119,7 @@ export default function ScrapedQuotesTab() {
     setRetryCount((count) => count + 1);
   };
 
-  if (loading) return <SkeletonQuoteCard />;
+  if (loading) return <SkeletonQuoteCard compact />;
 
   if (loadError) {
     return (
@@ -174,6 +174,7 @@ export default function ScrapedQuotesTab() {
             quote={scrapedQuote.quote}
             isScraped
             isCopied={copiedQuoteId === scrapedQuote.id}
+            compact
             handleScrap={() => handleUnscrap(scrapedQuote)}
             handleCopyToClipboard={() => handleCopyToClipboard(scrapedQuote)}
           />

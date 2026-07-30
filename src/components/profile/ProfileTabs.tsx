@@ -1,7 +1,6 @@
 import { FiBookmark, FiTarget, FiBarChart } from "react-icons/fi";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface ProfileTabsProps {
   activeTab: ProfileTabType;
@@ -36,27 +35,31 @@ export default function ProfileTabs({
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6 p-2 bg-muted/50 rounded-xl shadow-sm">
+    <div
+      className="mb-7 mt-10 flex gap-6 overflow-x-auto border-b border-border pr-5 sm:pr-0"
+      role="tablist"
+      aria-label="프로필 메뉴"
+    >
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
 
         return (
-          <Button
+          <button
             key={tab.id}
-            variant={isActive ? "default" : "ghost"}
-            size="sm"
             onClick={() => handleChangeTab(tab.id)}
+            role="tab"
+            aria-selected={isActive}
             className={cn(
-              "flex items-center space-x-2 flex-1 min-w-fit px-4 py-3 rounded-lg transition-all duration-200",
+              "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold transition-colors",
               isActive
-                ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-                : "hover:bg-background text-muted-foreground"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
             <Icon className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">{tab.label}</span>
-          </Button>
+            <span>{tab.label}</span>
+          </button>
         );
       })}
     </div>

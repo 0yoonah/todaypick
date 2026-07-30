@@ -35,7 +35,7 @@ export default function ProfileContainer() {
 
   const renderProfileSkeleton = useMemo(() => {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="space-y-6">
         <Card className="shadow-sm">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
@@ -61,14 +61,26 @@ export default function ProfileContainer() {
   if (loading) return renderProfileSkeleton;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* 프로필 헤더 */}
-      <ProfileHeader />
-      <InterestSettings />
-      {/* 탭 내비게이션 */}
+    <div>
+      <div className="mb-9">
+        <p className="mb-3 text-sm font-semibold text-primary">나의 TodayPick</p>
+        <h1 className="text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
+          학습 기록
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          관심 분야를 관리하고 지금까지 쌓은 학습을 확인하세요.
+        </p>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <ProfileHeader />
+          <InterestSettings />
+        </CardContent>
+      </Card>
+
       <ProfileTabs activeTab={activeTab} handleChangeTab={handleChangeTab} />
-      {/* 탭 컨텐츠 */}
-      {renderActiveTab}
+      <div>{renderActiveTab}</div>
     </div>
   );
 }
