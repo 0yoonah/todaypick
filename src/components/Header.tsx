@@ -150,16 +150,23 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden items-center gap-2 sm:flex">
-              <Link href={ROUTE_PATH.LOGIN}>
-                <Button variant="ghost" className="cursor-pointer">
-                  로그인
+            <>
+              <Button asChild variant="ghost" size="sm" className="h-11 sm:hidden">
+                <Link href={ROUTE_PATH.LOGIN}>로그인</Link>
+              </Button>
+              <div className="hidden items-center gap-2 sm:flex">
+                <Button asChild variant="ghost">
+                  <Link href={ROUTE_PATH.LOGIN}>
+                    로그인
+                  </Link>
                 </Button>
-              </Link>
-              <Link href={ROUTE_PATH.SIGNUP}>
-                <Button className="cursor-pointer">회원가입</Button>
-              </Link>
-            </div>
+                <Button asChild>
+                  <Link href={ROUTE_PATH.SIGNUP}>
+                    회원가입
+                  </Link>
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </div>
