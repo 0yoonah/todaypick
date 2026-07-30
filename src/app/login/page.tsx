@@ -5,8 +5,8 @@ import { Separator } from "@/components/ui/separator";
 
 export default function LoginPage() {
   return (
-    <main className="min-h-[calc(100vh-4.25rem)] bg-background">
-      <div className="mx-auto grid min-h-[calc(100vh-4.25rem)] max-w-6xl items-center gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_28rem] lg:px-8">
+    <main className="min-h-[calc(100dvh-4.25rem)] bg-background">
+      <div className="mx-auto grid min-h-[calc(100dvh-4.25rem)] max-w-6xl items-start gap-12 px-4 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 lg:grid-cols-[1fr_28rem] lg:items-center lg:px-8 lg:py-10">
         <div className="hidden max-w-xl lg:block">
           <p className="mb-4 text-sm font-semibold text-primary">다시 만나 반가워요</p>
           <h1 className="text-5xl font-bold leading-tight tracking-[-0.045em]">
@@ -19,8 +19,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <section className="rounded-2xl border border-border/80 bg-card p-6 shadow-xs sm:p-8">
-          <div className="mb-7">
+        <section className="border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-border/80 sm:bg-card sm:p-8 sm:shadow-xs">
+          <div className="mb-6 sm:mb-7">
             <p className="text-sm font-semibold text-primary lg:hidden">TodayPick</p>
             <h2 className="mt-1 text-2xl font-bold tracking-tight">로그인</h2>
             <p className="mt-2 text-sm text-muted-foreground">
