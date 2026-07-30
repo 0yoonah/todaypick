@@ -88,7 +88,7 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
               src={feed.image_url || ""}
               alt={feed.title}
               fill
-              className={`object-cover transition-opacity duration-200 ${
+              className={`object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105 ${
                 imageLoading ? "opacity-0" : "opacity-100"
               }`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
