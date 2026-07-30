@@ -3,8 +3,13 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import Parser from "rss-parser";
 import { FEED_CATEGORY } from "@/config/constants";
-import { feedSources } from "@/data/feeds";
-import type { Feed, FeedCategory, FeedSource } from "@/types/feed";
+import { getFeedSources } from "@/data/feeds";
+import type {
+  Feed,
+  FeedCategory,
+  FeedSource,
+  RSSFeedCategory,
+} from "@/types/feed";
 import type { InterestId } from "@/config/interests";
 import {
   inferFeedInterests,
@@ -92,8 +97,8 @@ async function fetchRSSFeed(source: FeedSource): Promise<Feed[]> {
   }
 }
 
-async function collectCategoryFeeds(category: FeedCategory): Promise<Feed[]> {
-  const sources = feedSources.filter((source) => source.category === category);
+async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> {
+  const sources = getFeedSources(category);
   const feeds: Feed[] = [];
 
   for (let index = 0; index < sources.length; index += BATCH_SIZE) {
