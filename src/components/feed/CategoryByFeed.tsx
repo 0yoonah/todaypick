@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useCallback } from "react";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useCallback, useEffect } from "react";
 import { FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY } from "@/config/constants";
 import { getValidCategory } from "@/utils/feedUtils";
@@ -10,12 +10,12 @@ import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
+import FeedListState from "@/components/feed/FeedListState";
 
 export default function CategoryByFeed() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
   const validCategory = getValidCategory(category);
-  const router = useRouter();
   const pathname = usePathname();
 
   const {
@@ -27,6 +27,8 @@ export default function CategoryByFeed() {
     handleScrap,
     handleChangeTab,
     fetchNextPage,
+    refetch,
+    error,
   } = useInfiniteFeed({
     category: validCategory,
     limit: 12,
@@ -35,10 +37,22 @@ export default function CategoryByFeed() {
   const handleTabChange = useCallback(
     (tab: FeedCategory) => {
       handleChangeTab(tab);
-      router.push(`${pathname}?category=${tab}`);
+      window.history.pushState(null, "", `${pathname}?category=${tab}`);
     },
-    [handleChangeTab, router, pathname]
+    [handleChangeTab, pathname]
   );
+
+  useEffect(() => {
+    const handleHistoryChange = () => {
+      const nextCategory = getValidCategory(
+        new URLSearchParams(window.location.search).get("category")
+      );
+      handleChangeTab(nextCategory);
+    };
+
+    window.addEventListener("popstate", handleHistoryChange);
+    return () => window.removeEventListener("popstate", handleHistoryChange);
+  }, [handleChangeTab]);
 
   return (
     <div>
@@ -60,20 +74,28 @@ export default function CategoryByFeed() {
       />
 
       <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 12 }).map((_, index) => (
-              <SkeletonFeedCard key={index} />
-            ))
-          : feeds.map((feed) => (
-              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
-            ))}
+        {isLoading ? (
+          Array.from({ length: 12 }).map((_, index) => (
+            <SkeletonFeedCard key={index} />
+          ))
+        ) : error ? (
+          <FeedListState type="error" onRetry={() => void refetch()} />
+        ) : feeds.length === 0 ? (
+          <FeedListState type="empty" />
+        ) : (
+          feeds.map((feed) => (
+            <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+          ))
+        )}
       </div>
 
-      <InfiniteScrollTrigger
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        fetchNextPage={fetchNextPage}
-      />
+      {!error && feeds.length > 0 && (
+        <InfiniteScrollTrigger
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
+      )}
     </div>
   );
 }

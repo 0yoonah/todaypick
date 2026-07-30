@@ -57,6 +57,27 @@ const getScrapedFeeds = async (userId: string, page: number, limit: number) => {
   };
 };
 
+const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
+  if (feedIds.length === 0) return new Set<string>();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scraped_feeds")
+    .select("feed->>id")
+    .eq("user_id", userId)
+    .in("feed->>id", [...new Set(feedIds)]);
+
+  if (error) {
+    throw new Error(`스크랩 상태 조회 실패: ${error.message}`);
+  }
+
+  return new Set(
+    data
+      ?.map(({ id }) => id)
+      .filter((id): id is string => typeof id === "string") ?? []
+  );
+};
+
 export async function GET(request: NextRequest) {
   try {
     const { category, page, limit } = parseFeedParams(request);
@@ -97,14 +118,14 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      const { data: scrapedFeeds } = await supabase
-        .from("scraped_feeds")
-        .select("feed->>id")
-        .eq("user_id", user.id);
+      const scrapedFeedIds = await getScrapedFeedIds(
+        user.id,
+        result.feeds.map(({ id }) => id)
+      );
 
       const feedsWithStatus = result.feeds.map((feed) => ({
         ...feed,
-        is_scraped: scrapedFeeds?.some((item) => item.id === feed.id) || false,
+        is_scraped: scrapedFeedIds.has(feed.id),
       }));
 
       return NextResponse.json({ ...result, feeds: feedsWithStatus });

@@ -6,13 +6,21 @@ import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
+import FeedListState from "@/components/feed/FeedListState";
 
 export default function TodayFeed() {
-  const { isLoading, feeds, activeTab, handleScrap, handleChangeTab } =
-    useInfiniteFeed({
-      category: FEED_CATEGORY.IT_NEWS,
-      limit: 3,
-    });
+  const {
+    isLoading,
+    feeds,
+    activeTab,
+    handleScrap,
+    handleChangeTab,
+    error,
+    refetch,
+  } = useInfiniteFeed({
+    category: FEED_CATEGORY.IT_NEWS,
+    limit: 3,
+  });
 
   return (
     <div>
@@ -41,15 +49,21 @@ export default function TodayFeed() {
       />
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading || feeds.length === 0
-          ? Array.from({ length: 3 }).map((_, index) => (
-              <SkeletonFeedCard key={index} />
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <SkeletonFeedCard key={index} />
+          ))
+        ) : error ? (
+          <FeedListState type="error" onRetry={() => void refetch()} />
+        ) : feeds.length === 0 ? (
+          <FeedListState type="empty" />
+        ) : (
+          feeds
+            .slice(0, 3)
+            .map((feed) => (
+              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
             ))
-          : feeds
-              .slice(0, 3)
-              .map((feed) => (
-                <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
-              ))}
+        )}
       </div>
     </div>
   );
