@@ -15,7 +15,6 @@ import {
   inferFeedInterests,
   sortFeedsByInterests,
 } from "@/utils/feedInterestUtils";
-import { selectFeedImageUrl } from "@/utils/feedImageUtils";
 
 const RSS_REVALIDATE_SECONDS = 15 * 60;
 const RSS_TIMEOUT_MS = 8_000;
@@ -83,20 +82,9 @@ async function fetchRSSFeed(source: FeedSource): Promise<Feed[]> {
           published_at: publishedAt || new Date(0).toISOString(),
           category: source.category,
           image_url:
-            selectFeedImageUrl([
-              {
-                url: item.enclosure?.url,
-                type: item.enclosure?.type,
-              },
-              {
-                url: item["media:content"]?.$?.url,
-                type: item["media:content"]?.$?.type,
-              },
-              {
-                url: item["media:thumbnail"]?.$?.url,
-                type: item["media:thumbnail"]?.$?.type,
-              },
-            ]) ||
+            item.enclosure?.url ||
+            item["media:content"]?.$?.url ||
+            item["media:thumbnail"]?.$?.url ||
             "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center",
           author: item.creator || source.name,
         };
@@ -136,7 +124,7 @@ async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> 
 
 const getCachedCategoryFeeds = unstable_cache(
   collectCategoryFeeds,
-  ["rss-category-feeds-v2"],
+  ["rss-category-feeds-v1"],
   { revalidate: RSS_REVALIDATE_SECONDS }
 );
 

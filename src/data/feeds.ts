@@ -152,12 +152,6 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
   {
-    id: "aws-tech",
-    name: "AWS 기술 블로그",
-    rss_url: "https://aws.amazon.com/ko/blogs/tech/feed/",
-    category: "tech_blog",
-  },
-  {
     id: "44bits",
     name: "44BITS",
     rss_url: "https://www.44bits.io/ko/feed/all",
