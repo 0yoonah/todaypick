@@ -157,6 +157,12 @@ export const feedSources: FeedSource[] = [
     rss_url: "https://www.44bits.io/ko/feed/all",
     category: "tech_blog",
   },
+  {
+    id: "aws-tech",
+    name: "AWS 기술 블로그",
+    rss_url: "https://aws.amazon.com/ko/blogs/tech/feed/",
+    category: "tech_blog",
+  },
 
   // IT 뉴스 (국내)
   {
