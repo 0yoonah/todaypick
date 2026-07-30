@@ -31,19 +31,19 @@ export default function WeeklyLearningReport({
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="border-b bg-muted/30">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <FiCalendar className="text-primary" />
             이번 주 학습 리포트
           </CardTitle>
-          <span className="text-xs text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground">
             {formatDateKey(current.startDate)}–{formatDateKey(current.endDate)}
           </span>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid grid-cols-3 gap-2 max-[360px]:grid-cols-1 sm:gap-4">
           <ReportMetric
             icon={FiCalendar}
             label="학습일"
@@ -53,6 +53,7 @@ export default function WeeklyLearningReport({
           <ReportMetric
             icon={FiTarget}
             label="완료한 퀴즈"
+            mobileLabel="퀴즈"
             value={`${current.quizzesCompleted}개`}
             subtext={`정답률 ${current.accuracyRate}%`}
             delta={comparison.quizzesCompleted}
@@ -60,13 +61,14 @@ export default function WeeklyLearningReport({
           <ReportMetric
             icon={FiBookOpen}
             label="읽거나 저장한 피드"
+            mobileLabel="피드"
             value={`${current.feedsEngaged}개`}
             subtext={`읽기 ${current.feedReads} · 저장 ${current.feedsScraped}`}
             delta={comparison.feedsEngaged}
           />
         </div>
 
-        <div className="mt-5 rounded-xl border bg-muted/30 p-4">
+        <div className="mt-4 rounded-lg border bg-muted/30 p-3 sm:mt-5 sm:rounded-xl sm:p-4">
           {hasActivity ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -101,12 +103,14 @@ export default function WeeklyLearningReport({
 function ReportMetric({
   icon: Icon,
   label,
+  mobileLabel,
   value,
   subtext,
   delta,
 }: {
   icon: typeof FiCalendar;
   label: string;
+  mobileLabel?: string;
   value: string;
   subtext?: string;
   delta: number;
@@ -114,21 +118,16 @@ function ReportMetric({
   const DeltaIcon = delta > 0 ? FiArrowUp : delta < 0 ? FiArrowDown : FiArrowRight;
 
   return (
-    <div className="rounded-xl border p-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icon className="text-primary" />
-        {label}
-      </div>
-      <div className="mt-2 flex items-end justify-between gap-2">
-        <div>
-          <p className="text-2xl font-bold">{value}</p>
-          {subtext && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{subtext}</p>
-          )}
+    <div className="min-w-0 rounded-lg border p-3 sm:rounded-xl sm:p-4">
+      <div className="flex items-start justify-between gap-1">
+        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Icon className="size-3.5 shrink-0 text-primary sm:size-4" />
+          <span className="truncate sm:hidden">{mobileLabel ?? label}</span>
+          <span className="hidden sm:inline">{label}</span>
         </div>
         <span
           className={cn(
-            "flex items-center gap-1 text-xs font-medium",
+            "flex shrink-0 items-center gap-0.5 text-xs font-medium sm:gap-1",
             delta > 0
               ? "text-success"
               : delta < 0
@@ -140,6 +139,14 @@ function ReportMetric({
           <DeltaIcon />
           {delta > 0 ? `+${delta}` : delta}
         </span>
+      </div>
+      <div className="mt-2 min-w-0">
+        <p className="text-xl font-bold sm:text-2xl">{value}</p>
+        {subtext && (
+          <p className="mt-1 text-[10px] leading-tight text-muted-foreground sm:mt-0.5 sm:text-xs">
+            {subtext}
+          </p>
+        )}
       </div>
     </div>
   );

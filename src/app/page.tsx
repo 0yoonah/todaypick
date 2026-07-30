@@ -5,27 +5,25 @@ import TodayQuote from "@/components/quote/TodayQuote";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1080px] px-5 py-8 sm:px-8 sm:py-12">
+        <div className="mb-12">
           <DailyLearningChecklist />
         </div>
 
-        {/* 오늘의 피드 */}
         <section id="today-feed" className="scroll-mt-24">
           <TodayFeed />
         </section>
 
-        {/* 오늘의 IT 퀴즈 */}
-        <section id="today-quiz" className="scroll-mt-24">
-          <TodayQuiz />
-        </section>
-
-        {/* 오늘의 명언 */}
-        <section id="today-quote" className="scroll-mt-24">
-          <TodayQuote />
-        </section>
+        <div className="mt-16 grid gap-14 border-t pt-14 lg:grid-cols-2 lg:gap-10">
+          <section id="today-quiz" className="scroll-mt-24">
+            <TodayQuiz />
+          </section>
+          <section id="today-quote" className="scroll-mt-24">
+            <TodayQuote />
+          </section>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

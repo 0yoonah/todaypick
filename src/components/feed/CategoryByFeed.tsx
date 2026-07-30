@@ -41,12 +41,13 @@ export default function CategoryByFeed() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+    <div>
+      <div className="mb-9 max-w-2xl">
+        <p className="mb-3 text-sm font-semibold text-primary">읽을거리</p>
+        <h1 className="text-3xl font-bold tracking-[-0.03em] text-foreground sm:text-4xl">
           {activeTab === FEED_CATEGORY.IT_NEWS ? "IT 기사" : "테크 블로그"}
-        </h2>
-        <p className="text-muted-foreground text-sm">
+        </h1>
+        <p className="mt-3 text-base leading-relaxed text-muted-foreground">
           {activeTab === FEED_CATEGORY.IT_NEWS
             ? "최신 IT 뉴스와 업계 동향을 확인해보세요."
             : "개발자들의 기술 블로그와 튜토리얼을 확인해보세요."}
@@ -58,7 +59,7 @@ export default function CategoryByFeed() {
         handleChangeTab={handleTabChange}
       />
 
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
         {isLoading
           ? Array.from({ length: 12 }).map((_, index) => (
               <SkeletonFeedCard key={index} />

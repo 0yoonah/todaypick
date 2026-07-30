@@ -12,25 +12,33 @@ export default function FeedCategoryTab({
   handleChangeTab,
 }: FeedCategoryTabProps) {
   return (
-    <div className="flex space-x-1 mb-6 bg-muted/50 rounded-lg p-1 shadow-sm">
+    <div
+      className="mb-7 flex gap-6 border-b border-border"
+      role="tablist"
+      aria-label="피드 종류"
+    >
       <button
         onClick={() => handleChangeTab(FEED_CATEGORY.IT_NEWS)}
+        role="tab"
+        aria-selected={activeTab === FEED_CATEGORY.IT_NEWS}
         className={cn(
-          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
+          "-mb-px border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
           activeTab === FEED_CATEGORY.IT_NEWS
-            ? "bg-background shadow-sm text-primary"
-            : "text-muted-foreground hover:text-primary hover:bg-background/50"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
         )}
       >
         IT 기사
       </button>
       <button
         onClick={() => handleChangeTab(FEED_CATEGORY.TECH_BLOG)}
+        role="tab"
+        aria-selected={activeTab === FEED_CATEGORY.TECH_BLOG}
         className={cn(
-          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
+          "-mb-px border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
           activeTab === FEED_CATEGORY.TECH_BLOG
-            ? "bg-background shadow-sm text-primary"
-            : "text-muted-foreground hover:text-primary hover:bg-background/50"
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
         )}
       >
         테크 블로그

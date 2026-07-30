@@ -5,10 +5,10 @@ export default function SkeletonLearningStatisticsTab() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-72 w-full rounded-xl" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {Array.from({ length: 2 }).map((_, index) => (
           <Card key={index}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <Skeleton className="h-8 w-8 rounded mb-2" />
               <Skeleton className="h-6 w-16 mb-1" />
               <Skeleton className="h-4 w-12" />

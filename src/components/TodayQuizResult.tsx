@@ -16,7 +16,7 @@ export default function TodayQuizResult({
         <p
           className={cn(
             "text-lg font-semibold mb-2",
-            isCorrect ? "text-success" : "text-destructive"
+            isCorrect ? "text-correct" : "text-destructive"
           )}
         >
           {isCorrect ? "🎉 정답입니다!" : "❌ 정답이 아닙니다"}

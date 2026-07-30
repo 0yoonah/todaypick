@@ -41,6 +41,7 @@ export function LoginForm() {
           id={FORM_DATA.EMAIL}
           type={FORM_DATA.EMAIL}
           name={FORM_DATA.EMAIL}
+          autoComplete="email"
           placeholder="이메일을 입력하세요"
           className="h-12"
           required
@@ -56,6 +57,7 @@ export function LoginForm() {
             id={FORM_DATA.PASSWORD}
             type={showPassword ? "text" : FORM_DATA.PASSWORD}
             name={FORM_DATA.PASSWORD}
+            autoComplete="current-password"
             placeholder="비밀번호를 입력하세요"
             className="h-12 pr-12"
             required
@@ -63,7 +65,8 @@ export function LoginForm() {
           <button
             type="button"
             onClick={handleTogglePasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-0.5 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
           >
             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
           </button>

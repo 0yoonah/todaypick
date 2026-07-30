@@ -15,20 +15,20 @@ export default function TodayFeed() {
     });
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              오늘의 피드
+            <h2 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
+              오늘 읽어볼 콘텐츠
             </h2>
-            <p className="text-muted-foreground text-sm">
-              최신 IT 뉴스와 테크 블로그 글을 확인해보세요.
+            <p className="mt-2 text-sm text-muted-foreground">
+              놓치기 아쉬운 IT 소식을 가볍게 골라봤어요.
             </p>
           </div>
           <Link
             href={ROUTE_PATH.FEEDS + "?category=" + activeTab}
-            className="text-sm text-blue-500"
+            className="text-sm font-semibold text-primary hover:underline"
           >
             전체보기
           </Link>
@@ -40,7 +40,7 @@ export default function TodayFeed() {
         handleChangeTab={handleChangeTab}
       />
 
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
         {isLoading || feeds.length === 0
           ? Array.from({ length: 3 }).map((_, index) => (
               <SkeletonFeedCard key={index} />

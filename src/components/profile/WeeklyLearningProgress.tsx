@@ -25,92 +25,102 @@ export default function WeeklyLearningProgress({
 }: WeeklyLearningProgressProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
           <FiCalendar className="h-5 w-5" />
           <span>{getCurrentWeekLabel()} 학습 현황</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-4 md:grid-cols-7 gap-4">
-          {getCurrentWeekDates().map((date) => {
-            const dailyProgress = getLearningProgressByDate(date, statistics);
-            const completedActivities =
-              getCompletedActivitiesCount(dailyProgress);
+      <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:overflow-visible sm:px-0">
+          <div className="grid w-max grid-cols-7 gap-3 sm:w-full sm:gap-4 lg:gap-4">
+            {getCurrentWeekDates().map((date) => {
+              const dailyProgress = getLearningProgressByDate(date, statistics);
+              const completedActivities =
+                getCompletedActivitiesCount(dailyProgress);
 
-            return (
-              <div key={date.toISOString()} className="text-center">
+              return (
                 <div
-                  className={cn(
-                    "flex flex-col items-center mb-2 text-xs",
-                    isToday(date)
-                      ? "text-primary font-bold"
-                      : "text-muted-foreground"
-                  )}
+                  key={date.toISOString()}
+                  className="w-16 text-center sm:w-auto"
                 >
-                  <span>{getDayName(date)}</span>
-                  <span>{getFormattedDate(date)}</span>
-                </div>
-
-                <div className="flex flex-col items-center space-y-2">
-                  <CircularProgressbar
-                    value={getProgressPercentage(completedActivities)}
-                    size={80}
-                    strokeWidth={6}
-                    color={completedActivities === 3 ? "#10b981" : "#3b82f6"}
-                    backgroundColor="#e5e7eb"
-                    showValue={false}
+                  <div
+                    className={cn(
+                      "mb-2 flex flex-col items-center text-xs",
+                      isToday(date)
+                        ? "font-bold text-primary"
+                        : "text-muted-foreground"
+                    )}
                   >
-                    <div className="text-center">
-                      <div className="text-sm font-bold">
-                        {completedActivities}
-                      </div>
-                      <div className="text-xs text-muted-foreground">/3</div>
-                    </div>
-                  </CircularProgressbar>
+                    <span>{getDayName(date)}</span>
+                    <span>{getFormattedDate(date)}</span>
+                  </div>
 
-                  <div className="flex space-x-1">
-                    <div
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        dailyProgress.feedClick ? "bg-blue-500" : "bg-gray-300"
-                      )}
-                    />
-                    <div
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        dailyProgress.quizComplete
-                          ? "bg-green-500"
-                          : "bg-gray-300"
-                      )}
-                    />
-                    <div
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        dailyProgress.quoteView
-                          ? "bg-purple-500"
-                          : "bg-gray-300"
-                      )}
-                    />
+                  <div className="flex flex-col items-center space-y-2">
+                    <CircularProgressbar
+                      value={getProgressPercentage(completedActivities)}
+                      size={80}
+                      strokeWidth={6}
+                      color={
+                        completedActivities === 3
+                          ? "var(--success)"
+                          : "var(--primary)"
+                      }
+                      backgroundColor="var(--muted)"
+                      showValue={false}
+                      className="[&_svg]:size-16 sm:[&_svg]:size-20"
+                    >
+                      <div className="text-center">
+                        <div className="text-sm font-bold">
+                          {completedActivities}
+                        </div>
+                        <div className="text-xs text-muted-foreground">/3</div>
+                      </div>
+                    </CircularProgressbar>
+
+                    <div className="flex space-x-1">
+                      <div
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          dailyProgress.feedClick ? "bg-primary" : "bg-muted"
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          dailyProgress.quizComplete
+                            ? "bg-success"
+                            : "bg-muted"
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          dailyProgress.quoteView
+                            ? "bg-info"
+                            : "bg-muted"
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border">
-          <div className="flex items-center justify-center space-x-6 text-xs text-muted-foreground">
+        <div className="mt-4 border-t border-border pt-4 sm:mt-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:gap-x-6">
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <div className="h-3 w-3 rounded-full bg-primary" />
               <span>피드 확인</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="h-3 w-3 rounded-full bg-success" />
               <span>퀴즈 풀기</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="h-3 w-3 rounded-full bg-info" />
               <span>명언 확인</span>
             </div>
           </div>

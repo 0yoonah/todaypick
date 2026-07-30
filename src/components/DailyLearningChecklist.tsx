@@ -56,16 +56,14 @@ export default function DailyLearningChecklist() {
 
   if (!user) {
     return (
-      <Card className="overflow-hidden bg-card shadow-sm">
-        <CardContent className="p-6">
+      <Card className="overflow-hidden border-0 bg-secondary shadow-none">
+        <CardContent className="p-6 sm:p-8">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-primary">
-              나만의 하루 10분 학습 루틴
-            </p>
-            <h1 className="text-xl font-bold leading-snug tracking-tight sm:text-2xl">
-              오늘의 학습을 하나씩 완료해보세요
+            <p className="text-sm font-semibold text-primary">오늘의 학습</p>
+            <h1 className="text-xl font-bold leading-snug tracking-[-0.025em] sm:text-2xl">
+              오늘 알아둘 내용을 준비했어요
             </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground">
+            <p className="hidden max-w-2xl text-sm text-muted-foreground sm:block">
               로그인하면 피드, 퀴즈, 명언 활동이 자동으로 기록되고 오늘의
               진행률을 확인할 수 있어요.
             </p>
@@ -101,38 +99,32 @@ export default function DailyLearningChecklist() {
     <section aria-labelledby="daily-checklist-title">
       <Card
         className={cn(
-          "overflow-hidden shadow-sm transition-colors",
+          "overflow-hidden border-0 bg-secondary shadow-none transition-colors",
           isComplete && "border-success/40 bg-success/5"
         )}
       >
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <CardContent className="p-6 sm:p-8">
+          <div>
             <div>
-              <p className="text-sm font-semibold text-primary">TODAY ROUTINE</p>
+              <p className="text-sm font-semibold text-primary">오늘의 학습</p>
               <h1
                 id="daily-checklist-title"
-                className="mt-1 text-2xl font-bold tracking-tight"
+                className="mt-1 text-xl font-bold tracking-[-0.025em] sm:text-2xl"
               >
                 {isComplete
                   ? "오늘의 학습을 모두 완료했어요!"
                   : "오늘의 학습 체크리스트"}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                 {isComplete
                   ? "작은 학습을 모두 해낸 멋진 하루예요. 내일도 이어가요."
                   : "세 가지 활동을 완료하고 오늘의 루틴을 채워보세요."}
               </p>
             </div>
-            <div className="shrink-0 text-left sm:text-right">
-              <strong className="text-2xl text-primary">
-                {completedCount}/{CHECKLIST_ITEMS.length}
-              </strong>
-              <p className="text-xs text-muted-foreground">완료</p>
-            </div>
           </div>
 
           <div
-            className="mt-5 h-2 overflow-hidden rounded-full bg-muted"
+            className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-5 sm:h-2"
             role="progressbar"
             aria-label="오늘의 학습 진행률"
             aria-valuemin={0}
@@ -148,7 +140,7 @@ export default function DailyLearningChecklist() {
             />
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="mt-5 divide-y border-t md:grid md:grid-cols-3 md:divide-x md:divide-y-0">
             {CHECKLIST_ITEMS.map((item, index) => {
               const isChecked = state[item.activity];
               const Icon = ITEM_ICONS[index];
@@ -158,15 +150,15 @@ export default function DailyLearningChecklist() {
                   key={item.activity}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "flex items-center gap-2.5 px-1 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3 sm:py-4 md:px-4",
                     isChecked
-                      ? "border-success/30 bg-success/10"
-                      : "hover:border-primary/30 hover:bg-muted/50"
+                      ? "text-success"
+                      : "hover:text-primary"
                   )}
                 >
                   <span
                     className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-full",
+                      "flex size-7 shrink-0 items-center justify-center rounded-full sm:size-8",
                       isChecked
                         ? "bg-success text-white"
                         : "bg-primary/10 text-primary"
@@ -175,8 +167,10 @@ export default function DailyLearningChecklist() {
                     {isChecked ? <FiCheck /> : <Icon />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block font-semibold">{item.title}</span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span className="block text-sm font-semibold sm:text-base">
+                      {item.title}
+                    </span>
+                    <span className="hidden text-xs text-muted-foreground sm:block">
                       {isChecked ? "완료했어요" : item.description}
                     </span>
                   </span>
@@ -202,7 +196,7 @@ function ChecklistSkeleton() {
         <Skeleton className="h-2 w-full rounded-full" />
         <div className="grid gap-3 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-20 rounded-xl" />
+            <Skeleton key={index} className="h-14 rounded-xl sm:h-20" />
           ))}
         </div>
       </CardContent>
