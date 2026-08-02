@@ -12,6 +12,7 @@ import QuizRecordsTab from "@/components/profile/QuizRecordsTab";
 import ScrapedQuotesTab from "@/components/profile/ScrapedQuotesTab";
 import LearningStatisticsTab from "@/components/profile/LearningStatisticsTab";
 import InterestSettings from "@/components/profile/InterestSettings";
+import ReadingHistoryTab from "@/components/profile/ReadingHistoryTab";
 
 export default function ProfileContainer() {
   const { loading } = useAuthStore();
@@ -21,6 +22,8 @@ export default function ProfileContainer() {
 
   const renderActiveTab = useMemo(() => {
     switch (activeTab) {
+      case PROFILE_TAB.READING_HISTORY:
+        return <ReadingHistoryTab />;
       case PROFILE_TAB.QUIZ_RECORDS:
         return <QuizRecordsTab />;
       case PROFILE_TAB.SCRAPED_QUOTES:
