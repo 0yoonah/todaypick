@@ -72,7 +72,7 @@ export default function LearningStatisticsTab() {
             <div className="mb-2 flex items-center space-x-2">
               <FiTrendingUp className="size-5 text-success sm:size-6" />
               <span className="text-sm font-medium text-muted-foreground">
-                연속 학습
+                목표 달성 스트릭
               </span>
             </div>
             <div className="text-xl font-bold sm:text-2xl">
