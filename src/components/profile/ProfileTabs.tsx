@@ -1,4 +1,4 @@
-import { FiBookmark, FiTarget, FiBarChart } from "react-icons/fi";
+import { FiBookmark, FiTarget, FiBarChart, FiClock } from "react-icons/fi";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,11 @@ export default function ProfileTabs({
       id: PROFILE_TAB.SCRAPED_FEEDS,
       label: "스크랩한 피드",
       icon: FiBookmark,
+    },
+    {
+      id: PROFILE_TAB.READING_HISTORY,
+      label: "읽은 글",
+      icon: FiClock,
     },
     {
       id: PROFILE_TAB.QUIZ_RECORDS,

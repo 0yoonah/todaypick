@@ -88,21 +88,20 @@ export async function POST(request: NextRequest) {
       typeof feed.title === "string" &&
       typeof feed.url === "string"
     ) {
-      const { error: feedReadError } = await supabase.from("feed_reads").upsert(
-        {
-          user_id: user.user.id,
-          feed_id: feed.id,
-          read_date: date,
-          feed: {
-            id: feed.id,
-            title: feed.title,
+      const { error: feedReadError } = await supabase.rpc("record_feed_read", {
+        p_feed_id: feed.id,
+        p_read_date: date,
+        p_feed: {
+          id: feed.id,
+          title: feed.title,
             source: typeof feed.source === "string" ? feed.source : "",
             url: feed.url,
+            category: typeof feed.category === "string" ? feed.category : "",
+            published_at:
+              typeof feed.published_at === "string" ? feed.published_at : "",
             interests: parseInterestIds(feed.interests),
-          },
         },
-        { onConflict: "user_id,feed_id,read_date" }
-      );
+      });
 
       if (feedReadError) {
         console.error("피드 읽기 기록 저장 실패:", feedReadError);

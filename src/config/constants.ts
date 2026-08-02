@@ -25,6 +25,7 @@ export const FEED_CATEGORY = {
 // 프로필 탭
 export const PROFILE_TAB = {
   SCRAPED_FEEDS: "scraped_feeds",
+  READING_HISTORY: "reading_history",
   QUIZ_RECORDS: "quiz_records",
   SCRAPED_QUOTES: "scraped_quotes",
   LEARNING_STATISTICS: "learning_statistics",

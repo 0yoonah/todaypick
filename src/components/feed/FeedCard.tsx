@@ -39,6 +39,8 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
             title: feed.title,
             source: feed.source,
             url: feed.url,
+            category: feed.category,
+            published_at: feed.published_at,
             interests: feed.interests ?? [],
           },
         }),
@@ -56,7 +58,9 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
     }
   }, [
     feed.id,
+    feed.category,
     feed.interests,
+    feed.published_at,
     feed.source,
     feed.title,
     feed.url,
