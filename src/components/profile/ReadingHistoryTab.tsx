@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiClock, FiExternalLink, FiTrash2 } from "react-icons/fi";
+import { FiClock, FiTrash2 } from "react-icons/fi";
 import type { FeedReadPage } from "@/types/feed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -118,55 +118,50 @@ export default function ReadingHistoryTab() {
           >
             {formatReadDate(date)}
           </h2>
-          <ul className="space-y-3">
+          <ul>
             {dateReads.map((read) => (
-              <li key={read.id}>
-                <Card>
-                  <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>{read.feed.source || "출처 없음"}</span>
-                        <span aria-hidden>·</span>
-                        <time dateTime={read.last_read_at}>
-                          최근 {formatReadTime(read.last_read_at)}
-                        </time>
-                        {read.read_count > 1 && (
-                          <>
-                            <span className="rounded-full bg-muted px-2 py-0.5">
-                              {read.read_count}회 읽음
-                            </span>
-                            <span>
-                              최초 {formatReadTime(read.first_read_at)}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <h3 className="truncate font-semibold">
-                        {read.feed.title}
-                      </h3>
+              <li key={read.id} className="border-b border-border">
+                <div className="flex items-start justify-between gap-4 py-5">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{read.feed.source || "출처 없음"}</span>
+                      <span aria-hidden>·</span>
+                      <time dateTime={read.last_read_at}>
+                        최근 {formatReadTime(read.last_read_at)}
+                      </time>
+                      {read.read_count > 1 && (
+                        <>
+                          <span className="rounded-full bg-muted px-2 py-0.5">
+                            {read.read_count}회 읽음
+                          </span>
+                          <span>
+                            최초 {formatReadTime(read.first_read_at)}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <div className="flex shrink-0 gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link
-                          href={read.feed.url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          원문 보기 <FiExternalLink aria-hidden />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`${read.feed.title} 읽기 기록 삭제`}
-                        disabled={deleteMutation.isPending}
-                        onClick={() => deleteMutation.mutate(read.id)}
+                    <h3 className="font-semibold leading-snug">
+                      <Link
+                        href={read.feed.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
-                        <FiTrash2 aria-hidden />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                        {read.feed.title}
+                      </Link>
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label={`${read.feed.title} 읽기 기록 삭제`}
+                    disabled={deleteMutation.isPending}
+                    onClick={() => deleteMutation.mutate(read.id)}
+                  >
+                    <FiTrash2 aria-hidden />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
