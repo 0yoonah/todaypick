@@ -7,8 +7,9 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { FiClock, FiInfo, FiTrash2 } from "react-icons/fi";
+import { FiClock, FiEdit3, FiInfo, FiTrash2 } from "react-icons/fi";
 import type { FeedReadPage } from "@/types/feed";
+import type { WritingDraft } from "@/types/writing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +46,11 @@ const formatReadDate = (value: string) => {
   }).format(new Date(`${value}T00:00:00+09:00`));
 };
 
-export default function ReadingHistoryTab() {
+export default function ReadingHistoryTab({
+  onStartWriting,
+}: {
+  onStartWriting: (draft: WritingDraft) => void;
+}) {
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const query = useInfiniteQuery({
@@ -73,6 +78,25 @@ export default function ReadingHistoryTab() {
     onSuccess: () => {
       setSelectedIds(new Set());
       queryClient.invalidateQueries({ queryKey: ["feed-reads"] });
+    },
+  });
+  const createDraftMutation = useMutation({
+    mutationFn: async () => {
+      const sources = reads
+        .filter((read) => selectedIds.has(read.id))
+        .map(({ feed }) => feed);
+      const response = await fetch("/api/writing-drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "", content: "", tags: [], sources }),
+      });
+      if (!response.ok) throw new Error("글 초안을 만들지 못했습니다.");
+      return response.json() as Promise<WritingDraft>;
+    },
+    onSuccess: (draft) => {
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["writing-drafts"] });
+      onStartWriting(draft);
     },
   });
 
@@ -167,19 +191,34 @@ export default function ReadingHistoryTab() {
           현재 목록 전체 선택
         </label>
         {selectedIds.size > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate([...selectedIds])}
-          >
-            <FiTrash2 aria-hidden />
-            {deleteMutation.isPending
-              ? "삭제하는 중..."
-              : `${selectedIds.size}개 삭제`}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={createDraftMutation.isPending}
+              onClick={() => createDraftMutation.mutate()}
+            >
+              <FiEdit3 aria-hidden />
+              {createDraftMutation.isPending
+                ? "초안 만드는 중..."
+                : `${selectedIds.size}개 글로 쓰기`}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate([...selectedIds])}
+            >
+              <FiTrash2 aria-hidden />
+              {deleteMutation.isPending
+                ? "삭제하는 중..."
+                : `${selectedIds.size}개 삭제`}
+            </Button>
+          </div>
         )}
       </div>
+      {createDraftMutation.error && (
+        <p className="text-sm text-destructive">{createDraftMutation.error.message}</p>
+      )}
       {[...readsByDate].map(([date, dateReads]) => (
         <section key={date} aria-labelledby={`read-date-${date}`}>
           <h2
