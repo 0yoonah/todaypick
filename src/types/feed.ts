@@ -2,6 +2,10 @@ import { FEED_CATEGORY } from "@/config/constants";
 import type { InterestId } from "@/config/interests";
 
 export type FeedCategory = (typeof FEED_CATEGORY)[keyof typeof FEED_CATEGORY];
+export type RSSFeedCategory = Exclude<
+  FeedCategory,
+  typeof FEED_CATEGORY.SCRAPED
+>;
 
 export type Feed = {
   id: string;
@@ -21,5 +25,6 @@ export type FeedSource = {
   id: string;
   name: string;
   rss_url: string;
-  category: FeedCategory;
+  category: RSSFeedCategory;
+  enabled?: boolean;
 };

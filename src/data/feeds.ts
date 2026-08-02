@@ -1,6 +1,5 @@
-import { FeedSource } from "@/types/feed";
+import type { FeedSource, RSSFeedCategory } from "@/types/feed";
 
-// is_active 필드 제거
 export const feedSources: FeedSource[] = [
   {
     id: "musinsa",
@@ -12,12 +11,6 @@ export const feedSources: FeedSource[] = [
     id: "naver-d2",
     name: "네이버 D2",
     rss_url: "https://d2.naver.com/d2.atom",
-    category: "tech_blog",
-  },
-  {
-    id: "kurly",
-    name: "마켓컬리",
-    rss_url: "https://helloworld.kurly.com/feed.xml",
     category: "tech_blog",
   },
   {
@@ -99,18 +92,6 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
   {
-    id: "socar",
-    name: "쏘카",
-    rss_url: "https://tech.socarcorp.kr/feed",
-    category: "tech_blog",
-  },
-  {
-    id: "ridi",
-    name: "리디",
-    rss_url: "https://www.ridicorp.com/feed",
-    category: "tech_blog",
-  },
-  {
     id: "nhn-toast",
     name: "NHN Toast",
     rss_url: "https://meetup.toast.com/rss",
@@ -165,15 +146,21 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
   {
-    id: "yanolja",
-    name: "야놀자",
-    rss_url: "https://yanolja.github.io/feed",
-    category: "tech_blog",
-  },
-  {
     id: "inflab",
     name: "인프랩",
     rss_url: "https://tech.inflab.com/rss.xml",
+    category: "tech_blog",
+  },
+  {
+    id: "44bits",
+    name: "44BITS",
+    rss_url: "https://www.44bits.io/ko/feed/all",
+    category: "tech_blog",
+  },
+  {
+    id: "aws-tech",
+    name: "AWS 기술 블로그",
+    rss_url: "https://aws.amazon.com/ko/blogs/tech/feed/",
     category: "tech_blog",
   },
 
@@ -181,7 +168,7 @@ export const feedSources: FeedSource[] = [
   {
     id: "it-daily",
     name: "IT데일리",
-    rss_url: "https://www.itdaily.kr/rss/S1N1.xml",
+    rss_url: "https://www.itdaily.kr/rss/allArticle.xml",
     category: "it_news",
   },
   {
@@ -190,7 +177,19 @@ export const feedSources: FeedSource[] = [
     rss_url: "https://it.donga.com/feeds/rss/",
     category: "it_news",
   },
+  {
+    id: "geeknews",
+    name: "GeekNews",
+    rss_url: "https://news.hada.io/rss/news",
+    category: "it_news",
+  },
 ];
+
+export function getFeedSources(category: RSSFeedCategory): FeedSource[] {
+  return feedSources.filter(
+    (source) => source.category === category && source.enabled !== false
+  );
+}
 
 export const feedCategories = [
   {

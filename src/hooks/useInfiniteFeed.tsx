@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   useInfiniteQuery,
@@ -67,6 +67,8 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
     queryFn: ({ pageParam }) =>
       fetchFeeds({ category: activeTab, pageParam, limit }),
     initialPageParam: 1,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     getNextPageParam: (lastPage) => {
       return lastPage.currentPage < lastPage.totalPages
         ? lastPage.currentPage + 1
@@ -74,10 +76,13 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
     },
   });
 
-  const allFeeds = data?.pages.flatMap((page) => page.feeds) || [];
-  const uniqueFeeds = allFeeds.filter(
-    (feed, index, self) => index === self.findIndex((f) => f.id === feed.id)
-  );
+  const uniqueFeeds = useMemo(() => {
+    const feedsById = new Map<string, Feed>();
+    for (const feed of data?.pages.flatMap((page) => page.feeds) ?? []) {
+      if (!feedsById.has(feed.id)) feedsById.set(feed.id, feed);
+    }
+    return [...feedsById.values()];
+  }, [data?.pages]);
 
   const scrapMutation = useMutation({
     mutationFn: async (feed: Feed) => {
