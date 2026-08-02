@@ -15,7 +15,6 @@ import {
   inferFeedInterests,
   sortFeedsByInterests,
 } from "@/utils/feedInterestUtils";
-import { selectFeedImageUrl } from "@/utils/feedImageUtils";
 import {
   assertRssContentType,
   assertSafeRssUrl,
@@ -31,10 +30,8 @@ const RSS_MAX_REDIRECTS = 3;
 const MAX_ITEMS_PER_SOURCE = 20;
 const BATCH_SIZE = 5;
 const MAX_TITLE_LENGTH = 200;
-const MAX_DESCRIPTION_LENGTH = 300;
+const MAX_DESCRIPTION_LENGTH = 180;
 const MAX_AUTHOR_LENGTH = 100;
-const DEFAULT_FEED_IMAGE_URL =
-  "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center";
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 
 function cleanText(value: unknown, maxLength: number): string {
@@ -153,13 +150,6 @@ async function fetchRSSFeed(
         if (!url) return [];
 
         const publishedAt = item.pubDate || item.isoDate || "";
-        const htmlValues = [
-          item["content:encoded"],
-          item.content,
-          item.description,
-          item.summary,
-        ];
-
         const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
           title: cleanText(
@@ -174,36 +164,6 @@ async function fetchRSSFeed(
           source: source.name,
           published_at: publishedAt || new Date(0).toISOString(),
           category: source.category,
-          image_url:
-            selectFeedImageUrl(
-              [
-                {
-                  url: item.enclosure?.url,
-                  type: item.enclosure?.type,
-                },
-                {
-                  url: item["media:content"]?.$?.url,
-                  type: item["media:content"]?.$?.type,
-                },
-                {
-                  url: item["media:thumbnail"]?.$?.url,
-                  type: item["media:thumbnail"]?.$?.type,
-                },
-                {
-                  url: parsedFeed.image?.url,
-                  type: "image/*",
-                },
-                {
-                  url: parsedFeed.logo,
-                  type: "image/*",
-                },
-                {
-                  url: parsedFeed.icon,
-                  type: "image/*",
-                },
-              ],
-              htmlValues
-            ) || DEFAULT_FEED_IMAGE_URL,
           author: cleanText(
             item.creator || source.name,
             MAX_AUTHOR_LENGTH
@@ -264,7 +224,7 @@ async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> 
 
 const getCachedCategoryFeeds = unstable_cache(
   collectCategoryFeeds,
-  ["rss-category-feeds-v6"],
+  ["rss-category-feeds-v7"],
   { revalidate: RSS_REVALIDATE_SECONDS }
 );
 

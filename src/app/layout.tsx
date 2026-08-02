@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
 import MobileBottomNavigation from "@/components/MobileBottomNavigation";
+import SiteFooter from "@/components/SiteFooter";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({
           <AuthProvider>
             <Header />
             {children}
+            <SiteFooter />
             <MobileBottomNavigation />
           </AuthProvider>
         </QueryProvider>

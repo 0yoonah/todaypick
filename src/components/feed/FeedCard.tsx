@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
+import { FiExternalLink } from "react-icons/fi";
 import { Feed } from "@/types/feed";
 import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,6 @@ interface FeedCardProps {
 }
 
 export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
-  const [imageLoading, setImageLoading] = useState(true);
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
@@ -73,28 +72,15 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
       <Link
         href={feed.url || ""}
         target="_blank"
+        rel="noopener noreferrer"
         onClick={handleFeedClick}
         className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <Card className="h-full overflow-hidden border-0 bg-transparent py-0 shadow-none">
-          {/* 이미지 섹션 */}
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-            {imageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/20 border-t-primary"></div>
-              </div>
-            )}
-            <Image
-              src={feed.image_url || ""}
-              alt={feed.title}
-              fill
-              className={`object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105 ${
-                imageLoading ? "opacity-0" : "opacity-100"
-              }`}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              onLoad={() => setImageLoading(false)}
-              onError={() => setImageLoading(false)}
-            />
+          <div className="flex aspect-[16/7] w-full items-end overflow-hidden rounded-lg bg-muted px-5 py-4">
+            <span className="line-clamp-2 text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+              {feed.source}에서 제공한 콘텐츠
+            </span>
           </div>
 
           <CardHeader className="px-0 pt-4 pb-2">
@@ -114,11 +100,13 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
             <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
               {feed.description}
             </p>
-            {feed.author && (
-              <span className="text-xs text-muted-foreground">
-                by {feed.author}
+            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              {feed.author ? <span>작성자 {feed.author}</span> : <span />}
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                원문 보기
+                <FiExternalLink aria-hidden />
               </span>
-            )}
+            </div>
           </CardContent>
         </Card>
       </Link>

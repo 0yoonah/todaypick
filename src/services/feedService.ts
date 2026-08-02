@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { Feed } from "@/types/feed";
+import { prepareFeedForStorage } from "@/utils/feedRightsUtils";
 
 // 메인 서비스 클래스
 export class FeedService {
@@ -29,7 +30,7 @@ export class FeedService {
     } else {
       const { error } = await scrapedFeedsTable.insert({
         user_id: user.user.id,
-        feed: feed,
+        feed: prepareFeedForStorage(feed),
       });
 
       if (error) {

@@ -7,8 +7,7 @@ export default function SkeletonFeedCard() {
       {/* 스크랩 버튼 스켈레톤 - 우측 상단 */}
       <Skeleton className="absolute top-3 right-3 w-10 h-10 rounded-full z-20" />
 
-      {/* 이미지 스켈레톤 */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <div className="relative aspect-[16/7] w-full overflow-hidden">
         <Skeleton className="w-full h-full" />
       </div>
 
