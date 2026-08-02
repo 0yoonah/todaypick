@@ -9,6 +9,8 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
   feed_clicked: false,
   quiz_completed: false,
   quote_viewed: false,
+  reading_goal: 3,
+  read_count: 0,
 };
 
 export const dailyActivityQueryKey = (userId: string, date: string) =>
@@ -39,6 +41,8 @@ export function markDailyActivityCompleted(
       feed_clicked: current?.feed_clicked ?? false,
       quiz_completed: current?.quiz_completed ?? false,
       quote_viewed: current?.quote_viewed ?? false,
+      reading_goal: current?.reading_goal ?? 3,
+      read_count: current?.read_count ?? 0,
       ...current,
       [activity]: true,
     })
