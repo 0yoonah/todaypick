@@ -31,15 +31,6 @@ const formatReadTime = (value: string) =>
     minute: "2-digit",
   }).format(new Date(value));
 
-const formatReadDate = (value: string) =>
-  new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  }).format(new Date(`${value}T00:00:00+09:00`));
-
 export default function ReadingHistoryTab() {
   const queryClient = useQueryClient();
   const query = useInfiniteQuery({
@@ -62,12 +53,6 @@ export default function ReadingHistoryTab() {
   });
 
   const reads = query.data?.pages.flatMap((page) => page.reads) ?? [];
-  const readsByDate = reads.reduce<Map<string, typeof reads>>((groups, read) => {
-    const dateReads = groups.get(read.read_date) ?? [];
-    dateReads.push(read);
-    groups.set(read.read_date, dateReads);
-    return groups;
-  }, new Map());
 
   if (query.isLoading) {
     return (
@@ -110,63 +95,51 @@ export default function ReadingHistoryTab() {
 
   return (
     <div className="space-y-4">
-      {[...readsByDate].map(([date, dateReads]) => (
-        <section key={date} aria-labelledby={`read-date-${date}`}>
-          <h2
-            id={`read-date-${date}`}
-            className="mb-3 text-sm font-semibold text-muted-foreground"
-          >
-            {formatReadDate(date)}
-          </h2>
-          <ul>
-            {dateReads.map((read) => (
-              <li key={read.id} className="border-b border-border">
-                <div className="flex items-start justify-between gap-4 py-5">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{read.feed.source || "출처 없음"}</span>
-                      <span aria-hidden>·</span>
-                      <time dateTime={read.last_read_at}>
-                        최근 {formatReadTime(read.last_read_at)}
-                      </time>
-                      {read.read_count > 1 && (
-                        <>
-                          <span className="rounded-full bg-muted px-2 py-0.5">
-                            {read.read_count}회 읽음
-                          </span>
-                          <span>
-                            최초 {formatReadTime(read.first_read_at)}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <h3 className="font-semibold leading-snug">
-                      <Link
-                        href={read.feed.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        {read.feed.title}
-                      </Link>
-                    </h3>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0"
-                    aria-label={`${read.feed.title} 읽기 기록 삭제`}
-                    disabled={deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate(read.id)}
-                  >
-                    <FiTrash2 aria-hidden />
-                  </Button>
+      <ul aria-label="읽은 글 히스토리">
+        {reads.map((read) => (
+          <li key={read.id} className="border-b border-border">
+            <div className="flex items-start justify-between gap-4 py-5">
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{read.feed.source || "출처 없음"}</span>
+                  <span aria-hidden>·</span>
+                  <time dateTime={read.last_read_at}>
+                    최근 {formatReadTime(read.last_read_at)}
+                  </time>
+                  {read.read_count > 1 && (
+                    <>
+                      <span className="rounded-full bg-muted px-2 py-0.5">
+                        {read.read_count}회 읽음
+                      </span>
+                      <span>최초 {formatReadTime(read.first_read_at)}</span>
+                    </>
+                  )}
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+                <h2 className="font-semibold leading-snug">
+                  <Link
+                    href={read.feed.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {read.feed.title}
+                  </Link>
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label={`${read.feed.title} 읽기 기록 삭제`}
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(read.id)}
+              >
+                <FiTrash2 aria-hidden />
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
       {query.hasNextPage && (
         <div className="flex justify-center pt-2">
           <Button
