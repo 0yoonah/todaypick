@@ -19,4 +19,21 @@ describe("RSS feed source configuration", () => {
       techBlogSources.every((source) => source.category === "tech_blog")
     ).toBe(true);
   });
+
+  it("excludes sources disabled through configuration", () => {
+    const disabledSource = {
+      id: "disabled-test-source",
+      name: "비활성 테스트 소스",
+      rss_url: "https://example.com/feed.xml",
+      category: "tech_blog" as const,
+      enabled: false,
+    };
+
+    feedSources.push(disabledSource);
+    try {
+      expect(getFeedSources("tech_blog")).not.toContain(disabledSource);
+    } finally {
+      feedSources.pop();
+    }
+  });
 });

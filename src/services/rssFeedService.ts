@@ -167,7 +167,7 @@ async function fetchRSSFeed(
             MAX_TITLE_LENGTH
           ),
           description: cleanText(
-            item.contentSnippet || item.content || item.description || "",
+            item.content || item.description || item.contentSnippet || "",
             MAX_DESCRIPTION_LENGTH
           ),
           url,
