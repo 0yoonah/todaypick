@@ -186,7 +186,9 @@ export const feedSources: FeedSource[] = [
 ];
 
 export function getFeedSources(category: RSSFeedCategory): FeedSource[] {
-  return feedSources.filter((source) => source.category === category);
+  return feedSources.filter(
+    (source) => source.category === category && source.enabled !== false
+  );
 }
 
 export const feedCategories = [

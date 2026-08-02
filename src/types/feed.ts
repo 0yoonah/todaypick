@@ -26,4 +26,5 @@ export type FeedSource = {
   name: string;
   rss_url: string;
   category: RSSFeedCategory;
+  enabled?: boolean;
 };
