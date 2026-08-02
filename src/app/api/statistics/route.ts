@@ -75,6 +75,12 @@ export async function GET() {
     const currentWeekDates = getCurrentWeekDateKeys();
     const previousWeekDates = getWeekDateKeys(new Date(), -1);
     const weeklyStatistics = [];
+    const readIdsByDate = new Map<string, Set<string>>();
+    for (const read of feedReads ?? []) {
+      const ids = readIdsByDate.get(read.read_date) ?? new Set<string>();
+      ids.add(read.feed_id);
+      readIdsByDate.set(read.read_date, ids);
+    }
 
     for (const dateStr of currentWeekDates) {
       // 해당 날짜의 일일 활동 찾기
@@ -83,7 +89,9 @@ export async function GET() {
       );
 
       const dailyProgress = {
-        feedClick: dayActivity?.feed_clicked || false,
+        feedClick:
+          (readIdsByDate.get(dateStr)?.size ?? 0) >=
+          (dayActivity?.reading_goal ?? 3),
         quizComplete: dayActivity?.quiz_completed || false,
         quoteView: dayActivity?.quote_viewed || false,
       };
@@ -131,16 +139,22 @@ export async function GET() {
       })),
     ];
     const toDateKey = (value: string) => getSeoulDateKey(new Date(value));
+    const goalAwareDailyActivities = (dailyActivities ?? []).map((activity) => ({
+      ...activity,
+      readingGoalCompleted:
+        (readIdsByDate.get(activity.date)?.size ?? 0) >=
+        (activity.reading_goal ?? 3),
+    }));
     const currentReport = createWeeklyReport(
       currentWeekDates,
-      dailyActivities || [],
+      goalAwareDailyActivities,
       quizResults || [],
       feedActivities,
       toDateKey
     );
     const previousReport = createWeeklyReport(
       previousWeekDates,
-      dailyActivities || [],
+      goalAwareDailyActivities,
       quizResults || [],
       feedActivities,
       toDateKey

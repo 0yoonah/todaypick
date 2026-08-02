@@ -11,6 +11,7 @@ import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 import FeedListState from "@/components/feed/FeedListState";
+import ReadingGoalProgress from "@/components/ReadingGoalProgress";
 
 export default function CategoryByFeed() {
   const searchParams = useSearchParams();
@@ -66,6 +67,10 @@ export default function CategoryByFeed() {
             ? "최신 IT 뉴스와 업계 동향을 확인해보세요."
             : "개발자들의 기술 블로그와 튜토리얼을 확인해보세요."}
         </p>
+      </div>
+
+      <div className="mb-8">
+        <ReadingGoalProgress />
       </div>
 
       <FeedCategoryTab

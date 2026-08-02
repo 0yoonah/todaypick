@@ -13,6 +13,10 @@ export interface DatedFeedActivity {
   kind: "read" | "scraped";
 }
 
+type GoalAwareDailyActivity = DailyLearningActivity & {
+  readingGoalCompleted?: boolean;
+};
+
 export interface WeeklyReportSummary {
   startDate: string;
   endDate: string;
@@ -35,7 +39,7 @@ export interface WeeklyReportComparison {
 
 export function createWeeklyReport(
   dateKeys: string[],
-  dailyActivities: DailyLearningActivity[],
+  dailyActivities: GoalAwareDailyActivity[],
   quizResults: DatedQuizResult[],
   feedActivities: DatedFeedActivity[],
   toDateKey: (value: string) => string
@@ -72,8 +76,8 @@ export function createWeeklyReport(
         feed_clicked || quiz_completed || quote_viewed
     ).length,
     completedGoalDays: weekActivities.filter(
-      ({ feed_clicked, quiz_completed, quote_viewed }) =>
-        feed_clicked && quiz_completed && quote_viewed
+      ({ feed_clicked, quiz_completed, quote_viewed, readingGoalCompleted }) =>
+        (readingGoalCompleted ?? feed_clicked) && quiz_completed && quote_viewed
     ).length,
     quizzesCompleted: weekQuizzes.length,
     correctQuizzes,

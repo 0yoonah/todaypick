@@ -77,6 +77,27 @@ describe("주간 학습 리포트", () => {
     expect(report.topInterest).toBe("frontend");
   });
 
+  it("읽기 활동이 있어도 날짜별 읽기 목표를 채워야 완료일로 집계한다", () => {
+    const report = createWeeklyReport(
+      dateKeys,
+      [
+        {
+          date: "2026-07-27",
+          feed_clicked: true,
+          quiz_completed: true,
+          quote_viewed: true,
+          readingGoalCompleted: false,
+        },
+      ],
+      [],
+      [],
+      toDateKey
+    );
+
+    expect(report.learningDays).toBe(1);
+    expect(report.completedGoalDays).toBe(0);
+  });
+
   it("지난주 대비 증감을 계산한다", () => {
     const current = createWeeklyReport(dateKeys, [], [], [], toDateKey);
     const previous = {

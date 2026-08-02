@@ -174,6 +174,19 @@ export default function DailyLearningChecklist() {
                       {isChecked ? "완료했어요" : item.description}
                     </span>
                   </span>
+                  {item.activity === "feed_clicked" && (
+                    <span
+                      className={cn(
+                        "ml-auto shrink-0 rounded-full px-2 py-1 text-xs font-semibold",
+                        isChecked
+                          ? "bg-success/10 text-success"
+                          : "bg-primary/10 text-primary"
+                      )}
+                      aria-label={`오늘 ${state.read_count ?? 0}개 읽음, 목표 ${state.reading_goal ?? 3}개`}
+                    >
+                      {state.read_count ?? 0}/{state.reading_goal ?? 3}
+                    </span>
+                  )}
                 </Link>
               );
             })}

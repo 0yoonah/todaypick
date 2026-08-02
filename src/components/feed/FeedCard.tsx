@@ -11,7 +11,7 @@ import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
 import { getSeoulDateKey } from "@/utils/dateUtils";
 import { useAuthStore } from "@/stores/authStore";
-import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
+import { dailyActivityQueryKey } from "@/utils/dailyActivityUtils";
 
 interface FeedCardProps {
   feed: Feed;
@@ -47,12 +47,9 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
       });
       if (!response.ok) return;
 
-      markDailyActivityCompleted(
-        queryClient,
-        user.id,
-        getSeoulDateKey(),
-        "feed_clicked"
-      );
+      queryClient.invalidateQueries({
+        queryKey: dailyActivityQueryKey(user.id, getSeoulDateKey()),
+      });
     } catch (error) {
       console.error("피드 클릭 기록 저장 실패:", error);
     }

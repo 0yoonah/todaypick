@@ -13,6 +13,7 @@ import ScrapedQuotesTab from "@/components/profile/ScrapedQuotesTab";
 import LearningStatisticsTab from "@/components/profile/LearningStatisticsTab";
 import InterestSettings from "@/components/profile/InterestSettings";
 import ReadingHistoryTab from "@/components/profile/ReadingHistoryTab";
+import ReadingGoalSettings from "@/components/profile/ReadingGoalSettings";
 
 export default function ProfileContainer() {
   const { loading } = useAuthStore();
@@ -79,6 +80,7 @@ export default function ProfileContainer() {
         <CardContent className="p-0">
           <ProfileHeader />
           <InterestSettings />
+          <ReadingGoalSettings />
         </CardContent>
       </Card>
 
