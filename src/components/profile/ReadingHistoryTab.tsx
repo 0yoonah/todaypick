@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiClock, FiTrash2 } from "react-icons/fi";
+import { useState } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { FiClock, FiInfo, FiTrash2 } from "react-icons/fi";
 import type { FeedReadPage } from "@/types/feed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
+import { addDaysToDateKey, getSeoulDateKey } from "@/utils/dateUtils";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 const fetchFeedReads = async (page: number) => {
   const response = await fetch(
@@ -21,18 +28,26 @@ const fetchFeedReads = async (page: number) => {
   return result as FeedReadPage;
 };
 
-const formatReadTime = (value: string) =>
-  new Intl.DateTimeFormat("ko-KR", {
+const formatReadDate = (value: string) => {
+  const today = getSeoulDateKey();
+  if (value === today) return "오늘";
+  if (value === addDaysToDateKey(today, -1)) return "어제";
+
+  const currentYear = Number(today.slice(0, 4));
+  const valueYear = Number(value.slice(0, 4));
+
+  return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
-    year: "numeric",
+    ...(valueYear !== currentYear && { year: "numeric" }),
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+    weekday: "short",
+  }).format(new Date(`${value}T00:00:00+09:00`));
+};
 
 export default function ReadingHistoryTab() {
   const queryClient = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const query = useInfiniteQuery({
     queryKey: ["feed-reads"],
     queryFn: ({ pageParam }) => fetchFeedReads(pageParam),
@@ -43,16 +58,54 @@ export default function ReadingHistoryTab() {
         : undefined,
   });
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/feed-reads?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("읽은 글 기록을 삭제하지 못했습니다.");
+    mutationFn: async (ids: string[]) => {
+      for (let index = 0; index < ids.length; index += 50) {
+        const response = await fetch("/api/feed-reads", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: ids.slice(index, index + 50) }),
+        });
+        if (!response.ok) {
+          throw new Error("읽은 글 기록을 삭제하지 못했습니다.");
+        }
+      }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["feed-reads"] }),
+    onSuccess: () => {
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["feed-reads"] });
+    },
   });
 
   const reads = query.data?.pages.flatMap((page) => page.reads) ?? [];
+  const readsByDate = reads.reduce<Map<string, typeof reads>>(
+    (groups, read) => {
+      const dateReads = groups.get(read.read_date) ?? [];
+      dateReads.push(read);
+      groups.set(read.read_date, dateReads);
+      return groups;
+    },
+    new Map()
+  );
+  const allVisibleSelected =
+    reads.length > 0 && reads.every((read) => selectedIds.has(read.id));
+
+  const toggleRead = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllVisible = () => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (allVisibleSelected) reads.forEach((read) => next.delete(read.id));
+      else reads.forEach((read) => next.add(read.id));
+      return next;
+    });
+  };
 
   if (query.isLoading) {
     return (
@@ -95,62 +148,88 @@ export default function ReadingHistoryTab() {
 
   return (
     <div className="space-y-4">
-      <ul aria-label="읽은 글 히스토리">
-        {reads.map((read) => (
-          <li key={read.id} className="border-b border-border">
-            <div className="flex items-start justify-between gap-4 py-5">
-              <div className="min-w-0 flex-1">
-                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>{read.feed.source || "출처 없음"}</span>
-                  <span aria-hidden>·</span>
-                  <time dateTime={read.last_read_at}>
-                    최근 {formatReadTime(read.last_read_at)}
-                  </time>
-                  {read.read_count > 1 && (
-                    <>
-                      <span className="rounded-full bg-muted px-2 py-0.5">
-                        {read.read_count}회 읽음
-                      </span>
-                      <span>최초 {formatReadTime(read.first_read_at)}</span>
-                    </>
-                  )}
-                </div>
-                <h2 className="font-semibold leading-snug">
-                  <Link
-                    href={read.feed.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {read.feed.title}
-                  </Link>
-                </h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                aria-label={`${read.feed.title} 읽기 기록 삭제`}
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate(read.id)}
-              >
-                <FiTrash2 aria-hidden />
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {query.hasNextPage && (
-        <div className="flex justify-center pt-2">
+      <div className="flex items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <FiInfo className="size-4" aria-hidden />
+        </span>
+        <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          최근 30일 동안 읽은 글을 최대 100개까지 보여드려요.
+        </p>
+      </div>
+      <div className="flex min-h-10 items-center justify-between gap-4">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            className="size-4 rounded border-border accent-primary"
+            checked={allVisibleSelected}
+            onChange={toggleAllVisible}
+          />
+          현재 목록 전체 선택
+        </label>
+        {selectedIds.size > 0 && (
           <Button
             variant="outline"
-            disabled={query.isFetchingNextPage}
-            onClick={() => query.fetchNextPage()}
+            size="sm"
+            disabled={deleteMutation.isPending}
+            onClick={() => deleteMutation.mutate([...selectedIds])}
           >
-            {query.isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+            <FiTrash2 aria-hidden />
+            {deleteMutation.isPending
+              ? "삭제하는 중..."
+              : `${selectedIds.size}개 삭제`}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
+      {[...readsByDate].map(([date, dateReads]) => (
+        <section key={date} aria-labelledby={`read-date-${date}`}>
+          <h2
+            id={`read-date-${date}`}
+            className="mb-1 text-sm font-semibold text-muted-foreground"
+          >
+            {formatReadDate(date)}
+          </h2>
+          <ul>
+            {dateReads.map((read) => (
+              <li key={read.id} className="border-b border-border">
+                <div className="flex items-start justify-between gap-4 py-5">
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4 shrink-0 rounded border-border accent-primary"
+                    checked={selectedIds.has(read.id)}
+                    onChange={() => toggleRead(read.id)}
+                    aria-label={`${read.feed.title} 선택`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{read.feed.source || "출처 없음"}</span>
+                      {read.read_count > 1 && (
+                        <span className="rounded-full bg-muted px-2 py-0.5">
+                          {read.read_count}회 읽음
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold leading-snug">
+                      <Link
+                        href={read.feed.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        {read.feed.title}
+                      </Link>
+                    </h3>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <InfiniteScrollTrigger
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        fetchNextPage={query.fetchNextPage}
+      />
     </div>
   );
 }

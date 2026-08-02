@@ -41,7 +41,7 @@ export default function ProfileTabs({
 
   return (
     <div
-      className="mb-7 mt-10 flex gap-6 overflow-x-auto border-b border-border pr-5 sm:pr-0"
+      className="mb-7 mt-10 flex gap-6 overflow-x-auto overflow-y-hidden border-b border-border pr-5 sm:pr-0"
       role="tablist"
       aria-label="프로필 메뉴"
     >
