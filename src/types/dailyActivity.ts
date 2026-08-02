@@ -8,6 +8,9 @@ export interface DailyActivity {
   quote_viewed: boolean;
   reading_goal: number;
   read_count: number;
+  reading_goal_completed: boolean;
+  current_streak: number;
+  longest_streak: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -16,7 +19,16 @@ export type DailyActivityState = Pick<
   DailyActivity,
   "feed_clicked" | "quiz_completed" | "quote_viewed"
 > &
-  Partial<Pick<DailyActivity, "reading_goal" | "read_count">>;
+  Partial<
+    Pick<
+      DailyActivity,
+      | "reading_goal"
+      | "read_count"
+      | "reading_goal_completed"
+      | "current_streak"
+      | "longest_streak"
+    >
+  >;
 
 export interface DailyChecklistItem {
   activity: DailyActivityType;

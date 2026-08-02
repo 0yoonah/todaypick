@@ -2,6 +2,7 @@ import { addDaysToDateKey } from "./dateUtils";
 
 export interface DailyLearningActivity {
   date: string;
+  reading_goal_completed?: boolean | null;
   feed_clicked?: boolean | null;
   quiz_completed?: boolean | null;
   quote_viewed?: boolean | null;
@@ -14,10 +15,7 @@ export function calculateLearningStreaks(
   const learnedDates = [
     ...new Set(
       activities
-        .filter(
-          ({ feed_clicked, quiz_completed, quote_viewed }) =>
-            feed_clicked || quiz_completed || quote_viewed
-        )
+        .filter(({ reading_goal_completed }) => reading_goal_completed)
         .map(({ date }) => date)
     ),
   ].sort();

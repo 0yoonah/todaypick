@@ -7,6 +7,7 @@ import {
 } from "@/services/dailyActivityService";
 import { parseInterestIds } from "@/config/interests";
 import { isValidReadingGoal } from "@/utils/readingGoalUtils";
+import { calculateLearningStreaks } from "@/utils/streakUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const [activityResult, userResult, readsResult] = await Promise.all([
+    const [activityResult, userResult, readsResult, streakResult] = await Promise.all([
       supabase
         .from("daily_activities")
         .select("*")
@@ -47,15 +48,23 @@ export async function GET(request: NextRequest) {
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.user.id)
         .eq("read_date", date),
+      supabase
+        .from("daily_activities")
+        .select("date, reading_goal_completed")
+        .eq("user_id", user.user.id),
     ]);
 
-    if (activityResult.error || userResult.error || readsResult.error) {
-      throw activityResult.error || userResult.error || readsResult.error;
+    if (activityResult.error || userResult.error || readsResult.error || streakResult.error) {
+      throw activityResult.error || userResult.error || readsResult.error || streakResult.error;
     }
 
     const readingGoal =
       activityResult.data?.reading_goal ?? userResult.data.daily_read_goal;
     const readCount = readsResult.count ?? 0;
+    const { currentStreak, longestStreak } = calculateLearningStreaks(
+      streakResult.data ?? [],
+      getSeoulDateKey()
+    );
 
     return NextResponse.json(
       {
@@ -66,6 +75,10 @@ export async function GET(request: NextRequest) {
         quote_viewed: activityResult.data?.quote_viewed ?? false,
         reading_goal: readingGoal,
         read_count: readCount,
+        reading_goal_completed:
+          activityResult.data?.reading_goal_completed ?? readCount >= readingGoal,
+        current_streak: currentStreak,
+        longest_streak: longestStreak,
         created_at: activityResult.data?.created_at,
         updated_at: activityResult.data?.updated_at,
       },
@@ -215,6 +228,20 @@ export async function PUT(request: NextRequest) {
         throw insertError;
       }
     }
+
+    const { count: readCount, error: countError } = await supabase
+      .from("feed_reads")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.user.id)
+      .eq("read_date", date);
+    if (countError) throw countError;
+
+    const { error: completionError } = await supabase
+      .from("daily_activities")
+      .update({ reading_goal_completed: (readCount ?? 0) >= readingGoal })
+      .eq("user_id", user.user.id)
+      .eq("date", date);
+    if (completionError) throw completionError;
 
     return NextResponse.json({ readingGoal, date }, { status: 200 });
   } catch (error) {

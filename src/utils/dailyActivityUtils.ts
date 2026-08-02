@@ -11,6 +11,9 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
   quote_viewed: false,
   reading_goal: 3,
   read_count: 0,
+  reading_goal_completed: false,
+  current_streak: 0,
+  longest_streak: 0,
 };
 
 export const dailyActivityQueryKey = (userId: string, date: string) =>
@@ -43,6 +46,9 @@ export function markDailyActivityCompleted(
       quote_viewed: current?.quote_viewed ?? false,
       reading_goal: current?.reading_goal ?? 3,
       read_count: current?.read_count ?? 0,
+      reading_goal_completed: current?.reading_goal_completed ?? false,
+      current_streak: current?.current_streak ?? 0,
+      longest_streak: current?.longest_streak ?? 0,
       ...current,
       [activity]: true,
     })
