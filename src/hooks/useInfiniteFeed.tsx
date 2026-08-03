@@ -7,7 +7,8 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Feed, FeedCategory } from "@/types/feed";
+import { Feed, FeedCategory, RSSFeedCategory } from "@/types/feed";
+import type { InterestId } from "@/config/interests";
 import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { feedService } from "@/services/feedService";
@@ -20,6 +21,9 @@ import {
 interface UseInfiniteFeedProps {
   category: FeedCategory;
   limit: number;
+  interest?: InterestId;
+  sourceCategory?: RSSFeedCategory;
+  enabled?: boolean;
 }
 
 type FeedQuerySnapshot = [readonly unknown[], InfiniteFeedData | undefined];
@@ -28,16 +32,22 @@ const fetchFeeds = async ({
   category,
   pageParam,
   limit,
+  interest,
+  sourceCategory,
 }: {
   category: FeedCategory;
   pageParam: number;
   limit: number;
+  interest?: InterestId;
+  sourceCategory?: RSSFeedCategory;
 }) => {
   const params = new URLSearchParams({
     category: category,
     page: pageParam.toString(),
     limit: limit.toString(),
   });
+  if (interest) params.set("interest", interest);
+  if (sourceCategory) params.set("sourceCategory", sourceCategory);
 
   const response = await fetch(`/api/feeds?${params}`);
   if (!response.ok) {
@@ -48,7 +58,13 @@ const fetchFeeds = async ({
   return response.json() as Promise<FeedPage>;
 };
 
-export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
+export const useInfiniteFeed = ({
+  category,
+  limit,
+  interest,
+  sourceCategory,
+  enabled = true,
+}: UseInfiniteFeedProps) => {
   const [activeTab, setActiveTab] = useState<FeedCategory>(category);
   const { user } = useAuthStore();
   const router = useRouter();
@@ -63,9 +79,23 @@ export const useInfiniteFeed = ({ category, limit }: UseInfiniteFeedProps) => {
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["feeds", activeTab, limit, user?.id],
+    queryKey: [
+      "feeds",
+      activeTab,
+      limit,
+      user?.id,
+      interest ?? "all",
+      sourceCategory ?? "all",
+    ],
     queryFn: ({ pageParam }) =>
-      fetchFeeds({ category: activeTab, pageParam, limit }),
+      fetchFeeds({
+        category: activeTab,
+        pageParam,
+        limit,
+        interest,
+        sourceCategory,
+      }),
+    enabled,
     initialPageParam: 1,
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

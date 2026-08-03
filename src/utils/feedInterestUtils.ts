@@ -75,6 +75,22 @@ const INTEREST_KEYWORDS: Record<InterestId, string[]> = {
   ],
 };
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchesKeyword(text: string, keyword: string) {
+  const normalizedKeyword = keyword.toLowerCase();
+  if (!/^[\x00-\x7f]+$/.test(normalizedKeyword)) {
+    return text.includes(normalizedKeyword);
+  }
+
+  return new RegExp(
+    `(^|[^a-z0-9])${escapeRegExp(normalizedKeyword)}($|[^a-z0-9])`,
+    "i"
+  ).test(text);
+}
+
 export function inferFeedInterests(
   feed: Pick<Feed, "title" | "description" | "source">
 ): InterestId[] {
@@ -82,7 +98,7 @@ export function inferFeedInterests(
 
   return (Object.entries(INTEREST_KEYWORDS) as [InterestId, string[]][])
     .filter(([, keywords]) =>
-      keywords.some((keyword) => text.includes(keyword.toLowerCase()))
+      keywords.some((keyword) => matchesKeyword(text, keyword))
     )
     .map(([interest]) => interest);
 }

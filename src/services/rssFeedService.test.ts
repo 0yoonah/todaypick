@@ -208,4 +208,91 @@ describe("RSS feed service integration", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(testState.getFeedSources).toHaveBeenCalledTimes(2);
   });
+
+  it("filters by inferred interest before pagination", async () => {
+    testState.getFeedSources.mockReturnValue([source("interests")]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        xmlResponse(
+          rss(
+            item({
+              title: "React 브라우저 렌더링 개선",
+              link: "https://example.com/frontend",
+            }) +
+              item({
+                title: "서버 API 설계 원칙",
+                link: "https://example.com/backend",
+              })
+          )
+        )
+      )
+    );
+
+    const result = await getRSSFeedsWithPagination(
+      "tech_blog",
+      1,
+      1,
+      [],
+      "backend"
+    );
+
+    expect(result.feeds.map(({ url }) => url)).toEqual([
+      "https://example.com/backend",
+    ]);
+    expect(result.totalCount).toBe(1);
+    expect(result.totalPages).toBe(1);
+  });
+
+  it("does not classify partial English keyword matches", async () => {
+    testState.getFeedSources.mockReturnValue([source("boundaries")]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        xmlResponse(
+          rss(
+            item({
+              title: "KAPIE 협약 소식",
+              link: "https://example.com/kapie",
+              description: "농산업 혁신 협력",
+            })
+          )
+        )
+      )
+    );
+
+    const result = await getRSSFeedsWithPagination(
+      "tech_blog",
+      1,
+      10,
+      [],
+      "backend"
+    );
+
+    expect(result.feeds).toEqual([]);
+    expect(result.totalCount).toBe(0);
+  });
+
+  it("keeps up to fifty items from each RSS source", async () => {
+    testState.getFeedSources.mockReturnValue([source("large")]);
+    const items = Array.from({ length: 60 }, (_, index) =>
+      item({
+        title: `백엔드 서버 글 ${index}`,
+        link: `https://example.com/backend-${index}`,
+      })
+    ).join("");
+    vi.stubGlobal("fetch", vi.fn(async () => xmlResponse(rss(items))));
+
+    const result = await getRSSFeedsWithPagination(
+      "tech_blog",
+      1,
+      50,
+      [],
+      "backend"
+    );
+
+    expect(result.feeds).toHaveLength(50);
+    expect(result.totalCount).toBe(50);
+    expect(result.totalPages).toBe(1);
+  });
 });

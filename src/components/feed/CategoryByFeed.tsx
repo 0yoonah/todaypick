@@ -13,10 +13,15 @@ import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 import FeedListState from "@/components/feed/FeedListState";
 import ReadingGoalProgress from "@/components/ReadingGoalProgress";
 import WrittenPostsTab from "@/components/feed/WrittenPostsTab";
+import InterestFilter from "@/components/feed/InterestFilter";
+import { INTERESTS, isInterestId, type InterestId } from "@/config/interests";
 
 export default function CategoryByFeed() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
+  const interestParam = searchParams.get("interest");
+  const interest = isInterestId(interestParam) ? interestParam : undefined;
+  const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
   const validCategory = getValidCategory(category);
   const router = useRouter();
   const showWritingTab = category === "writing";
@@ -35,14 +40,25 @@ export default function CategoryByFeed() {
   } = useInfiniteFeed({
     category: validCategory,
     limit: 12,
+    interest,
   });
+
+  const updateQuery = useCallback(
+    (nextCategory: FeedCategory | "writing", nextInterest?: InterestId) => {
+      const params = new URLSearchParams();
+      params.set("category", nextCategory);
+      if (nextInterest) params.set("interest", nextInterest);
+      router.push(`?${params.toString()}`);
+    },
+    [router]
+  );
 
   const handleTabChange = useCallback(
     (tab: FeedCategory) => {
       handleChangeTab(tab);
-      router.push(`?category=${tab}`);
+      updateQuery(tab, interest);
     },
-    [handleChangeTab, router]
+    [handleChangeTab, interest, updateQuery]
   );
 
   useEffect(() => {
@@ -76,11 +92,18 @@ export default function CategoryByFeed() {
       <FeedCategoryTab
         activeTab={showWritingTab ? "writing" : activeTab}
         handleChangeTab={handleTabChange}
-        handleChangeWritingTab={() => router.push("?category=writing")}
+        handleChangeWritingTab={() => updateQuery("writing", interest)}
+      />
+
+      <InterestFilter
+        value={interest}
+        onChange={(nextInterest) =>
+          updateQuery(showWritingTab ? "writing" : activeTab, nextInterest)
+        }
       />
 
       {showWritingTab ? (
-        <WrittenPostsTab />
+        <WrittenPostsTab interest={interest} />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
@@ -91,7 +114,7 @@ export default function CategoryByFeed() {
             ) : error ? (
               <FeedListState type="error" onRetry={() => void refetch()} />
             ) : feeds.length === 0 ? (
-              <FeedListState type="empty" />
+              <FeedListState type="empty" interestLabel={interestLabel} />
             ) : (
               feeds.map((feed) => (
                 <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
