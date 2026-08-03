@@ -49,7 +49,7 @@ const formatReadDate = (value: string) => {
 export default function ReadingHistoryTab({
   onStartWriting,
 }: {
-  onStartWriting: (draft: WritingDraft) => void;
+  onStartWriting: (draftId: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -88,15 +88,24 @@ export default function ReadingHistoryTab({
       const response = await fetch("/api/writing-drafts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "", content: "", tags: [], sources }),
+        body: JSON.stringify({
+          title: "",
+          content: "",
+          tags: [],
+          visibility: "private",
+          sources,
+        }),
       });
       if (!response.ok) throw new Error("글 초안을 만들지 못했습니다.");
       return response.json() as Promise<WritingDraft>;
     },
     onSuccess: (draft) => {
       setSelectedIds(new Set());
-      queryClient.invalidateQueries({ queryKey: ["writing-drafts"] });
-      onStartWriting(draft);
+      queryClient.setQueryData<WritingDraft[]>(["writing-drafts"], (drafts) => [
+        draft,
+        ...(drafts?.filter((item) => item.id !== draft.id) ?? []),
+      ]);
+      onStartWriting(draft.id);
     },
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,19 +16,17 @@ import InterestSettings from "@/components/profile/InterestSettings";
 import ReadingHistoryTab from "@/components/profile/ReadingHistoryTab";
 import ReadingGoalSettings from "@/components/profile/ReadingGoalSettings";
 import WritingTab from "@/components/profile/WritingTab";
-import type { WritingDraft } from "@/types/writing";
 
 export default function ProfileContainer() {
+  const router = useRouter();
   const { loading } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ProfileTabType>(
     PROFILE_TAB.SCRAPED_FEEDS
   );
-  const [writingDraft, setWritingDraft] = useState<WritingDraft | null>(null);
 
-  const startWriting = useCallback((draft: WritingDraft) => {
-    setWritingDraft(draft);
-    setActiveTab(PROFILE_TAB.WRITING);
-  }, []);
+  const startWriting = useCallback((draftId: string) => {
+    router.push(`/write?draftId=${draftId}&newDraft=true`);
+  }, [router]);
 
   const renderActiveTab = useMemo(() => {
     switch (activeTab) {
@@ -40,17 +39,12 @@ export default function ProfileContainer() {
       case PROFILE_TAB.LEARNING_STATISTICS:
         return <LearningStatisticsTab />;
       case PROFILE_TAB.WRITING:
-        return (
-          <WritingTab
-            key={writingDraft?.id ?? "writing-drafts"}
-            initialDraft={writingDraft}
-          />
-        );
+        return <WritingTab />;
       case PROFILE_TAB.SCRAPED_FEEDS:
       default:
         return <ScrapedFeedsTab />;
     }
-  }, [activeTab, startWriting, writingDraft]);
+  }, [activeTab, startWriting]);
 
   const renderProfileSkeleton = useMemo(() => {
     return (

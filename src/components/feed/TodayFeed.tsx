@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ROUTE_PATH, FEED_CATEGORY } from "@/config/constants";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import FeedListState from "@/components/feed/FeedListState";
+import WrittenPostsTab from "@/components/feed/WrittenPostsTab";
 
 export default function TodayFeed() {
+  const [viewTab, setViewTab] = useState<"feed" | "writing">("feed");
   const {
     isLoading,
     feeds,
@@ -22,12 +25,14 @@ export default function TodayFeed() {
     limit: 3,
   });
 
+  const showWritingTab = viewTab === "writing";
+
   return (
     <div>
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
               오늘 읽어볼 콘텐츠
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -44,27 +49,35 @@ export default function TodayFeed() {
       </div>
 
       <FeedCategoryTab
-        activeTab={activeTab}
-        handleChangeTab={handleChangeTab}
+        activeTab={showWritingTab ? "writing" : activeTab}
+        handleChangeTab={(tab) => {
+          setViewTab("feed");
+          handleChangeTab(tab);
+        }}
+        handleChangeWritingTab={() => setViewTab("writing")}
       />
 
-      <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, index) => (
-            <SkeletonFeedCard key={index} />
-          ))
-        ) : error ? (
-          <FeedListState type="error" onRetry={() => void refetch()} />
-        ) : feeds.length === 0 ? (
-          <FeedListState type="empty" />
-        ) : (
-          feeds
-            .slice(0, 3)
-            .map((feed) => (
-              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+      {showWritingTab ? (
+        <WrittenPostsTab />
+      ) : (
+        <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <SkeletonFeedCard key={index} />
             ))
-        )}
-      </div>
+          ) : error ? (
+            <FeedListState type="error" onRetry={() => void refetch()} />
+          ) : feeds.length === 0 ? (
+            <FeedListState type="empty" />
+          ) : (
+            feeds
+              .slice(0, 3)
+              .map((feed) => (
+                <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+              ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

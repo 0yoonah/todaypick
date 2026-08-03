@@ -34,7 +34,7 @@ export default function ProfileTabs({
     },
     {
       id: PROFILE_TAB.WRITING,
-      label: "내 글쓰기",
+      label: "내가 쓴 글",
       icon: FiEdit3,
     },
     {
