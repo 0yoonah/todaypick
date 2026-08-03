@@ -1,10 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import type { WritingDraft } from "@/types/writing";
 
 async function getAuthenticatedClient() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   return { supabase, user: data.user };
+}
+
+export async function GET() {
+  const { supabase, user } = await getAuthenticatedClient();
+  if (!user) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
+
+  const { data: bookmarks, error: bookmarkError } = await supabase
+    .from("writing_bookmarks")
+    .select("draft_id, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (bookmarkError) {
+    console.error(
+      `게시글 북마크 조회 오류 (${bookmarkError.code}): ${bookmarkError.message}`
+    );
+    return NextResponse.json(
+      { error: "북마크한 게시글을 불러오지 못했습니다." },
+      { status: 500 }
+    );
+  }
+
+  if (!bookmarks?.length) {
+    return NextResponse.json({ drafts: [] });
+  }
+
+  const { data: publicDrafts, error: draftError } = await supabase.rpc(
+    "get_public_writing_drafts",
+    { p_id: null }
+  );
+  if (draftError) {
+    console.error(
+      `북마크 게시글 조회 오류 (${draftError.code}): ${draftError.message}`
+    );
+    return NextResponse.json(
+      { error: "북마크한 게시글을 불러오지 못했습니다." },
+      { status: 500 }
+    );
+  }
+
+  const draftsById = new Map(
+    (publicDrafts ?? []).map((draft: WritingDraft) => [draft.id, draft])
+  );
+  const drafts = bookmarks.flatMap(({ draft_id }) => {
+    const draft = draftsById.get(draft_id);
+    return draft ? [draft] : [];
+  });
+
+  return NextResponse.json({ drafts });
 }
 
 export async function POST(request: NextRequest) {
