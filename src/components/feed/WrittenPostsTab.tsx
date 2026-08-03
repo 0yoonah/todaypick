@@ -1,21 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiEdit3 } from "react-icons/fi";
-import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
+import WrittenPostCard from "@/components/feed/WrittenPostCard";
 import { ROUTE_PATH } from "@/config/constants";
-import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { useAuthStore } from "@/stores/authStore";
 import type { WritingDraft } from "@/types/writing";
+import { INTERESTS, type InterestId } from "@/config/interests";
 
-async function fetchDrafts(): Promise<WritingDraft[]> {
-  const response = await fetch("/api/writing-drafts?scope=public");
+async function fetchDrafts(interest?: InterestId): Promise<WritingDraft[]> {
+  const params = new URLSearchParams({ scope: "public" });
+  if (interest) params.set("interest", interest);
+  const response = await fetch(`/api/writing-drafts?${params}`);
   const result = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(result?.error || "글 목록을 불러오지 못했습니다.");
@@ -23,13 +24,14 @@ async function fetchDrafts(): Promise<WritingDraft[]> {
   return result.drafts ?? [];
 }
 
-export default function WrittenPostsTab() {
+export default function WrittenPostsTab({ interest }: { interest?: InterestId }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
   const query = useQuery({
-    queryKey: ["writing-drafts", "public"],
-    queryFn: fetchDrafts,
+    queryKey: ["writing-drafts", "public", interest ?? "all"],
+    queryFn: () => fetchDrafts(interest),
   });
   const bookmarkMutation = useMutation({
     mutationFn: async (draft: WritingDraft) => {
@@ -54,15 +56,14 @@ export default function WrittenPostsTab() {
       return { draftId: draft.id, isBookmarked: result.is_bookmarked as boolean };
     },
     onSuccess: ({ draftId, isBookmarked }) => {
-      queryClient.setQueryData<WritingDraft[]>(
-        ["writing-drafts", "public"],
+      queryClient.setQueriesData<WritingDraft[]>(
+        { queryKey: ["writing-drafts", "public"] },
         (drafts) =>
           drafts?.map((draft) =>
-            draft.id === draftId
-              ? { ...draft, is_bookmarked: isBookmarked }
-              : draft
+            draft.id === draftId ? { ...draft, is_bookmarked: isBookmarked } : draft
           )
       );
+      queryClient.invalidateQueries({ queryKey: ["writing-bookmarks"] });
       queryClient.setQueryData<WritingDraft>(
         ["writing-draft", draftId],
         (draft) => draft ? { ...draft, is_bookmarked: isBookmarked } : draft
@@ -107,9 +108,15 @@ export default function WrittenPostsTab() {
         <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
           <FiEdit3 className="size-8 text-muted-foreground" aria-hidden />
           <div>
-            <h2 className="font-semibold">게시글이 아직 없어요.</h2>
+            <h2 className="font-semibold">
+              {interestLabel
+                ? `${interestLabel} 분야의 게시글이 아직 없어요.`
+                : "게시글이 아직 없어요."}
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              글쓰기 페이지에서 초안을 시작하면 여기에 모여 보여요.
+              {interestLabel
+                ? "다른 관심 분야를 선택하거나 새로운 글을 작성해보세요."
+                : "글쓰기 페이지에서 초안을 시작하면 여기에 모여 보여요."}
             </p>
           </div>
           <Button asChild>
@@ -122,78 +129,15 @@ export default function WrittenPostsTab() {
 
   const publicDrafts = query.data;
 
-  if (publicDrafts.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-          <FiEdit3 className="size-8 text-muted-foreground" aria-hidden />
-          <div>
-            <h2 className="font-semibold">공개 게시글이 아직 없어요.</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              공개로 저장한 글만 이 탭에 카드 형태로 보여요.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
       {publicDrafts.map((draft) => (
-        <div key={draft.id} className="relative h-full w-full min-w-0">
-          <Link
-            href={`${ROUTE_PATH.POSTS}/${draft.id}`}
-            className="group block h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <Card className="h-full w-full overflow-hidden border-0 bg-transparent py-0 shadow-none">
-            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={draft.thumbnail_url || DEFAULT_FEED_IMAGE_URL}
-                alt={draft.title || "게시글 썸네일"}
-                fill
-                className="object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105"
-              />
-            </div>
-
-            <CardHeader className="px-0 pt-4 pb-2">
-              <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{draft.author_name || "TodayPick 사용자"}</span>
-                <span aria-hidden>·</span>
-                <span>
-                  {new Date(draft.updated_at).toLocaleDateString("ko-KR", {
-                    year: "2-digit",
-                    month: "2-digit",
-                    day: "2-digit",
-                  })}
-                </span>
-              </div>
-              <CardTitle className="line-clamp-2 text-lg font-bold leading-snug tracking-[-0.02em] text-card-foreground transition-colors group-hover:text-primary">
-                {draft.title || "제목 없는 글"}
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="px-0 pt-0">
-              <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                {draft.content || "아직 작성 내용이 없어요."}
-              </p>
-            </CardContent>
-            </Card>
-          </Link>
-          <button
-            type="button"
-            className="absolute right-3 top-3 z-20 flex size-11 items-center justify-center rounded-full bg-white/95 text-muted-foreground shadow-sm transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 sm:size-9"
-            onClick={() => handleBookmark(draft)}
-            disabled={bookmarkMutation.isPending}
-            aria-label={draft.is_bookmarked ? "게시글 북마크 해제" : "게시글 북마크 추가"}
-          >
-            {draft.is_bookmarked ? (
-              <GoBookmarkFill className="text-lg text-primary" />
-            ) : (
-              <GoBookmark className="text-lg" />
-            )}
-          </button>
-        </div>
+        <WrittenPostCard
+          key={draft.id}
+          draft={draft}
+          onBookmark={handleBookmark}
+          bookmarkPending={bookmarkMutation.isPending}
+        />
       ))}
     </div>
   );

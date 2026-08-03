@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { parseInterestIds } from "@/config/interests";
+import { isInterestId, parseInterestIds } from "@/config/interests";
 import {
   MAX_DRAFT_CONTENT_LENGTH,
   MAX_DRAFT_TITLE_LENGTH,
@@ -9,6 +9,7 @@ import {
   parseWritingThumbnailUrl,
   parseWritingSources,
 } from "@/utils/writingUtils";
+import type { WritingDraft } from "@/types/writing";
 
 const selectFields =
   "id, title, content, tags, visibility, thumbnail_url, sources, created_at, updated_at";
@@ -109,6 +110,11 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const draftId = url.searchParams.get("id");
   const publicFeed = url.searchParams.get("scope") === "public";
+  const interestValue = url.searchParams.get("interest");
+  const interest = isInterestId(interestValue) ? interestValue : undefined;
+  if (interestValue && !interest) {
+    return NextResponse.json({ error: "유효한 관심 분야가 필요합니다." }, { status: 400 });
+  }
 
   if (publicFeed || draftId) {
     const { data: publicDrafts, error: publicError } = await supabase.rpc(
@@ -127,7 +133,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (publicFeed) {
-      return NextResponse.json({ drafts: publicDrafts ?? [] });
+      const drafts = interest
+        ? (publicDrafts ?? []).filter((draft: WritingDraft) => draft.tags.includes(interest))
+        : publicDrafts ?? [];
+      return NextResponse.json({ drafts });
     }
 
     if (publicDrafts?.[0]) {
