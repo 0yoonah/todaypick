@@ -26,6 +26,9 @@ export const FEED_IMAGE_HOSTNAMES = [
   "images.unsplash.com",
 ] as const;
 
+export const DEFAULT_FEED_IMAGE_URL =
+  "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center";
+
 function matchesHostname(hostname: string, pattern: string): boolean {
   if (!pattern.startsWith("*.")) return hostname === pattern;
 
