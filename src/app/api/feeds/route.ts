@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { FeedCategory } from "@/types/feed";
+import { FeedCategory, RSSFeedCategory } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import { FEED_CATEGORY } from "@/config/constants";
 import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
-import { parseInterestIds } from "@/config/interests";
+import { isInterestId, parseInterestIds } from "@/config/interests";
 import type { InterestId } from "@/config/interests";
 
 const parseFeedParams = (request: NextRequest) => {
@@ -17,6 +17,20 @@ const parseFeedParams = (request: NextRequest) => {
 
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "12");
+  const interestValue = searchParams.get("interest");
+  const interest = isInterestId(interestValue) ? interestValue : undefined;
+  if (interestValue && !interest) {
+    throw new TypeError("유효한 관심 분야가 필요합니다.");
+  }
+  const sourceCategoryValue = searchParams.get("sourceCategory");
+  const sourceCategory =
+    sourceCategoryValue === FEED_CATEGORY.IT_NEWS ||
+    sourceCategoryValue === FEED_CATEGORY.TECH_BLOG
+      ? (sourceCategoryValue as RSSFeedCategory)
+      : undefined;
+  if (sourceCategoryValue && !sourceCategory) {
+    throw new TypeError("유효한 스크랩 피드 유형이 필요합니다.");
+  }
 
   if (!Number.isInteger(page) || page < 1) {
     throw new TypeError("page는 1 이상의 정수여야 합니다.");
@@ -27,20 +41,28 @@ const parseFeedParams = (request: NextRequest) => {
   }
 
   const category = categoryValue as FeedCategory;
-  return { category, page, limit };
+  return { category, page, limit, interest, sourceCategory };
 };
 
-const getScrapedFeeds = async (userId: string, page: number, limit: number) => {
+const getScrapedFeeds = async (
+  userId: string,
+  page: number,
+  limit: number,
+  sourceCategory?: RSSFeedCategory
+) => {
   const supabase = await createClient();
-
+  let query = supabase
+    .from("scraped_feeds")
+    .select("*", { count: "exact" })
+    .eq("user_id", userId);
+  if (sourceCategory) {
+    query = query.eq("feed->>category", sourceCategory);
+  }
   const {
     data: scrapedFeeds,
     error,
     count,
-  } = await supabase
-    .from("scraped_feeds")
-    .select("*", { count: "exact" })
-    .eq("user_id", userId)
+  } = await query
     .order("created_at", { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
 
@@ -80,7 +102,7 @@ const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
 
 export async function GET(request: NextRequest) {
   try {
-    const { category, page, limit } = parseFeedParams(request);
+    const { category, page, limit, interest, sourceCategory } = parseFeedParams(request);
     const supabase = await createClient();
     const {
       data: { user },
@@ -91,7 +113,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      const result = await getScrapedFeeds(user.id, page, limit);
+      const result = await getScrapedFeeds(user.id, page, limit, sourceCategory);
       return NextResponse.json(result, { status: 200 });
     } else {
       let interests: InterestId[] = [];
@@ -108,7 +130,8 @@ export async function GET(request: NextRequest) {
         category,
         page,
         limit,
-        interests
+        interests,
+        interest
       );
 
       if (!user) {

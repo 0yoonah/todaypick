@@ -28,3 +28,28 @@ export type FeedSource = {
   category: RSSFeedCategory;
   enabled?: boolean;
 };
+
+export type FeedRead = {
+  id: string;
+  feed: Pick<
+    Feed,
+    | "id"
+    | "title"
+    | "source"
+    | "url"
+    | "category"
+    | "published_at"
+    | "interests"
+  >;
+  read_date: string;
+  first_read_at: string;
+  last_read_at: string;
+  read_count: number;
+};
+
+export type FeedReadPage = {
+  reads: FeedRead[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+};

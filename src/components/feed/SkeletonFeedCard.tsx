@@ -1,33 +1,43 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
-export default function SkeletonFeedCard() {
-  return (
-    <Card className="h-full overflow-hidden border bg-card shadow-sm">
-      {/* 스크랩 버튼 스켈레톤 - 우측 상단 */}
-      <Skeleton className="absolute top-3 right-3 w-10 h-10 rounded-full z-20" />
+interface SkeletonFeedCardProps {
+  showActions?: boolean;
+}
 
-      {/* 이미지 스켈레톤 */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <Skeleton className="w-full h-full" />
+export default function SkeletonFeedCard({
+  showActions = true,
+}: SkeletonFeedCardProps) {
+  return (
+    <Card className="relative h-full overflow-hidden border-0 bg-transparent py-0 shadow-none">
+      {showActions && (
+        <div className="absolute right-3 top-3 z-20 flex gap-2">
+          <Skeleton className="size-11 rounded-full sm:size-9" />
+          <Skeleton className="size-11 rounded-full sm:size-9" />
+        </div>
+      )}
+
+      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg">
+        <Skeleton className="h-full w-full" />
       </div>
 
-      <CardHeader className="pb-3">
-        <Skeleton className="h-6 w-3/4 mb-2" />
-        <div className="flex items-center space-x-2">
+      <CardHeader className="px-0 pt-4 pb-2">
+        <div className="mb-2 flex items-center gap-2">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-1" />
           <Skeleton className="h-4 w-20" />
         </div>
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-3/4" />
+        </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="space-y-2 mb-4">
+      <CardContent className="px-0 pt-0">
+        <div className="space-y-2">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
-          <Skeleton className="h-4 w-4/6" />
         </div>
-        <Skeleton className="h-3 w-24" />
       </CardContent>
     </Card>
   );

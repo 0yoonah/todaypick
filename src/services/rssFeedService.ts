@@ -3,6 +3,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import Parser from "rss-parser";
 import { FEED_CATEGORY } from "@/config/constants";
+import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { getFeedSources } from "@/data/feeds";
 import type {
   Feed,
@@ -28,13 +29,11 @@ const RSS_TIMEOUT_MS = 8_000;
 const RSS_CATEGORY_TIMEOUT_MS = 12_000;
 const RSS_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const RSS_MAX_REDIRECTS = 3;
-const MAX_ITEMS_PER_SOURCE = 20;
+const MAX_ITEMS_PER_SOURCE = 50;
 const BATCH_SIZE = 5;
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_AUTHOR_LENGTH = 100;
-const DEFAULT_FEED_IMAGE_URL =
-  "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center";
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 
 function cleanText(value: unknown, maxLength: number): string {
@@ -272,16 +271,20 @@ export async function getRSSFeedsWithPagination(
   category: FeedCategory,
   page: number,
   limit: number,
-  selectedInterests: InterestId[] = []
+  selectedInterests: InterestId[] = [],
+  filterInterest?: InterestId
 ) {
   if (category === FEED_CATEGORY.SCRAPED) {
     throw new Error("스크랩 피드는 RSS 수집 대상이 아닙니다.");
   }
 
-  const feeds = sortFeedsByInterests(
+  const sortedFeeds = sortFeedsByInterests(
     await getCachedCategoryFeeds(category),
     selectedInterests
   );
+  const feeds = filterInterest
+    ? sortedFeeds.filter((feed) => feed.interests?.includes(filterInterest))
+    : sortedFeeds;
   const totalCount = feeds.length;
   const startIndex = (page - 1) * limit;
 

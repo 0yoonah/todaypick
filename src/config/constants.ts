@@ -5,6 +5,8 @@ export const ROUTE_PATH = {
   SIGNUP: "/signup",
   PROFILE: "/profile",
   FEEDS: "/feeds",
+  WRITE: "/write",
+  POSTS: "/posts",
 } as const;
 
 // 폼 데이터
@@ -25,9 +27,11 @@ export const FEED_CATEGORY = {
 // 프로필 탭
 export const PROFILE_TAB = {
   SCRAPED_FEEDS: "scraped_feeds",
+  READING_HISTORY: "reading_history",
   QUIZ_RECORDS: "quiz_records",
   SCRAPED_QUOTES: "scraped_quotes",
   LEARNING_STATISTICS: "learning_statistics",
+  WRITING: "writing",
 } as const;
 
 export type ProfileTabType = (typeof PROFILE_TAB)[keyof typeof PROFILE_TAB];

@@ -21,7 +21,8 @@ export async function recordDailyActivity(
   supabase: SupabaseClient,
   userId: string,
   date: string,
-  activity: DailyActivityType
+  activity: DailyActivityType,
+  readingGoal = 3
 ) {
   const updatedAt = new Date().toISOString();
   const { data: updated, error: updateError } = await supabase
@@ -46,6 +47,7 @@ export async function recordDailyActivity(
     feed_clicked: activity === "feed_clicked",
     quiz_completed: activity === "quiz_completed",
     quote_viewed: activity === "quote_viewed",
+    reading_goal: readingGoal,
     updated_at: updatedAt,
   });
 

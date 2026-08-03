@@ -1,11 +1,13 @@
 interface FeedListStateProps {
   type: "empty" | "error";
   onRetry?: () => void;
+  interestLabel?: string;
 }
 
 export default function FeedListState({
   type,
   onRetry,
+  interestLabel,
 }: FeedListStateProps) {
   const isError = type === "error";
 
@@ -17,7 +19,9 @@ export default function FeedListState({
       <p className="font-semibold text-foreground">
         {isError
           ? "피드를 불러오지 못했어요."
-          : "아직 표시할 피드가 없어요."}
+          : interestLabel
+            ? `${interestLabel} 분야의 피드가 아직 없어요.`
+            : "아직 표시할 피드가 없어요."}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
         {isError
