@@ -17,6 +17,13 @@ export const formatDate = (dateString: string) => {
   return date.toLocaleDateString("ko-KR");
 };
 
+export const WRITING_CATEGORY = "writing" as const;
+
+/** 게시글 탭은 RSS 피드가 아니라 공개 게시글 목록을 사용한다. */
+export const isWritingCategory = (
+  category: string | null | undefined
+): boolean => category === WRITING_CATEGORY;
+
 export const getValidCategory = (category: string | null): FeedCategory => {
   if (
     !category ||
