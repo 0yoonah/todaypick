@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  CS_PASS_SCORE,
   filterCsQuestions,
-  getConfidenceLabel,
   getCsCategoryLabel,
+  getScoreFeedback,
+  gradeCsAnswer,
+  needsReview,
+  normalizeAnswerText,
 } from "@/utils/csUtils";
 import type { CsQuestion } from "@/types/cs";
-import {
-  CS_CATEGORIES,
-  isCsCategory,
-  isReviewConfidence,
-  REVIEW_CONFIDENCES,
-} from "@/types/cs";
+import { CS_CATEGORIES, isCsCategory } from "@/types/cs";
 
 const base: CsQuestion = {
   id: "base",
@@ -34,17 +33,6 @@ describe("isCsCategory", () => {
   });
 });
 
-describe("isReviewConfidence", () => {
-  it("정의된 평가 값만 통과시킨다", () => {
-    REVIEW_CONFIDENCES.forEach((confidence) => {
-      expect(isReviewConfidence(confidence)).toBe(true);
-    });
-    expect(isReviewConfidence("maybe")).toBe(false);
-    expect(isReviewConfidence("")).toBe(false);
-    expect(isReviewConfidence(null)).toBe(false);
-  });
-});
-
 describe("라벨", () => {
   it("모든 카테고리에 한글 라벨이 있다", () => {
     CS_CATEGORIES.forEach((category) => {
@@ -52,12 +40,6 @@ describe("라벨", () => {
       expect(label).not.toBe(category);
       expect(label.trim().length).toBeGreaterThan(0);
     });
-  });
-
-  it("모든 평가 값에 한글 라벨이 있다", () => {
-    expect(getConfidenceLabel("explained")).toBe("설명했어요");
-    expect(getConfidenceLabel("unsure")).toBe("애매해요");
-    expect(getConfidenceLabel("unknown")).toBe("몰랐어요");
   });
 });
 
@@ -85,5 +67,94 @@ describe("filterCsQuestions", () => {
   it("원본 배열을 바꾸지 않는다", () => {
     filterCsQuestions(questions, "network");
     expect(questions).toHaveLength(3);
+  });
+});
+
+describe("normalizeAnswerText", () => {
+  it("공백과 구분 기호를 없애고 소문자로 맞춘다", () => {
+    expect(normalizeAnswerText("연결 지향")).toBe("연결지향");
+    expect(normalizeAnswerText("TCP")).toBe("tcp");
+    expect(normalizeAnswerText("AI·데이터")).toBe("ai데이터");
+    expect(normalizeAnswerText("in-memory (cache)")).toBe("inmemorycache");
+  });
+});
+
+describe("gradeCsAnswer", () => {
+  const keywords = ["연결 지향", "신뢰성", "순서 보장", "재전송"];
+
+  it("언급한 키워드 비율로 점수를 계산한다", () => {
+    const result = gradeCsAnswer("연결 지향이고 신뢰성을 보장합니다", keywords);
+
+    expect(result.matched).toEqual(["연결 지향", "신뢰성"]);
+    expect(result.missed).toEqual(["순서 보장", "재전송"]);
+    expect(result.total).toBe(4);
+    expect(result.score).toBe(50);
+  });
+
+  it("붙여 쓰거나 조사가 끼어도 인식한다", () => {
+    const result = gradeCsAnswer(
+      "연결지향적이고 순서를 보장하며 재전송한다",
+      keywords
+    );
+
+    expect(result.matched).toContain("연결 지향");
+    expect(result.matched).toContain("순서 보장");
+    expect(result.matched).toContain("재전송");
+  });
+
+  it("구성 단어가 모두 나오면 순서가 달라도 인식한다", () => {
+    expect(gradeCsAnswer("보장한다, 순서를", ["순서 보장"]).score).toBe(100);
+  });
+
+  it("한 단어짜리 키워드는 부분 문자열로만 인식한다", () => {
+    expect(gradeCsAnswer("재전", ["재전송"]).score).toBe(0);
+  });
+
+  it("대소문자를 구분하지 않는다", () => {
+    expect(gradeCsAnswer("tcp를 씁니다", ["TCP"]).score).toBe(100);
+  });
+
+  it("모두 언급하면 100점, 하나도 없으면 0점이다", () => {
+    expect(gradeCsAnswer(keywords.join(" "), keywords).score).toBe(100);
+    expect(gradeCsAnswer("모르겠습니다", keywords).score).toBe(0);
+  });
+
+  it("빈 답변은 0점이다", () => {
+    const result = gradeCsAnswer("", keywords);
+    expect(result.score).toBe(0);
+    expect(result.matched).toEqual([]);
+    expect(result.missed).toHaveLength(4);
+  });
+
+  it("키워드가 없으면 0점을 반환하고 오류를 내지 않는다", () => {
+    expect(gradeCsAnswer("답변", [])).toEqual({
+      score: 0,
+      matched: [],
+      missed: [],
+      total: 0,
+    });
+  });
+
+  it("점수를 정수로 반올림한다", () => {
+    const three = ["가", "나", "다"];
+    expect(gradeCsAnswer("가", three).score).toBe(33);
+    expect(gradeCsAnswer("가 나", three).score).toBe(67);
+  });
+});
+
+describe("needsReview / getScoreFeedback", () => {
+  it("기준 점수 미만이면 복습 대상이다", () => {
+    expect(needsReview(CS_PASS_SCORE - 1)).toBe(true);
+    expect(needsReview(CS_PASS_SCORE)).toBe(false);
+    expect(needsReview(100)).toBe(false);
+  });
+
+  it("점수 구간에 따라 다른 안내를 준다", () => {
+    const high = getScoreFeedback(80);
+    const mid = getScoreFeedback(CS_PASS_SCORE);
+    const low = getScoreFeedback(CS_PASS_SCORE - 1);
+
+    expect(new Set([high, mid, low]).size).toBe(3);
+    expect(high.length).toBeGreaterThan(0);
   });
 });

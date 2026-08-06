@@ -18,7 +18,7 @@ export default function InterestFilter({ value, onChange }: InterestFilterProps)
         onClick={() => onChange(undefined)}
         aria-pressed={!value}
         className={cn(
-          "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+          "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
           !value
             ? "border-primary bg-primary text-primary-foreground"
             : "border-border bg-background text-muted-foreground hover:text-foreground"
@@ -33,7 +33,7 @@ export default function InterestFilter({ value, onChange }: InterestFilterProps)
           onClick={() => onChange(interest.id)}
           aria-pressed={value === interest.id}
           className={cn(
-            "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+            "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
             value === interest.id
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border bg-background text-muted-foreground hover:text-foreground"

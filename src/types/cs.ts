@@ -27,19 +27,23 @@ export interface CsQuestion {
   created_at: string;
 }
 
-/** 답안을 확인한 뒤 스스로 내리는 평가 */
-export const REVIEW_CONFIDENCES = ["explained", "unsure", "unknown"] as const;
-
-export type ReviewConfidence = (typeof REVIEW_CONFIDENCES)[number];
-
-export const isReviewConfidence = (
-  value: unknown
-): value is ReviewConfidence =>
-  typeof value === "string" &&
-  (REVIEW_CONFIDENCES as readonly string[]).includes(value);
+/** 키워드 언급 기준 채점 결과 */
+export interface CsGradeResult {
+  /** 0~100 사이의 참고 점수 */
+  score: number;
+  /** 답변에서 확인된 키워드 */
+  matched: string[];
+  /** 답변에서 확인되지 않은 키워드 */
+  missed: string[];
+  /** 채점 대상 키워드 수 */
+  total: number;
+}
 
 export interface CsReview {
   question_id: string;
-  confidence: ReviewConfidence;
+  score: number;
+  matched_keywords: string[];
+  answer: string;
+  used_hint: boolean;
   reviewed_at: string;
 }

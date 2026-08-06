@@ -196,7 +196,7 @@ export default function ReadingHistoryTab({
         <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
           <input
             type="checkbox"
-            className="size-4 rounded border-border accent-primary"
+            className="size-4 cursor-pointer rounded border-border accent-primary"
             checked={allVisibleSelected}
             onChange={toggleAllVisible}
           />
@@ -245,7 +245,7 @@ export default function ReadingHistoryTab({
                 <div className="flex items-start justify-between gap-4 py-5">
                   <input
                     type="checkbox"
-                    className="mt-1 size-4 shrink-0 rounded border-border accent-primary"
+                    className="mt-1 size-4 shrink-0 cursor-pointer rounded border-border accent-primary"
                     checked={selectedIds.has(read.id)}
                     onChange={() => toggleRead(read.id)}
                     aria-label={`${read.feed.title} 선택`}

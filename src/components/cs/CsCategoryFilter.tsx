@@ -24,7 +24,7 @@ export default function CsCategoryFilter({
         onClick={() => onChange(undefined)}
         aria-pressed={!value}
         className={cn(
-          "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+          "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
           !value
             ? "border-primary bg-primary text-primary-foreground"
             : "border-border bg-background text-muted-foreground hover:text-foreground"
@@ -39,7 +39,7 @@ export default function CsCategoryFilter({
           onClick={() => onChange(category)}
           aria-pressed={value === category}
           className={cn(
-            "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+            "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
             value === category
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border bg-background text-muted-foreground hover:text-foreground"

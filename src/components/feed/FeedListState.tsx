@@ -31,7 +31,7 @@ export default function FeedListState({
       {isError && onRetry && (
         <button
           type="button"
-          className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          className="mt-5 cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           onClick={onRetry}
         >
           다시 시도
