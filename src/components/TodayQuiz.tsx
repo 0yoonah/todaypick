@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FiCheckCircle } from "react-icons/fi";
 import { cn } from "@/lib/utils";
-import {
-  getTodayQuiz,
-  getCategoryLabel,
-  getCategoryColor,
-} from "@/utils/quizUtils";
+import { getCategoryLabel, getCategoryColor } from "@/utils/quizUtils";
 import { Quiz } from "@/types/quiz";
-import { ROUTE_PATH } from "@/config/constants";
+import { PROFILE_TAB, ROUTE_PATH } from "@/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,43 +17,64 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getSeoulDateKey } from "@/utils/dateUtils";
 import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 
+type TodayQuizResponse = {
+  quiz: Quiz | null;
+  result: { selected_answer: number; is_correct: boolean } | null;
+  isCompleted: boolean;
+  solvedCount: number;
+  totalCount: number;
+};
+
 export default function TodayQuiz() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [solvedCount, setSolvedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadError, setLoadError] = useState(false);
   const { user } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let ignore = false;
+
     const loadQuiz = async () => {
       try {
-        const todayQuiz = getTodayQuiz();
-        setQuiz(todayQuiz);
+        // 서버가 이미 푼 문제를 제외하고 오늘의 문제를 결정한다.
+        const response = await fetch("/api/quizzes?scope=today");
 
-        if (!user) return;
-
-        // 로그인한 사용자의 경우 기존 답안 확인
-        const response = await fetch(`/api/quizzes?quizId=${todayQuiz.id}`);
-
-        if (!response.ok && response.status !== 401) {
+        if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const result = await response.json();
-        if (!result) return;
+        const data = (await response.json()) as TodayQuizResponse;
+        if (ignore) return;
 
-        setSelectedAnswer(result.selected_answer);
-        setIsCorrect(result.is_correct);
-        setShowResult(true);
+        setQuiz(data.quiz);
+        setIsCompleted(data.isCompleted);
+        setSolvedCount(data.solvedCount);
+        setTotalCount(data.totalCount);
+
+        if (data.result) {
+          setSelectedAnswer(data.result.selected_answer);
+          setIsCorrect(data.result.is_correct);
+          setShowResult(true);
+        }
       } catch (error) {
         console.error("퀴즈를 불러오는 중 오류가 발생했습니다:", error);
+        if (!ignore) setLoadError(true);
       }
     };
 
     loadQuiz();
+
+    return () => {
+      ignore = true;
+    };
   }, [user]);
 
   const handleAnswerSelect = (index: number) => {
@@ -144,10 +163,44 @@ export default function TodayQuiz() {
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           한 문제로 오늘의 IT 상식을 확인해보세요.
+          {solvedCount > 0 && totalCount > 0 && (
+            <span className="ml-1">
+              지금까지 {totalCount}문제 중 {solvedCount}문제를 풀었어요.
+            </span>
+          )}
         </p>
       </div>
 
-      {!quiz ? (
+      {loadError ? (
+        <Card className="w-full shadow-none">
+          <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
+            <h3 className="font-semibold">퀴즈를 불러오지 못했습니다.</h3>
+            <p className="text-sm text-muted-foreground">
+              잠시 후 다시 시도해주세요.
+            </p>
+          </CardContent>
+        </Card>
+      ) : isCompleted ? (
+        <Card className="w-full shadow-none">
+          <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
+            <FiCheckCircle className="size-8 text-success" aria-hidden />
+            <div>
+              <h3 className="font-semibold">
+                준비된 퀴즈를 모두 풀었어요.
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                총 {totalCount}문제를 완주했습니다. 새로운 문제가 추가되면 이곳에
+                다시 나타나요.
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href={`${ROUTE_PATH.PROFILE}?tab=${PROFILE_TAB.QUIZ_RECORDS}`}>
+                퀴즈 기록 보기
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : !quiz ? (
         renderSkeletonCard
       ) : (
         <Card className="w-full shadow-none">
