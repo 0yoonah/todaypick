@@ -1,4 +1,11 @@
-import { FiBookmark, FiTarget, FiBarChart, FiClock, FiEdit3 } from "react-icons/fi";
+import {
+  FiBookmark,
+  FiTarget,
+  FiBarChart,
+  FiClock,
+  FiEdit3,
+  FiRepeat,
+} from "react-icons/fi";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +43,11 @@ export default function ProfileTabs({
       id: PROFILE_TAB.WRITING,
       label: "내가 쓴 글",
       icon: FiEdit3,
+    },
+    {
+      id: PROFILE_TAB.CS_REVIEW,
+      label: "CS 복습",
+      icon: FiRepeat,
     },
     {
       id: PROFILE_TAB.LEARNING_STATISTICS,
