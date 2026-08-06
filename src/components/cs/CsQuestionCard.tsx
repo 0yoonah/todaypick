@@ -1,39 +1,65 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FiCheck, FiEye, FiHelpCircle, FiRotateCcw, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { CsGradeResult, CsQuestion } from "@/types/cs";
+import { ROUTE_PATH } from "@/config/constants";
+import { useAuthStore } from "@/stores/authStore";
+import type { CsGradeResult, CsQuestion, CsReview } from "@/types/cs";
 import {
   CS_PASS_SCORE,
   getCsCategoryColor,
   getCsCategoryLabel,
   getScoreFeedback,
   gradeCsAnswer,
+  MAX_CS_ANSWER_LENGTH,
+  restoreGradeResult,
 } from "@/utils/csUtils";
-
-const MAX_ANSWER_LENGTH = 2000;
 
 interface CsQuestionCardProps {
   question: CsQuestion;
+  /** 저장된 지난 채점 기록 */
+  review?: CsReview;
+  onSave?: (input: { answer: string; usedHint: boolean }) => void;
+  isSaving?: boolean;
+  saveError?: string;
 }
 
-export default function CsQuestionCard({ question }: CsQuestionCardProps) {
-  const [answer, setAnswer] = useState("");
-  const [result, setResult] = useState<CsGradeResult | null>(null);
+export default function CsQuestionCard({
+  question,
+  review,
+  onSave,
+  isSaving = false,
+  saveError,
+}: CsQuestionCardProps) {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const savedResult = review
+    ? restoreGradeResult(question.keywords, review.matched_keywords, review.score)
+    : null;
+
+  const [answer, setAnswer] = useState(review?.answer ?? "");
+  const [result, setResult] = useState<CsGradeResult | null>(savedResult);
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [usedHint, setUsedHint] = useState(false);
+  const [usedHint, setUsedHint] = useState(review?.used_hint ?? false);
 
   const answerId = useId();
   const hintId = useId();
   const modelAnswerId = useId();
 
   const handleGrade = () => {
+    if (!user) {
+      router.push(ROUTE_PATH.LOGIN);
+      return;
+    }
+
     setResult(gradeCsAnswer(answer, question.keywords));
     setShowAnswer(true);
+    onSave?.({ answer, usedHint });
   };
 
   const handleReset = () => {
@@ -79,7 +105,7 @@ export default function CsQuestionCard({ question }: CsQuestionCardProps) {
           <textarea
             id={answerId}
             value={answer}
-            maxLength={MAX_ANSWER_LENGTH}
+            maxLength={MAX_CS_ANSWER_LENGTH}
             disabled={Boolean(result)}
             placeholder="먼저 스스로 설명해보세요. 떠오르는 개념을 자유롭게 적으면 됩니다."
             onChange={(event) => setAnswer(event.target.value)}
@@ -126,10 +152,10 @@ export default function CsQuestionCard({ question }: CsQuestionCardProps) {
               type="button"
               size="sm"
               className="ml-auto"
-              disabled={answer.trim().length === 0}
+              disabled={answer.trim().length === 0 || isSaving}
               onClick={handleGrade}
             >
-              채점하기
+              {isSaving ? "채점 중..." : "채점하기"}
             </Button>
           )}
         </div>
@@ -196,6 +222,9 @@ export default function CsQuestionCard({ question }: CsQuestionCardProps) {
                 </li>
               ))}
             </ul>
+            {saveError && (
+              <p className="mt-3 text-xs text-destructive">{saveError}</p>
+            )}
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
               키워드 언급 여부로 계산한 참고 점수예요. 표현이 달라 인식되지 않을 수
               있으니 모범 답안과 함께 확인해보세요.

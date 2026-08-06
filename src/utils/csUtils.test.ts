@@ -7,8 +7,10 @@ import {
   gradeCsAnswer,
   needsReview,
   normalizeAnswerText,
+  restoreGradeResult,
+  toReviewMap,
 } from "@/utils/csUtils";
-import type { CsQuestion } from "@/types/cs";
+import type { CsQuestion, CsReview } from "@/types/cs";
 import { CS_CATEGORIES, isCsCategory } from "@/types/cs";
 
 const base: CsQuestion = {
@@ -156,5 +158,61 @@ describe("needsReview / getScoreFeedback", () => {
 
     expect(new Set([high, mid, low]).size).toBe(3);
     expect(high.length).toBeGreaterThan(0);
+  });
+});
+
+describe("restoreGradeResult", () => {
+  const keywords = ["가", "나", "다", "라"];
+
+  it("저장된 기록으로 화면 표시용 결과를 복원한다", () => {
+    const result = restoreGradeResult(keywords, ["나", "라"], 50);
+
+    expect(result.matched).toEqual(["나", "라"]);
+    expect(result.missed).toEqual(["가", "다"]);
+    expect(result.total).toBe(4);
+    expect(result.score).toBe(50);
+  });
+
+  it("문항의 키워드 순서를 유지한다", () => {
+    expect(restoreGradeResult(keywords, ["라", "가"], 50).matched).toEqual([
+      "가",
+      "라",
+    ]);
+  });
+
+  it("문항에 없는 키워드가 기록에 남아 있어도 무시한다", () => {
+    const result = restoreGradeResult(keywords, ["나", "삭제된키워드"], 25);
+
+    expect(result.matched).toEqual(["나"]);
+    expect(result.missed).toHaveLength(3);
+  });
+
+  it("언급 기록이 없으면 전부 놓친 것으로 본다", () => {
+    const result = restoreGradeResult(keywords, [], 0);
+    expect(result.matched).toEqual([]);
+    expect(result.missed).toEqual(keywords);
+  });
+});
+
+describe("toReviewMap", () => {
+  const review = (question_id: string, score: number): CsReview => ({
+    question_id,
+    score,
+    matched_keywords: [],
+    answer: "",
+    used_hint: false,
+    reviewed_at: "2026-08-06T00:00:00.000Z",
+  });
+
+  it("질문 id로 기록을 찾을 수 있다", () => {
+    const map = toReviewMap([review("net-1", 80), review("os-1", 40)]);
+
+    expect(map.get("net-1")?.score).toBe(80);
+    expect(map.get("os-1")?.score).toBe(40);
+    expect(map.get("db-1")).toBeUndefined();
+  });
+
+  it("기록이 없으면 빈 맵을 반환한다", () => {
+    expect(toReviewMap([]).size).toBe(0);
   });
 });
