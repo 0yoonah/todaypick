@@ -56,13 +56,31 @@ chore/32-release-config
 6. `develop → master` 릴리스 PR을 생성한다.
 7. GitHub Actions `CI / verify`와 Vercel 검사가 통과한 뒤 `master`에 병합한다.
 8. Production을 확인하고 검증된 `master` 병합 커밋에 태그와 GitHub Release를 생성한다.
-9. 병합 완료 작업 브랜치를 로컬과 원격에서 정리한다.
+9. 병합 완료 작업 브랜치를 정리한다.
 
 - 각 이슈 PR의 base는 `develop`으로 유지하고 다른 이슈 브랜치를 base로 지정하지 않는다.
 - PR base를 변경했다면 변경 범위가 해당 이슈 파일만 포함하는지 다시 확인한다.
 - base 변경은 기본 `pull_request` GitHub Actions를 자동 실행하지 않을 수 있다. 필요하면 PR을 닫았다가 다시 열어 `reopened` 이벤트로 검증을 실행한다.
+
+### 브랜치 정리
+
+- 저장소의 `Automatically delete head branches` 설정이 켜져 있어 **원격 작업 브랜치는 PR 병합과 함께 자동으로 삭제된다.** 병합 후 별도로 `git push origin --delete`를 실행하지 않는다.
+- `master`, `develop`과 명시적인 보관 브랜치(`archive/*`)는 PR의 head가 아니므로 자동 삭제 대상이 아니다. 수동으로도 삭제하지 않는다.
+- 로컬 브랜치는 자동으로 정리되지 않는다. 병합을 확인한 뒤 직접 정리한다.
+
+```bash
+git checkout develop
+git pull --ff-only
+git fetch --prune          # 원격에서 사라진 추적 참조 정리
+git branch -d <브랜치>      # 병합되지 않았으면 삭제되지 않는다
+```
+
 - 브랜치를 삭제하기 전에 대상 커밋이 의도한 기준 브랜치에 병합됐는지 확인한다. 이슈 브랜치는 `develop`, 릴리스 변경은 `master` 반영 여부를 기준으로 한다.
-- `master`, `develop`, 명시적인 보관 브랜치는 삭제하지 않는다.
+- 자동 삭제가 꺼져 있거나 과거에 쌓인 브랜치를 정리할 때는 두 조건을 함께 확인한다.
+  - `git branch -r --contains <브랜치>`에 `origin/develop` 또는 `origin/master`가 포함된다.
+  - `git rev-list --count origin/develop..<브랜치>`가 `0`이다.
+- `git branch -D`처럼 병합 여부를 무시하는 강제 삭제는 사용하지 않는다.
+- 병합되지 않은 커밋이 남은 브랜치는 임의로 지우지 않고 처리 방식을 먼저 정한다.
 
 ## 이슈와 PR
 
