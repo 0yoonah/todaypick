@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiHelpCircle } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE_PATH } from "@/config/constants";
@@ -10,13 +11,28 @@ import CsQuestionCard from "@/components/cs/CsQuestionCard";
 import { csQuestions } from "@/data/csQuestions";
 import { isCsCategory, type CsCategory } from "@/types/cs";
 import {
+  CS_REVIEWS_QUERY_KEY,
   filterCsQuestions,
   getCsCategoryLabel,
+  toReviewMap,
 } from "@/utils/csUtils";
+import { useAuthStore } from "@/stores/authStore";
+import type { CsReview } from "@/types/cs";
+
+async function fetchCsReviews(): Promise<CsReview[]> {
+  const response = await fetch("/api/cs-reviews");
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(result?.error || "채점 기록을 불러오지 못했습니다.");
+  }
+  return result.reviews ?? [];
+}
 
 export default function CsQuestionList() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const categoryParam = searchParams.get("category");
   const category = isCsCategory(categoryParam)
     ? categoryParam
@@ -26,6 +42,47 @@ export default function CsQuestionList() {
     () => filterCsQuestions(csQuestions, category),
     [category]
   );
+
+  const reviewsQuery = useQuery({
+    queryKey: CS_REVIEWS_QUERY_KEY,
+    queryFn: fetchCsReviews,
+    enabled: Boolean(user),
+  });
+  const reviewMap = useMemo(
+    () => toReviewMap(reviewsQuery.data ?? []),
+    [reviewsQuery.data]
+  );
+
+  const saveReview = useMutation({
+    mutationFn: async (input: {
+      questionId: string;
+      answer: string;
+      usedHint: boolean;
+    }) => {
+      const response = await fetch("/api/cs-reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: input.questionId,
+          answer: input.answer,
+          used_hint: input.usedHint,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.error || "채점 기록을 저장하지 못했습니다.");
+      }
+      return result.review as CsReview;
+    },
+    onSuccess: (review) => {
+      queryClient.setQueryData<CsReview[]>(CS_REVIEWS_QUERY_KEY, (current) => [
+        ...(current ?? []).filter(
+          (item) => item.question_id !== review.question_id
+        ),
+        review,
+      ]);
+    },
+  });
 
   const updateCategory = useCallback(
     (nextCategory?: CsCategory) => {
@@ -78,7 +135,27 @@ export default function CsQuestionList() {
           <ul className="space-y-4">
             {questions.map((question) => (
               <li key={question.id}>
-                <CsQuestionCard question={question} />
+                <CsQuestionCard
+                  question={question}
+                  review={reviewMap.get(question.id)}
+                  isSaving={
+                    saveReview.isPending &&
+                    saveReview.variables?.questionId === question.id
+                  }
+                  saveError={
+                    saveReview.isError &&
+                    saveReview.variables?.questionId === question.id
+                      ? saveReview.error.message
+                      : undefined
+                  }
+                  onSave={({ answer, usedHint }) =>
+                    saveReview.mutate({
+                      questionId: question.id,
+                      answer,
+                      usedHint,
+                    })
+                  }
+                />
               </li>
             ))}
           </ul>

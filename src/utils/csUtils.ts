@@ -1,4 +1,9 @@
-import type { CsGradeResult, CsCategory, CsQuestion } from "@/types/cs";
+import type {
+  CsCategory,
+  CsGradeResult,
+  CsQuestion,
+  CsReview,
+} from "@/types/cs";
 
 /** 선택한 분야의 질문만 남긴다. 분야를 고르지 않으면 전체를 반환한다. */
 export const filterCsQuestions = (
@@ -48,6 +53,12 @@ export const getCsCategoryColor = (category: CsCategory) => {
       return "border-border bg-muted text-muted-foreground";
   }
 };
+
+/** 채점 기록 캐시 키 */
+export const CS_REVIEWS_QUERY_KEY = ["cs-reviews"] as const;
+
+/** 답변 입력 상한. DB 제약과 동일하게 유지한다. */
+export const MAX_CS_ANSWER_LENGTH = 2000;
 
 /** 복습이 필요하다고 보는 기준 점수 */
 export const CS_PASS_SCORE = 60;
@@ -111,3 +122,25 @@ export const getScoreFeedback = (score: number): string => {
 
 /** 복습이 필요한 점수인지 판단한다. */
 export const needsReview = (score: number): boolean => score < CS_PASS_SCORE;
+
+/** 저장된 채점 기록으로 화면에 표시할 결과를 복원한다. */
+export function restoreGradeResult(
+  keywords: string[],
+  matchedKeywords: string[],
+  score: number
+): CsGradeResult {
+  const matchedSet = new Set(matchedKeywords);
+  const matched = keywords.filter((keyword) => matchedSet.has(keyword));
+
+  return {
+    score,
+    matched,
+    missed: keywords.filter((keyword) => !matchedSet.has(keyword)),
+    total: keywords.length,
+  };
+}
+
+/** 질문 id로 채점 기록을 찾을 수 있게 정리한다. */
+export function toReviewMap(reviews: CsReview[]): Map<string, CsReview> {
+  return new Map(reviews.map((review) => [review.question_id, review]));
+}
