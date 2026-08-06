@@ -4,19 +4,19 @@ import { useId, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { InterviewQuestion } from "@/types/interview";
+import type { CsQuestion } from "@/types/cs";
 import {
-  getInterviewCategoryColor,
-  getInterviewCategoryLabel,
-} from "@/utils/interviewUtils";
+  getCsCategoryColor,
+  getCsCategoryLabel,
+} from "@/utils/csUtils";
 
-interface InterviewQuestionCardProps {
-  question: InterviewQuestion;
+interface CsQuestionCardProps {
+  question: CsQuestion;
 }
 
-export default function InterviewQuestionCard({
+export default function CsQuestionCard({
   question,
-}: InterviewQuestionCardProps) {
+}: CsQuestionCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const answerId = useId();
 
@@ -27,10 +27,10 @@ export default function InterviewQuestionCard({
           <span
             className={cn(
               "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-              getInterviewCategoryColor(question.category)
+              getCsCategoryColor(question.category)
             )}
           >
-            {getInterviewCategoryLabel(question.category)}
+            {getCsCategoryLabel(question.category)}
           </span>
         </div>
 

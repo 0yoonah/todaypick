@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
-  filterInterviewQuestions,
+  filterCsQuestions,
   getConfidenceLabel,
-  getInterviewCategoryLabel,
-} from "@/utils/interviewUtils";
-import type { InterviewQuestion } from "@/types/interview";
+  getCsCategoryLabel,
+} from "@/utils/csUtils";
+import type { CsQuestion } from "@/types/cs";
 import {
-  INTERVIEW_CATEGORIES,
-  isInterviewCategory,
+  CS_CATEGORIES,
+  isCsCategory,
   isReviewConfidence,
   REVIEW_CONFIDENCES,
-} from "@/types/interview";
+} from "@/types/cs";
 
-const base: InterviewQuestion = {
+const base: CsQuestion = {
   id: "base",
   question: "질문",
   answer: "답안",
@@ -21,15 +21,16 @@ const base: InterviewQuestion = {
   created_at: "2026-08-06T00:00:00.000Z",
 };
 
-describe("isInterviewCategory", () => {
+describe("isCsCategory", () => {
   it("정의된 카테고리만 통과시킨다", () => {
-    INTERVIEW_CATEGORIES.forEach((category) => {
-      expect(isInterviewCategory(category)).toBe(true);
+    CS_CATEGORIES.forEach((category) => {
+      expect(isCsCategory(category)).toBe(true);
     });
-    expect(isInterviewCategory("frontend")).toBe(false);
-    expect(isInterviewCategory(null)).toBe(false);
-    expect(isInterviewCategory(undefined)).toBe(false);
-    expect(isInterviewCategory(1)).toBe(false);
+    expect(isCsCategory("web")).toBe(false);
+    expect(isCsCategory("language")).toBe(false);
+    expect(isCsCategory(null)).toBe(false);
+    expect(isCsCategory(undefined)).toBe(false);
+    expect(isCsCategory(1)).toBe(false);
   });
 });
 
@@ -46,8 +47,8 @@ describe("isReviewConfidence", () => {
 
 describe("라벨", () => {
   it("모든 카테고리에 한글 라벨이 있다", () => {
-    INTERVIEW_CATEGORIES.forEach((category) => {
-      const label = getInterviewCategoryLabel(category);
+    CS_CATEGORIES.forEach((category) => {
+      const label = getCsCategoryLabel(category);
       expect(label).not.toBe(category);
       expect(label.trim().length).toBeGreaterThan(0);
     });
@@ -60,7 +61,7 @@ describe("라벨", () => {
   });
 });
 
-describe("filterInterviewQuestions", () => {
+describe("filterCsQuestions", () => {
   const questions = [
     { ...base, id: "a", category: "network" as const },
     { ...base, id: "b", category: "os" as const },
@@ -68,21 +69,21 @@ describe("filterInterviewQuestions", () => {
   ];
 
   it("분야를 고르지 않으면 전체를 반환한다", () => {
-    expect(filterInterviewQuestions(questions)).toHaveLength(3);
-    expect(filterInterviewQuestions(questions, undefined)).toBe(questions);
+    expect(filterCsQuestions(questions)).toHaveLength(3);
+    expect(filterCsQuestions(questions, undefined)).toBe(questions);
   });
 
   it("선택한 분야의 질문만 남긴다", () => {
-    const filtered = filterInterviewQuestions(questions, "network");
+    const filtered = filterCsQuestions(questions, "network");
     expect(filtered.map((question) => question.id)).toEqual(["a", "c"]);
   });
 
   it("해당 분야의 질문이 없으면 빈 배열을 반환한다", () => {
-    expect(filterInterviewQuestions(questions, "system_design")).toEqual([]);
+    expect(filterCsQuestions(questions, "system_design")).toEqual([]);
   });
 
   it("원본 배열을 바꾸지 않는다", () => {
-    filterInterviewQuestions(questions, "network");
+    filterCsQuestions(questions, "network");
     expect(questions).toHaveLength(3);
   });
 });

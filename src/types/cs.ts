@@ -1,29 +1,29 @@
-export const INTERVIEW_CATEGORIES = [
+export const CS_CATEGORIES = [
   "network",
   "os",
   "database",
   "algorithm",
-  "web",
-  "language",
+  "frontend",
+  "backend",
   "system_design",
 ] as const;
 
-export type InterviewCategory = (typeof INTERVIEW_CATEGORIES)[number];
+export type CsCategory = (typeof CS_CATEGORIES)[number];
 
-export const isInterviewCategory = (
+export const isCsCategory = (
   value: unknown
-): value is InterviewCategory =>
+): value is CsCategory =>
   typeof value === "string" &&
-  (INTERVIEW_CATEGORIES as readonly string[]).includes(value);
+  (CS_CATEGORIES as readonly string[]).includes(value);
 
-export interface InterviewQuestion {
+export interface CsQuestion {
   id: string;
   question: string;
   /** 스스로 설명한 뒤 확인하는 모범 답안 */
   answer: string;
   /** 답변에 반드시 포함해야 하는 핵심 개념 */
   keywords: string[];
-  category: InterviewCategory;
+  category: CsCategory;
   created_at: string;
 }
 
@@ -38,7 +38,7 @@ export const isReviewConfidence = (
   typeof value === "string" &&
   (REVIEW_CONFIDENCES as readonly string[]).includes(value);
 
-export interface InterviewReview {
+export interface CsReview {
   question_id: string;
   confidence: ReviewConfidence;
   reviewed_at: string;

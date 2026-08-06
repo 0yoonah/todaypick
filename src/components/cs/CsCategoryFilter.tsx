@@ -1,23 +1,23 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { INTERVIEW_CATEGORIES, type InterviewCategory } from "@/types/interview";
-import { getInterviewCategoryLabel } from "@/utils/interviewUtils";
+import { CS_CATEGORIES, type CsCategory } from "@/types/cs";
+import { getCsCategoryLabel } from "@/utils/csUtils";
 
-interface InterviewCategoryFilterProps {
-  value?: InterviewCategory;
-  onChange: (category?: InterviewCategory) => void;
+interface CsCategoryFilterProps {
+  value?: CsCategory;
+  onChange: (category?: CsCategory) => void;
 }
 
-export default function InterviewCategoryFilter({
+export default function CsCategoryFilter({
   value,
   onChange,
-}: InterviewCategoryFilterProps) {
+}: CsCategoryFilterProps) {
   return (
     <div
       className="mb-7 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0"
       role="group"
-      aria-label="면접 질문 분야 필터"
+      aria-label="CS 지식 분야 필터"
     >
       <button
         type="button"
@@ -32,7 +32,7 @@ export default function InterviewCategoryFilter({
       >
         전체
       </button>
-      {INTERVIEW_CATEGORIES.map((category) => (
+      {CS_CATEGORIES.map((category) => (
         <button
           key={category}
           type="button"
@@ -45,7 +45,7 @@ export default function InterviewCategoryFilter({
               : "border-border bg-background text-muted-foreground hover:text-foreground"
           )}
         >
-          {getInterviewCategoryLabel(category)}
+          {getCsCategoryLabel(category)}
         </button>
       ))}
     </div>

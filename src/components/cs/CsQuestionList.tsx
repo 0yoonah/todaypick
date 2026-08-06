@@ -4,34 +4,35 @@ import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiHelpCircle } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
-import InterviewCategoryFilter from "@/components/interview/InterviewCategoryFilter";
-import InterviewQuestionCard from "@/components/interview/InterviewQuestionCard";
-import { interviewQuestions } from "@/data/interviewQuestions";
-import { isInterviewCategory, type InterviewCategory } from "@/types/interview";
+import { ROUTE_PATH } from "@/config/constants";
+import CsCategoryFilter from "@/components/cs/CsCategoryFilter";
+import CsQuestionCard from "@/components/cs/CsQuestionCard";
+import { csQuestions } from "@/data/csQuestions";
+import { isCsCategory, type CsCategory } from "@/types/cs";
 import {
-  filterInterviewQuestions,
-  getInterviewCategoryLabel,
-} from "@/utils/interviewUtils";
+  filterCsQuestions,
+  getCsCategoryLabel,
+} from "@/utils/csUtils";
 
-export default function InterviewQuestionList() {
+export default function CsQuestionList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
-  const category = isInterviewCategory(categoryParam)
+  const category = isCsCategory(categoryParam)
     ? categoryParam
     : undefined;
 
   const questions = useMemo(
-    () => filterInterviewQuestions(interviewQuestions, category),
+    () => filterCsQuestions(csQuestions, category),
     [category]
   );
 
   const updateCategory = useCallback(
-    (nextCategory?: InterviewCategory) => {
+    (nextCategory?: CsCategory) => {
       const params = new URLSearchParams();
       if (nextCategory) params.set("category", nextCategory);
       const query = params.toString();
-      router.push(query ? `?${query}` : "/interview");
+      router.push(query ? `?${query}` : ROUTE_PATH.CS);
     },
     [router]
   );
@@ -39,17 +40,17 @@ export default function InterviewQuestionList() {
   return (
     <div>
       <div className="mb-9 max-w-2xl">
-        <p className="mb-3 text-sm font-semibold text-primary">면접 대비</p>
+        <p className="mb-3 text-sm font-semibold text-primary">CS 지식</p>
         <h1 className="text-3xl font-bold tracking-[-0.03em] text-foreground sm:text-4xl">
-          CS 면접 질문
+          CS 지식 다지기
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          질문을 보고 먼저 스스로 설명해 본 뒤 답을 확인해보세요. 총{" "}
-          {interviewQuestions.length}개의 질문이 준비되어 있어요.
+          질문을 보고 먼저 스스로 설명해 본 뒤 답을 확인해보세요. 면접에서도
+          자주 다루는 주제로 총 {csQuestions.length}개를 준비했어요.
         </p>
       </div>
 
-      <InterviewCategoryFilter value={category} onChange={updateCategory} />
+      <CsCategoryFilter value={category} onChange={updateCategory} />
 
       {questions.length === 0 ? (
         <Card>
@@ -58,7 +59,7 @@ export default function InterviewQuestionList() {
             <div>
               <h2 className="font-semibold">
                 {category
-                  ? `${getInterviewCategoryLabel(category)} 질문이 아직 없어요.`
+                  ? `${getCsCategoryLabel(category)} 질문이 아직 없어요.`
                   : "질문이 아직 없어요."}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -71,13 +72,13 @@ export default function InterviewQuestionList() {
         <>
           <p className="mb-4 text-sm text-muted-foreground">
             {category
-              ? `${getInterviewCategoryLabel(category)} ${questions.length}문항`
+              ? `${getCsCategoryLabel(category)} ${questions.length}문항`
               : `전체 ${questions.length}문항`}
           </p>
           <ul className="space-y-4">
             {questions.map((question) => (
               <li key={question.id}>
-                <InterviewQuestionCard question={question} />
+                <CsQuestionCard question={question} />
               </li>
             ))}
           </ul>

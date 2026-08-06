@@ -29,10 +29,10 @@ export default function MobileBottomNavigation() {
       isActive: pathname === ROUTE_PATH.FEEDS,
     },
     {
-      label: "면접",
-      href: ROUTE_PATH.INTERVIEW,
+      label: "CS",
+      href: ROUTE_PATH.CS,
       icon: FiHelpCircle,
-      isActive: pathname === ROUTE_PATH.INTERVIEW,
+      isActive: pathname === ROUTE_PATH.CS,
     },
     {
       label: "프로필",
