@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import WrittenPostCard from "@/components/feed/WrittenPostCard";
 import { ROUTE_PATH } from "@/config/constants";
+import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import { useAuthStore } from "@/stores/authStore";
 import type { WritingDraft } from "@/types/writing";
 import { INTERESTS, type InterestId } from "@/config/interests";
@@ -131,12 +132,13 @@ export default function WrittenPostsTab({ interest }: { interest?: InterestId })
 
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-      {publicDrafts.map((draft) => (
+      {publicDrafts.map((draft, index) => (
         <WrittenPostCard
           key={draft.id}
           draft={draft}
           onBookmark={handleBookmark}
           bookmarkPending={bookmarkMutation.isPending}
+          priority={shouldPrioritizeImage(index)}
         />
       ))}
     </div>

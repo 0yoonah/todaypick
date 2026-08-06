@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ROUTE_PATH, FEED_CATEGORY } from "@/config/constants";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
+import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
@@ -72,8 +73,13 @@ export default function TodayFeed() {
           ) : (
             feeds
               .slice(0, 3)
-              .map((feed) => (
-                <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+              .map((feed, index) => (
+                <FeedCard
+                  key={feed.id}
+                  feed={feed}
+                  handleScrap={handleScrap}
+                  priority={shouldPrioritizeImage(index)}
+                />
               ))
           )}
         </div>
