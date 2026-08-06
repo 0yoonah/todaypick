@@ -2,62 +2,74 @@
 
 > 하루 10분, IT 전문가로 성장하는 습관
 
-TodayPick은 매일 IT 뉴스, 퀴즈, 명언을 제공하여 개발자들이 꾸준히 학습할 수 있도록 돕는 웹 애플리케이션입니다.
+TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드는 웹 애플리케이션입니다. 읽은 글을 다시 찾고, 하루 읽기 목표와 연속 학습일을 관리하고, 읽은 글을 인용해 글을 쓰고 공유할 수 있습니다.
 
 ## 🚀 주요 기능
 
 ### 오늘의 피드
 
-- **IT 뉴스**: 최신 IT 뉴스와 기술 트렌드
-- **테크 블로그**: 개발자들이 주목하는 기술 블로그 글
-- **RSS 피드 수집**: 다양한 소스에서 자동으로 최신 콘텐츠 수집
-- **스크랩 기능**: 관심 있는 글을 저장하고 나중에 다시 볼 수 있음
+- **IT 기사·테크 블로그**: 여러 소스의 RSS를 모아 최신 콘텐츠를 제공
+- **관심 분야 필터**: 프론트엔드, 백엔드, AI·데이터, 인프라·DevOps, 보안, 커리어
+- **스크랩**: 관심 있는 글을 저장하고 프로필에서 다시 확인
+- **무한 스크롤**: 중복 제거와 결정적 정렬을 마친 뒤 12개씩 페이지 로딩
+
+### 읽기 기록과 목표
+
+- **읽은 글 히스토리**: 원문을 연 기록을 서울 날짜 기준으로 저장, 최근 30일·최대 100개 보관
+- **재방문 정보**: 최초 읽기, 최근 읽기, 재방문 횟수 구분
+- **하루 읽기 목표**: 1~20개 범위로 설정하고 오늘 진행률 확인
+- **연속 학습일**: 서울 날짜 기준 목표 달성일로 현재·최고 스트릭 계산
+- **기록 삭제**: 기록을 지우면 해당 날짜의 목표 달성 상태와 스트릭을 다시 계산
+
+### 인용 기반 글쓰기
+
+- **글 작성**: Markdown 본문, 관심 분야 태그, 썸네일, 공개·비공개 상태
+- **원문 인용**: 피드나 읽은 글에서 바로 인용해 초안 시작
+- **공개 게시글**: 비로그인 사용자도 열람 가능, 게시글 탭에서 12개씩 무한 스크롤
+- **북마크**: 다른 사용자의 공개 게시글을 저장해 프로필에서 확인
 
 ### 오늘의 IT 퀴즈
 
-- **매일 새로운 퀴즈**: 프로그래밍, 데이터베이스, 네트워크, 보안 등 다양한 카테고리
-- **즉시 피드백**: 답안 제출 후 정답과 해설 확인
-- **학습 통계**: 정답률과 연속 학습 기록 추적
+- **매일 한 문제**: 서울 날짜 기준으로 결정적으로 선정
+- **이미 푼 문제 제외**: 아직 풀지 않은 문제를 우선 제시하고, 모두 풀면 완주 상태 안내
+- **즉시 피드백**: 정답과 해설을 바로 확인
 
 ### 오늘의 명언
 
-- **영감을 주는 명언**: 개발자와 IT 전문가들의 명언
-- **스크랩 기능**: 마음에 드는 명언 저장
-- **클립보드 복사**: 명언을 쉽게 공유
+- **개발자 명언**: 매일 새로운 명언 제공
+- **스크랩과 복사**: 마음에 드는 명언 저장, 클립보드 복사
 
-### 사용자 프로필
+### 프로필과 학습 통계
 
-- **학습 통계**: 퀴즈 정답률, 스크랩한 피드/명언 수
-- **연속 학습 기록**: 현재 연속 학습일과 최장 연속 학습일
-- **주간 학습 진행도**: 일주일 단위 학습 현황 시각화
-- **개인화된 대시보드**: 스크랩한 콘텐츠와 퀴즈 기록 관리
+- **저장한 콘텐츠**: RSS 스크랩과 게시글 북마크를 한곳에서 조회
+- **읽은 글·내가 쓴 글·퀴즈 기록·스크랩한 명언** 탭 제공
+- **주간 리포트**: 이번 주와 지난주의 학습일, 읽기량, 퀴즈 정답률 비교
+- **학습 통계**: 누적 퀴즈 수, 정답률, 현재·최고 스트릭
 
 ## 🛠 기술 스택
 
 ### Frontend
 
-- **Next.js 16.2.12** - React 기반 풀스택 프레임워크
-- **React 19.2.8** - 사용자 인터페이스 라이브러리
-- **TypeScript** - 타입 안전성
-- **Tailwind CSS 4** - 유틸리티 우선 CSS 프레임워크
+- **Next.js 16** (App Router, Turbopack)
+- **React 19**
+- **TypeScript**
+- **Tailwind CSS 4**
 
 ### Backend & Database
 
-- **Supabase**
-  - PostgreSQL 데이터베이스
-  - 실시간 구독
-  - 인증 및 권한 관리
-  - Row Level Security (RLS)
+- **Supabase** — PostgreSQL, 인증, Storage, Row Level Security
 
 ### 상태 관리 & 데이터 페칭
 
-- **Zustand** - 가벼운 상태 관리 라이브러리
-- **TanStack Query** - 서버 상태 관리 및 캐싱
+- **TanStack Query** — 서버 상태, 캐시, 무한 스크롤
+- **Zustand** — 인증 상태
 
-### 기타 라이브러리
+### 기타
 
-- **RSS Parser** - RSS 피드 파싱
-- **React Icons** - 아이콘 라이브러리
+- **rss-parser** — RSS 수집
+- **react-markdown / remark-gfm** — 게시글 본문 렌더링
+- **react-icons**
+- **Vitest** — 단위 테스트
 
 ## 📁 프로젝트 구조
 
@@ -65,27 +77,30 @@ TodayPick은 매일 IT 뉴스, 퀴즈, 명언을 제공하여 개발자들이 �
 src/
 ├── app/                   # Next.js App Router
 │   ├── api/               # API 라우트
-│   │   ├── auth/          # 인증 관련 API
-│   │   ├── feeds/         # 피드 관련 API
-│   │   ├── quizzes/       # 퀴즈 관련 API
-│   │   ├── quotes/        # 명언 관련 API
-│   │   └── profile/       # 프로필 관련 API
-│   ├── auth/              # 인증 페이지
+│   │   ├── daily-activities/  # 일일 활동, 읽기 목표
+│   │   ├── feed-reads/        # 읽은 글 히스토리
+│   │   ├── feeds/             # RSS 피드, 스크랩
+│   │   ├── profile/           # 프로필, 관심 분야
+│   │   ├── quizzes/           # 오늘의 퀴즈, 답안
+│   │   ├── quotes/            # 명언
+│   │   ├── statistics/        # 학습 통계, 주간 리포트
+│   │   ├── writing-bookmarks/ # 게시글 북마크
+│   │   └── writing-drafts/    # 글 작성, 공개 게시글
 │   ├── feeds/             # 피드 페이지
-│   ├── profile/           # 프로필 페이지
-│   └── layout.tsx         # 루트 레이아웃
-├── components/            # 재사용 가능한 컴포넌트
-│   ├── auth/              # 인증 관련 컴포넌트
-│   ├── feed/              # 피드 관련 컴포넌트
-│   ├── profile/           # 프로필 관련 컴포넌트
-│   ├── quote/             # 명언 관련 컴포넌트
-│   └── ui/                # 기본 UI 컴포넌트
+│   ├── login/             # 로그인
+│   ├── posts/[id]/        # 게시글 상세
+│   ├── profile/           # 프로필
+│   ├── signup/            # 회원가입
+│   └── write/             # 글쓰기
+├── components/            # 화면 컴포넌트
+│   ├── auth/  feed/  profile/  quote/  write/  ui/
+├── config/                # 상수, 관심 분야, RSS 소스 설정
+├── data/                  # 정적 데이터 (퀴즈, 명언, 피드 소스)
 ├── hooks/                 # 커스텀 훅
-├── services/              # 비즈니스 로직
-├── stores/                # 상태 관리
-├── types/                 # TypeScript 타입 정의
-├── utils/                 # 유틸리티 함수
-└── data/                  # 정적 데이터
+├── services/              # 서버 로직 (RSS 수집, 일일 활동 등)
+├── stores/                # Zustand 스토어
+├── types/                 # 타입 정의
+└── utils/                 # 유틸리티 (날짜, 통계, 피드, 글쓰기 등)
 ```
 
 ## 🚀 시작하기
@@ -94,7 +109,7 @@ src/
 # 저장소 클론 및 의존성 설치
 git clone <repository-url>
 cd todaypick
-nvm use
+nvm use          # .nvmrc 기준 Node.js 24
 npm install
 
 # 환경 변수 설정
@@ -104,6 +119,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
+필요한 환경 변수는 `.env.example`의 두 개입니다.
+
+| 변수 | 설명 |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+
 ## 🗄 데이터베이스 스키마
 
 Supabase CLI로 로컬 프로젝트를 연결한 뒤 마이그레이션을 적용합니다.
@@ -111,60 +133,79 @@ Supabase CLI로 로컬 프로젝트를 연결한 뒤 마이그레이션을 적�
 ```bash
 npx supabase login
 npx supabase link --project-ref <project-ref>
-npx supabase db push
+npx supabase migration list --linked   # 로컬과 원격의 적용 상태 비교
+npx supabase db push          # 미적용 migration 반영
 ```
 
-`supabase/migrations`는 테이블, 인덱스, 회원 프로필 생성 트리거,
-RLS 정책과 `avatars` Storage 정책의 기준 소스입니다. Dashboard에서 직접
-스키마를 변경했다면 `npx supabase db diff -f <migration-name>`으로 변경 이력을
-먼저 저장합니다.
+`supabase/migrations`는 테이블, 인덱스, 트리거, RLS 정책과 Storage 정책의 기준 소스입니다.
+Dashboard에서 직접 스키마를 변경했다면 `npx supabase db diff -f <migration-name>`으로 변경 이력을 먼저 저장합니다.
+
+원격 적용 확인과 릴리스 절차는 [docs/release-operations.md](docs/release-operations.md)를 따릅니다.
 
 ### 주요 테이블
 
-- **users** - 사용자 정보
-- **scraped_feeds** - 스크랩한 피드
-- **scraped_quotes** - 스크랩한 명언
-- **quiz_results** - 퀴즈 답안 기록
-- **daily_activities** - 일일 학습 활동 기록
+| 테이블 | 용도 |
+| --- | --- |
+| `users` | 사용자 프로필, 관심 분야, 하루 읽기 목표 |
+| `daily_activities` | 날짜별 학습 활동과 읽기 목표 달성 상태 |
+| `feed_reads` | 읽은 글 히스토리(서울 날짜 기준, 재방문 횟수 포함) |
+| `scraped_feeds` | 스크랩한 RSS 피드 |
+| `scraped_quotes` | 스크랩한 명언 |
+| `quiz_results` | 퀴즈 답안과 정답 여부 |
+| `writing_drafts` | 작성한 글(공개·비공개) |
+| `writing_bookmarks` | 북마크한 공개 게시글 |
+
+### 주요 함수
+
+| 함수 | 용도 |
+| --- | --- |
+| `record_feed_read` | 읽은 글 기록과 일일 목표 달성 상태 갱신 |
+| `cleanup_feed_read_history` | 30일·100개 보관 정책에 따른 기록 정리 (`pg_cron`) |
+| `get_public_writing_drafts` | 공개 게시글 조회 |
+| `handle_new_user` | 가입 시 프로필 생성 |
 
 ## 🔧 개발 스크립트
 
 ```bash
-# 개발 서버 실행 (Next.js 16은 Turbopack을 기본 사용)
-npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 프로덕션 서버 실행
-npm run start
-
-# 린팅
-npm run lint
-
-# 타입 검사
-npm run type-check
-
+npm run dev          # 개발 서버 (Turbopack)
+npm run build        # 프로덕션 빌드
+npm run start        # 프로덕션 서버
+npm run lint         # ESLint
+npm run type-check   # tsc --noEmit
+npm test             # Vitest 단위 테스트
 ```
+
+코드 변경 후에는 위 네 가지 검증(`lint`, `type-check`, `test`, `build`)을 모두 실행합니다.
+GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 
 ## 📱 주요 페이지
 
-- **홈페이지** (`/`) - 오늘의 피드, 퀴즈, 명언
-- **피드 페이지** (`/feeds`) - 전체 피드 목록 및 카테고리별 필터링
-- **프로필 페이지** (`/profile`) - 사용자 정보 및 학습 통계
-- **로그인** (`/login`) - 사용자 인증
-- **회원가입** (`/signup`) - 새 계정 생성
+| 경로 | 설명 |
+| --- | --- |
+| `/` | 오늘 읽어볼 콘텐츠, 오늘의 퀴즈, 오늘의 명언, 학습 체크리스트 |
+| `/feeds` | IT 기사·테크 블로그·게시글 탭과 관심 분야 필터 |
+| `/posts/[id]` | 공개 게시글 상세 |
+| `/write` | 글쓰기와 수정 |
+| `/profile` | 저장한 콘텐츠, 읽은 글, 내가 쓴 글, 퀴즈 기록, 명언, 학습 통계 |
+| `/login`, `/signup` | 인증 |
 
-## 🎨 UI/UX 특징
+## 🎨 UI/UX 기준
 
-- **반응형 디자인**: 모바일, 태블릿, 데스크톱 모든 기기 지원
-- **스켈레톤 로딩**: 부드러운 로딩 경험
-- **무한 스크롤**: 효율적인 콘텐츠 로딩
-- **접근성**: 키보드 내비게이션 및 스크린 리더 지원
+- **반응형**: 320px 모바일부터 데스크톱까지 지원
+- **콘텐츠 폭**: 주요 페이지는 `max-width: 1080px`과 동일한 좌우 시작선
+- **색상 토큰**: `src/app/globals.css`의 역할 기반 토큰 사용
+- **상태 구분**: 로딩·오류·빈 데이터·비로그인 상태를 서로 구분해 표시
+- **접근성**: 키보드 내비게이션, accessible name, `prefers-reduced-motion` 존중
 
 ## 🔐 인증 및 보안
 
-- **Supabase Auth**: 이메일/비밀번호 기반 인증
-- **Row Level Security**: 데이터베이스 레벨 보안
-- **미들웨어**: 인증 상태 확인 및 리다이렉션
-- **세션 관리**: 안전한 사용자 세션 처리
+- **Supabase Auth**: 이메일/비밀번호 인증
+- **Row Level Security**: 사용자 데이터는 본인만 접근, 공개 게시글은 제한된 함수로 조회
+- **미들웨어**: 인증 상태 확인과 리다이렉션
+- **RSS 수집**: 허용 목록 기반 수집, 원문 본문과 HTML은 저장하지 않음
+
+## 📚 문서
+
+- [AGENTS.md](AGENTS.md) — 브랜치, 커밋, PR, 릴리스 규칙
+- [docs/release-operations.md](docs/release-operations.md) — migration 적용 확인과 릴리스·검증 절차
+- [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
