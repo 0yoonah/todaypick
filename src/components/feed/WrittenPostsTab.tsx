@@ -24,7 +24,14 @@ async function fetchDrafts(interest?: InterestId): Promise<WritingDraft[]> {
   return result.drafts ?? [];
 }
 
-export default function WrittenPostsTab({ interest }: { interest?: InterestId }) {
+export default function WrittenPostsTab({
+  interest,
+  limit,
+}: {
+  interest?: InterestId;
+  /** 홈처럼 미리보기만 노출할 때 사용할 최대 개수 */
+  limit?: number;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -127,7 +134,8 @@ export default function WrittenPostsTab({ interest }: { interest?: InterestId })
     );
   }
 
-  const publicDrafts = query.data;
+  const publicDrafts =
+    limit && limit > 0 ? query.data.slice(0, limit) : query.data;
 
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
