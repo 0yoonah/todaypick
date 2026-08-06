@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
-import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
+import { isProfileTab, PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -20,8 +20,9 @@ import WritingTab from "@/components/profile/WritingTab";
 export default function ProfileContainer() {
   const router = useRouter();
   const { loading } = useAuthStore();
+  const requestedTab = useSearchParams().get("tab");
   const [activeTab, setActiveTab] = useState<ProfileTabType>(
-    PROFILE_TAB.SCRAPED_FEEDS
+    isProfileTab(requestedTab) ? requestedTab : PROFILE_TAB.SCRAPED_FEEDS
   );
 
   const startWriting = useCallback((draftId: string) => {

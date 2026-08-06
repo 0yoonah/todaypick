@@ -8,9 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INTERESTS, type InterestId } from "@/config/interests";
-import { ROUTE_PATH } from "@/config/constants";
+import { PROFILE_TAB, ROUTE_PATH } from "@/config/constants";
 import { cn } from "@/lib/utils";
-import { DEFAULT_WRITING_VISIBILITY } from "@/utils/writingUtils";
+import {
+  createWritingFormSnapshot,
+  DEFAULT_WRITING_VISIBILITY,
+  hasWritingFormChanges,
+} from "@/utils/writingUtils";
 import type {
   WritingDraft,
   WritingSource,
@@ -52,15 +56,28 @@ export default function WriteEditor({
     initialDraft?.thumbnail_url ?? null
   );
 
-  const isDirty = Boolean(
-    title.trim() ||
-      content.trim() ||
-      tags.length > 0 ||
-      visibility !==
-        (initialDraft?.visibility ?? DEFAULT_WRITING_VISIBILITY) ||
-      thumbnailFile ||
-      thumbnailUrl ||
-      sources.length !== (initialDraft?.sources.length ?? 0)
+  const initialSnapshot = useMemo(
+    () =>
+      createWritingFormSnapshot(
+        editing,
+        startAsPublic && !editing
+          ? DEFAULT_WRITING_VISIBILITY
+          : editing?.visibility ?? DEFAULT_WRITING_VISIBILITY
+      ),
+    [editing, startAsPublic]
+  );
+
+  const isDirty = hasWritingFormChanges(
+    initialSnapshot,
+    {
+      title,
+      content,
+      tags,
+      visibility,
+      sourceIds: sources.map((source) => source.id),
+      thumbnailUrl,
+    },
+    Boolean(thumbnailFile)
   );
 
   useEffect(() => {
@@ -110,7 +127,11 @@ export default function WriteEditor({
       setThumbnailFile(null);
       setThumbnailPreview(draft.thumbnail_url ?? null);
       await queryClient.invalidateQueries({ queryKey: ["writing-drafts"] });
-      router.push(`${ROUTE_PATH.FEEDS}?category=writing`);
+      router.push(
+        draft.visibility === "public"
+          ? `${ROUTE_PATH.FEEDS}?category=writing`
+          : `${ROUTE_PATH.PROFILE}?tab=${PROFILE_TAB.WRITING}`
+      );
     },
   });
 
