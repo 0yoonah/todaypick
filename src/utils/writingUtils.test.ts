@@ -5,6 +5,8 @@ import {
   MAX_PUBLIC_DRAFT_LIMIT,
   paginateDrafts,
   parseWritingDraftPagination,
+  publicWritingDraftsQueryKey,
+  setDraftBookmarkInPages,
   sortPublicDrafts,
   hasWritingFormChanges,
   parseWritingSources,
@@ -224,5 +226,81 @@ describe("paginateDrafts", () => {
       totalPages: 0,
       currentPage: 1,
     });
+  });
+});
+
+describe("setDraftBookmarkInPages", () => {
+  const bookmarkDraft = (id: string, isBookmarked: boolean): WritingDraft => ({
+    id,
+    title: `글 ${id}`,
+    content: "",
+    tags: [],
+    visibility: "public",
+    thumbnail_url: null,
+    sources: [],
+    created_at: "2026-08-03T00:00:00.000Z",
+    updated_at: "2026-08-03T00:00:00.000Z",
+    is_bookmarked: isBookmarked,
+  });
+  const page = (drafts: WritingDraft[], currentPage: number) => ({
+    drafts,
+    totalCount: 3,
+    totalPages: 2,
+    currentPage,
+  });
+
+  it("모든 페이지에서 해당 글의 북마크 상태만 바꾼다", () => {
+    const data = {
+      pages: [
+        page([bookmarkDraft("a", false), bookmarkDraft("b", false)], 1),
+        page([bookmarkDraft("c", false)], 2),
+      ],
+      pageParams: [1, 2],
+    };
+
+    const updated = setDraftBookmarkInPages(data, "c", true);
+
+    expect(updated?.pages[1].drafts[0].is_bookmarked).toBe(true);
+    expect(updated?.pages[0].drafts.map((draft) => draft.is_bookmarked)).toEqual(
+      [false, false]
+    );
+  });
+
+  it("캐시가 없으면 그대로 둔다", () => {
+    expect(setDraftBookmarkInPages(undefined, "a", true)).toBeUndefined();
+  });
+
+  it("원본 캐시를 변경하지 않는다", () => {
+    const data = {
+      pages: [page([bookmarkDraft("a", false)], 1)],
+      pageParams: [1],
+    };
+
+    setDraftBookmarkInPages(data, "a", true);
+
+    expect(data.pages[0].drafts[0].is_bookmarked).toBe(false);
+  });
+});
+
+describe("publicWritingDraftsQueryKey", () => {
+  it("관심 분야와 미리보기 개수로 캐시를 구분한다", () => {
+    expect(publicWritingDraftsQueryKey()).toEqual([
+      "writing-drafts",
+      "public",
+      "all",
+      "all",
+    ]);
+    expect(publicWritingDraftsQueryKey("frontend", 3)).toEqual([
+      "writing-drafts",
+      "public",
+      "frontend",
+      3,
+    ]);
+    expect(publicWritingDraftsQueryKey(undefined, 0)).toEqual([
+      "writing-drafts",
+      "public",
+      "all",
+      "all",
+    ]);
   });
 });

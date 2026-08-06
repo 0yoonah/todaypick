@@ -71,6 +71,43 @@ export function paginateDrafts<T>(drafts: T[], page: number, limit: number) {
   };
 }
 
+export const PUBLIC_DRAFT_PAGE_SIZE = 12;
+
+export const publicWritingDraftsQueryKey = (
+  interest?: string,
+  previewLimit?: number
+) =>
+  [
+    "writing-drafts",
+    "public",
+    interest ?? "all",
+    previewLimit && previewLimit > 0 ? previewLimit : "all",
+  ] as const;
+
+type DraftPages = { pages: { drafts: WritingDraft[] }[] };
+
+/**
+ * 페이지 단위로 쌓인 공개 게시글 캐시에서 한 글의 북마크 상태만 바꾼다.
+ * 목록이 무한 스크롤로 나뉘어 있어 모든 페이지를 훑어야 한다.
+ */
+export function setDraftBookmarkInPages<T extends DraftPages>(
+  data: T | undefined,
+  draftId: string,
+  isBookmarked: boolean
+): T | undefined {
+  if (!data) return data;
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      drafts: page.drafts.map((draft) =>
+        draft.id === draftId ? { ...draft, is_bookmarked: isBookmarked } : draft
+      ),
+    })),
+  };
+}
+
 export type WritingFormSnapshot = {
   title: string;
   content: string;
