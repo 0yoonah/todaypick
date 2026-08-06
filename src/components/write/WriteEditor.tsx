@@ -14,6 +14,7 @@ import {
   createWritingFormSnapshot,
   DEFAULT_WRITING_VISIBILITY,
   hasWritingFormChanges,
+  ownWritingDraftQueryKey,
 } from "@/utils/writingUtils";
 import type {
   WritingDraft,
@@ -126,7 +127,11 @@ export default function WriteEditor({
       setThumbnailUrl(draft.thumbnail_url ?? null);
       setThumbnailFile(null);
       setThumbnailPreview(draft.thumbnail_url ?? null);
+      queryClient.setQueryData(ownWritingDraftQueryKey(draft.id), draft);
       await queryClient.invalidateQueries({ queryKey: ["writing-drafts"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["writing-draft", draft.id],
+      });
       router.push(
         draft.visibility === "public"
           ? `${ROUTE_PATH.FEEDS}?category=writing`

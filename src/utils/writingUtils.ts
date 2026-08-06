@@ -11,6 +11,13 @@ export const MAX_DRAFT_SOURCES = 20;
 export const MAX_DRAFT_THUMBNAIL_SIZE = 5 * 1024 * 1024;
 export const DEFAULT_WRITING_VISIBILITY: WritingVisibility = "public";
 
+/**
+ * 수정 화면이 사용하는 본인 글 단건 조회 캐시 키.
+ * 공개 게시글 상세(`["writing-draft", id]`)와 응답 형태가 달라 키를 분리한다.
+ */
+export const ownWritingDraftQueryKey = (draftId: string) =>
+  ["writing-draft", draftId, "mine"] as const;
+
 export const DEFAULT_PUBLIC_DRAFT_LIMIT = 12;
 export const MAX_PUBLIC_DRAFT_LIMIT = 50;
 
