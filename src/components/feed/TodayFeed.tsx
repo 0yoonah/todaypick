@@ -9,6 +9,7 @@ import {
   getHomePreviewItems,
   HOME_PREVIEW_COUNT,
 } from "@/utils/homeFeedUtils";
+import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
@@ -75,8 +76,13 @@ export default function TodayFeed() {
           ) : feeds.length === 0 ? (
             <FeedListState type="empty" />
           ) : (
-            getHomePreviewItems(feeds).map((feed) => (
-              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+            getHomePreviewItems(feeds).map((feed, index) => (
+              <FeedCard
+                key={feed.id}
+                feed={feed}
+                handleScrap={handleScrap}
+                priority={shouldPrioritizeImage(index)}
+              />
             ))
           )}
         </div>
