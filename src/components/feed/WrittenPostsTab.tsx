@@ -14,9 +14,16 @@ import { useAuthStore } from "@/stores/authStore";
 import type { WritingDraft } from "@/types/writing";
 import { INTERESTS, type InterestId } from "@/config/interests";
 
-async function fetchDrafts(interest?: InterestId): Promise<WritingDraft[]> {
+async function fetchDrafts(
+  interest?: InterestId,
+  limit?: number
+): Promise<WritingDraft[]> {
   const params = new URLSearchParams({ scope: "public" });
   if (interest) params.set("interest", interest);
+  if (limit && limit > 0) {
+    params.set("page", "1");
+    params.set("limit", String(limit));
+  }
   const response = await fetch(`/api/writing-drafts?${params}`);
   const result = await response.json().catch(() => null);
   if (!response.ok) {
@@ -30,7 +37,7 @@ export default function WrittenPostsTab({
   limit,
 }: {
   interest?: InterestId;
-  /** 홈처럼 미리보기만 노출할 때 사용할 최대 개수 */
+  /** 홈처럼 미리보기만 노출할 때 서버에서 받아올 최대 개수 */
   limit?: number;
 }) {
   const router = useRouter();
@@ -38,8 +45,13 @@ export default function WrittenPostsTab({
   const { user } = useAuthStore();
   const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
   const query = useQuery({
-    queryKey: ["writing-drafts", "public", interest ?? "all"],
-    queryFn: () => fetchDrafts(interest),
+    queryKey: [
+      "writing-drafts",
+      "public",
+      interest ?? "all",
+      limit && limit > 0 ? limit : "all",
+    ],
+    queryFn: () => fetchDrafts(interest, limit),
   });
   const bookmarkMutation = useMutation({
     mutationFn: async (draft: WritingDraft) => {
@@ -90,9 +102,11 @@ export default function WrittenPostsTab({
   if (query.isLoading) {
     return (
       <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <SkeletonFeedCard key={index} showActions={false} />
-        ))}
+        {Array.from({ length: limit && limit > 0 ? limit : 3 }).map(
+          (_, index) => (
+            <SkeletonFeedCard key={index} showActions={false} />
+          )
+        )}
       </div>
     );
   }
@@ -135,8 +149,7 @@ export default function WrittenPostsTab({
     );
   }
 
-  const publicDrafts =
-    limit && limit > 0 ? query.data.slice(0, limit) : query.data;
+  const publicDrafts = query.data;
 
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
