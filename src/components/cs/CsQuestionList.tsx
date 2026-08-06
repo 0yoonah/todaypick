@@ -2,87 +2,37 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiHelpCircle } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE_PATH } from "@/config/constants";
 import CsCategoryFilter from "@/components/cs/CsCategoryFilter";
 import CsQuestionCard from "@/components/cs/CsQuestionCard";
 import { csQuestions } from "@/data/csQuestions";
+import { useCsReviews, useSaveCsReview } from "@/hooks/useCsReviews";
 import { isCsCategory, type CsCategory } from "@/types/cs";
 import {
-  CS_REVIEWS_QUERY_KEY,
   filterCsQuestions,
   getCsCategoryLabel,
   toReviewMap,
 } from "@/utils/csUtils";
-import { useAuthStore } from "@/stores/authStore";
-import type { CsReview } from "@/types/cs";
-
-async function fetchCsReviews(): Promise<CsReview[]> {
-  const response = await fetch("/api/cs-reviews");
-  const result = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(result?.error || "채점 기록을 불러오지 못했습니다.");
-  }
-  return result.reviews ?? [];
-}
 
 export default function CsQuestionList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const { user } = useAuthStore();
   const categoryParam = searchParams.get("category");
-  const category = isCsCategory(categoryParam)
-    ? categoryParam
-    : undefined;
+  const category = isCsCategory(categoryParam) ? categoryParam : undefined;
 
-  const questions = useMemo(
-    () => filterCsQuestions(csQuestions, category),
-    [category]
-  );
-
-  const reviewsQuery = useQuery({
-    queryKey: CS_REVIEWS_QUERY_KEY,
-    queryFn: fetchCsReviews,
-    enabled: Boolean(user),
-  });
+  const reviewsQuery = useCsReviews();
+  const saveReview = useSaveCsReview();
   const reviewMap = useMemo(
     () => toReviewMap(reviewsQuery.data ?? []),
     [reviewsQuery.data]
   );
 
-  const saveReview = useMutation({
-    mutationFn: async (input: {
-      questionId: string;
-      answer: string;
-      usedHint: boolean;
-    }) => {
-      const response = await fetch("/api/cs-reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_id: input.questionId,
-          answer: input.answer,
-          used_hint: input.usedHint,
-        }),
-      });
-      const result = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(result?.error || "채점 기록을 저장하지 못했습니다.");
-      }
-      return result.review as CsReview;
-    },
-    onSuccess: (review) => {
-      queryClient.setQueryData<CsReview[]>(CS_REVIEWS_QUERY_KEY, (current) => [
-        ...(current ?? []).filter(
-          (item) => item.question_id !== review.question_id
-        ),
-        review,
-      ]);
-    },
-  });
+  const questions = useMemo(
+    () => filterCsQuestions(csQuestions, category),
+    [category]
+  );
 
   const updateCategory = useCallback(
     (nextCategory?: CsCategory) => {

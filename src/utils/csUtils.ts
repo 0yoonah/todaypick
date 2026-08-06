@@ -144,3 +144,29 @@ export function restoreGradeResult(
 export function toReviewMap(reviews: CsReview[]): Map<string, CsReview> {
   return new Map(reviews.map((review) => [review.question_id, review]));
 }
+
+/**
+ * 기준 점수 미만으로 채점된 질문만 복습 순서대로 정렬한다.
+ * 점수가 낮을수록, 마지막으로 푼 지 오래됐을수록 먼저 보여준다.
+ * 같은 조건에서도 순서가 흔들리지 않도록 질문 id를 마지막 정렬 키로 둔다.
+ */
+export function selectReviewQuestions(
+  questions: CsQuestion[],
+  reviews: Map<string, CsReview>
+): CsQuestion[] {
+  return questions
+    .filter((question) => {
+      const review = reviews.get(question.id);
+      return review !== undefined && needsReview(review.score);
+    })
+    .sort((a, b) => {
+      const reviewA = reviews.get(a.id) as CsReview;
+      const reviewB = reviews.get(b.id) as CsReview;
+
+      return (
+        reviewA.score - reviewB.score ||
+        reviewA.reviewed_at.localeCompare(reviewB.reviewed_at) ||
+        a.id.localeCompare(b.id)
+      );
+    });
+}
