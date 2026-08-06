@@ -1,17 +1,23 @@
-import { INTERESTS, type InterestId } from "@/config/interests";
-import { cn } from "@/lib/utils";
+"use client";
 
-interface InterestFilterProps {
-  value?: InterestId;
-  onChange: (interest?: InterestId) => void;
+import { cn } from "@/lib/utils";
+import { CS_CATEGORIES, type CsCategory } from "@/types/cs";
+import { getCsCategoryLabel } from "@/utils/csUtils";
+
+interface CsCategoryFilterProps {
+  value?: CsCategory;
+  onChange: (category?: CsCategory) => void;
 }
 
-export default function InterestFilter({ value, onChange }: InterestFilterProps) {
+export default function CsCategoryFilter({
+  value,
+  onChange,
+}: CsCategoryFilterProps) {
   return (
     <div
       className="mb-7 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0"
       role="group"
-      aria-label="관심 분야 필터"
+      aria-label="CS 지식 분야 필터"
     >
       <button
         type="button"
@@ -26,20 +32,20 @@ export default function InterestFilter({ value, onChange }: InterestFilterProps)
       >
         전체
       </button>
-      {INTERESTS.map((interest) => (
+      {CS_CATEGORIES.map((category) => (
         <button
-          key={interest.id}
+          key={category}
           type="button"
-          onClick={() => onChange(interest.id)}
-          aria-pressed={value === interest.id}
+          onClick={() => onChange(category)}
+          aria-pressed={value === category}
           className={cn(
             "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-            value === interest.id
+            value === category
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border bg-background text-muted-foreground hover:text-foreground"
           )}
         >
-          {interest.label}
+          {getCsCategoryLabel(category)}
         </button>
       ))}
     </div>

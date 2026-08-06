@@ -1,4 +1,4 @@
-import type { InterviewQuestion } from "@/types/interview";
+import type { CsQuestion } from "@/types/cs";
 
 /** 정적 문항의 생성 시각. 모듈이 로드될 때마다 값이 달라지지 않도록 고정한다. */
 const CREATED_AT = "2026-08-06T00:00:00.000Z";
@@ -7,7 +7,7 @@ const CREATED_AT = "2026-08-06T00:00:00.000Z";
  * CS 면접 대비 질문.
  * 스스로 설명해 본 뒤 답안을 확인하는 서술형 학습용이며, 외부 콘텐츠를 복제하지 않고 직접 작성했다.
  */
-export const interviewQuestions: InterviewQuestion[] = [
+export const csQuestions: CsQuestion[] = [
   {
     id: "net-1",
     question: "TCP와 UDP의 차이를 설명해 주세요.",
@@ -379,7 +379,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "HTML을 파싱해 DOM을, CSS를 파싱해 CSSOM을 만들고 둘을 합쳐 화면에 그릴 요소만 담은 렌더 트리를 구성합니다. 이어 레이아웃 단계에서 각 요소의 위치와 크기를 계산하고, 페인트에서 픽셀을 채운 뒤 레이어를 합성해 화면에 표시합니다. 파서를 막는 스크립트는 이 과정을 지연시키므로 위치와 로딩 속성을 신경 써야 합니다.",
     keywords: ["DOM·CSSOM", "렌더 트리", "레이아웃", "페인트", "합성"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -388,7 +388,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "CSR은 브라우저에서 자바스크립트로 화면을 그려 초기 로딩이 느리고 SEO에 불리하지만 이후 상호작용이 부드럽습니다. SSR은 요청마다 서버에서 HTML을 만들어 초기 표시와 SEO에 유리하되 서버 부하가 있습니다. SSG는 빌드 시점에 HTML을 만들어 가장 빠르지만 데이터가 자주 바뀌면 부적합해, 갱신 주기와 개인화 여부로 선택합니다.",
     keywords: ["초기 로딩", "SEO", "서버 부하", "빌드 타임", "데이터 갱신 주기"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -397,7 +397,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "리플로우는 요소의 크기나 위치가 바뀌어 레이아웃을 다시 계산하는 것으로 비용이 큽니다. 리페인트는 색상처럼 레이아웃에 영향이 없는 시각 속성만 다시 그리는 것으로 상대적으로 저렴합니다. transform과 opacity는 합성 단계에서 처리돼 두 과정을 건너뛸 수 있어 애니메이션에 유리합니다.",
     keywords: ["레이아웃 재계산", "시각 속성", "transform·opacity", "합성", "비용 차이"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -406,7 +406,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "LCP는 가장 큰 콘텐츠가 표시되기까지의 시간으로 로딩 체감을 나타내고, 주요 이미지 우선 로딩과 서버 응답 개선으로 줄입니다. CLS는 예기치 않은 레이아웃 이동량으로, 이미지와 광고 영역의 크기를 미리 확보해 낮춥니다. INP는 사용자 입력에 대한 응답성 지표로, 긴 작업을 쪼개고 메인 스레드 점유를 줄여 개선합니다.",
     keywords: ["LCP", "CLS", "INP", "레이아웃 이동", "메인 스레드"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -415,7 +415,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "XSS는 악성 스크립트를 페이지에 삽입해 다른 사용자의 브라우저에서 실행시키는 공격으로, 출력 이스케이프와 CSP, 신뢰할 수 없는 HTML 삽입 금지로 막습니다. CSRF는 인증된 사용자의 브라우저가 의도치 않은 요청을 보내게 만드는 공격으로, CSRF 토큰과 SameSite 쿠키, 상태 변경 요청의 메서드 제한으로 막습니다. XSS가 뚫리면 CSRF 방어도 무력해질 수 있어 XSS 대응이 우선입니다.",
     keywords: ["스크립트 삽입", "출력 이스케이프", "CSP", "CSRF 토큰", "SameSite"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -424,7 +424,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "의미에 맞는 시맨틱 태그를 사용해 스크린 리더가 구조를 이해할 수 있게 하고, 버튼과 링크에 명확한 접근 가능한 이름을 제공합니다. 키보드만으로 모든 기능을 사용할 수 있어야 하며 포커스 표시가 보여야 합니다. 색상만으로 상태를 전달하지 않고 텍스트나 아이콘을 함께 쓰며, 명도 대비와 모션 감소 설정도 고려합니다.",
     keywords: ["시맨틱 마크업", "accessible name", "키보드 내비게이션", "명도 대비", "prefers-reduced-motion"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -433,7 +433,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "쿠키는 매 요청에 자동으로 실려 서버와 공유되며 용량이 작고 만료와 HttpOnly·Secure 설정이 가능합니다. localStorage는 브라우저에 영구 보관되고 자동 전송되지 않으며 용량이 큽니다. sessionStorage는 탭 단위로 유지되다 탭을 닫으면 사라집니다. 인증 토큰처럼 민감한 값은 스크립트 접근이 가능한 저장소보다 HttpOnly 쿠키가 안전합니다.",
     keywords: ["자동 전송", "용량", "만료", "HttpOnly", "탭 범위"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -442,7 +442,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "Cache-Control의 max-age 동안은 서버에 묻지 않고 캐시를 그대로 사용합니다. 기간이 지나면 ETag나 Last-Modified를 조건부 요청으로 보내 변경이 없으면 304를 받아 본문 전송을 아낍니다. 정적 자산은 파일명에 해시를 넣어 오래 캐시하고, 자주 바뀌는 문서는 짧은 max-age와 재검증을 조합하는 전략을 씁니다.",
     keywords: ["Cache-Control", "max-age", "ETag", "조건부 요청", "304"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -451,7 +451,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "번들링은 여러 모듈을 묶어 요청 수를 줄이고 트리 셰이킹으로 사용하지 않는 코드를 제거합니다. 다만 번들이 커지면 초기 로딩이 느려지므로, 라우트나 상호작용 시점 기준으로 코드를 나눠 필요한 시점에 불러오는 코드 스플리팅을 적용합니다. 지연 로딩과 프리페치를 함께 쓰면 초기 부담을 줄이면서 체감 속도를 유지할 수 있습니다.",
     keywords: ["트리 셰이킹", "초기 번들 크기", "라우트 분할", "지연 로딩", "프리페치"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -460,7 +460,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "뷰포트 메타 태그를 설정하고 고정 픽셀 대신 상대 단위와 유연한 레이아웃을 사용합니다. 미디어 쿼리로 중단점을 나누되 콘텐츠가 깨지는 지점을 기준으로 잡고, 이미지에는 크기와 srcset을 지정해 레이아웃 이동과 과도한 전송을 막습니다. 작은 화면에서 터치 영역과 가로 스크롤, 320px 폭까지 확인하는 것이 좋습니다.",
     keywords: ["뷰포트", "상대 단위", "미디어 쿼리", "srcset", "터치 영역"],
-    category: "web",
+    category: "frontend",
     created_at: CREATED_AT,
   },
 
@@ -470,7 +470,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "var는 함수 스코프이고 선언이 끌어올려져 초기화 전에 접근하면 undefined가 됩니다. let과 const는 블록 스코프이며 선언 전 접근 시 참조 오류가 발생하는 일시적 사각지대가 있습니다. const는 재할당만 막을 뿐 객체 내부 변경은 가능하므로, 기본적으로 const를 쓰고 재할당이 필요할 때만 let을 사용합니다.",
     keywords: ["함수 스코프", "블록 스코프", "호이스팅", "일시적 사각지대", "재할당"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -479,7 +479,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "함수가 선언될 때의 렉시컬 환경을 기억해, 외부 함수 실행이 끝난 뒤에도 그 변수에 접근할 수 있는 것을 클로저라고 합니다. 이를 이용해 상태를 숨긴 채 특정 함수만 접근하게 하거나, 함수 팩토리와 부분 적용을 구현합니다. 참조가 남아 있으면 메모리가 해제되지 않으므로 불필요한 참조를 오래 유지하지 않도록 주의합니다.",
     keywords: ["렉시컬 환경", "은닉", "함수 팩토리", "상태 유지", "메모리 참조"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -488,7 +488,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "일반 함수의 this는 호출 방식에 따라 결정돼, 메서드 호출이면 앞의 객체, 단독 호출이면 전역 또는 undefined가 됩니다. call·apply·bind로 명시할 수 있고 new로 호출하면 새로 만들어진 객체를 가리킵니다. 화살표 함수는 자신의 this를 만들지 않고 선언된 위치의 상위 스코프 this를 그대로 사용합니다.",
     keywords: ["호출 방식", "메서드 호출", "call·apply·bind", "new", "화살표 함수"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -497,7 +497,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "자바스크립트는 단일 스레드로 콜 스택을 처리하고, 비동기 작업은 브라우저나 런타임이 대신 수행한 뒤 콜백을 큐에 넣습니다. 이벤트 루프는 콜 스택이 비면 큐에서 작업을 꺼내 실행하는데, 프로미스 콜백이 담기는 마이크로태스크 큐를 setTimeout 같은 매크로태스크보다 먼저 비웁니다. 긴 동기 작업은 큐 처리를 막아 화면이 멈춘 것처럼 보이게 합니다.",
     keywords: ["단일 스레드", "콜 스택", "마이크로태스크", "매크로태스크", "블로킹"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -506,7 +506,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "Promise는 비동기 결과를 나타내는 객체로 pending에서 fulfilled 또는 rejected로 한 번만 전이합니다. async/await는 프로미스를 동기 코드처럼 읽히게 하는 문법으로, await는 프로미스가 처리될 때까지 해당 함수의 실행을 멈춥니다. 오류는 try/catch로 다루고, 독립적인 작업은 Promise.all로 병렬 처리해야 불필요한 직렬 대기를 피할 수 있습니다.",
     keywords: ["상태 전이", "then 체이닝", "await", "try/catch", "Promise.all"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -515,7 +515,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "모든 객체는 프로토타입 링크를 가지며, 속성을 찾을 때 자신에게 없으면 프로토타입 체인을 따라 올라가며 탐색합니다. 생성자 함수의 prototype 객체에 메서드를 두면 인스턴스들이 이를 공유해 메모리를 아낍니다. class 문법도 내부적으로는 프로토타입을 사용하는 문법적 설탕입니다.",
     keywords: ["프로토타입 체인", "속성 탐색", "메서드 공유", "생성자", "class 문법"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -524,7 +524,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "얕은 복사는 최상위 속성만 복사해 중첩된 객체는 참조를 공유하므로, 내부를 수정하면 원본도 함께 바뀝니다. 전개 연산자와 Object.assign이 여기에 해당합니다. 깊은 복사는 중첩 구조까지 새로 만들어 완전히 분리하며 structuredClone이나 재귀 구현을 사용합니다. 상태를 불변으로 다루는 코드에서는 어느 수준까지 복사되는지 정확히 알아야 합니다.",
     keywords: ["참조 공유", "전개 연산자", "structuredClone", "중첩 객체", "불변성"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -533,7 +533,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "interface는 같은 이름으로 다시 선언하면 병합되고 객체 형태를 확장하는 데 적합합니다. type은 유니온, 튜플, 조건부 타입 등 객체가 아닌 형태도 표현할 수 있고 선언 병합은 되지 않습니다. 공개 API의 객체 구조에는 확장 가능한 interface를, 유니온이나 유틸리티 타입 조합에는 type을 쓰는 편이 자연스럽습니다.",
     keywords: ["선언 병합", "확장", "유니온", "튜플", "조건부 타입"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -542,7 +542,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "타입을 매개변수로 받아 여러 타입에 재사용하면서도 타입 안전성과 추론을 유지하기 위해 사용합니다. any를 쓰면 검사와 자동 완성을 잃지만 제네릭은 호출 시점의 타입을 그대로 이어갑니다. extends로 제약을 두면 필요한 속성이 있는 타입만 허용해 안전성과 유연성의 균형을 잡을 수 있습니다.",
     keywords: ["타입 매개변수", "재사용", "타입 추론", "제약(extends)", "any와의 차이"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
   {
@@ -551,7 +551,7 @@ export const interviewQuestions: InterviewQuestion[] = [
     answer:
       "순수 함수는 같은 입력에 항상 같은 결과를 내고 외부 상태를 바꾸지 않아 테스트와 추론이 쉽습니다. 불변성은 데이터를 직접 수정하지 않고 새 값을 만들어, 변경 시점을 명확히 하고 참조 비교로 변화를 감지할 수 있게 합니다. React처럼 상태 변화를 참조로 판단하는 환경에서는 불변성이 렌더링 정확성과 직결됩니다.",
     keywords: ["부수 효과 없음", "예측 가능성", "참조 비교", "테스트 용이성", "렌더링 정확성"],
-    category: "language",
+    category: "frontend",
     created_at: CREATED_AT,
   },
 
@@ -643,6 +643,96 @@ export const interviewQuestions: InterviewQuestion[] = [
       "먼저 읽기와 쓰기 비율, 지연 요구사항, 데이터 크기를 파악해 병목 지점을 가정합니다. 정적 자산은 CDN으로 밀어내고 애플리케이션은 무상태로 만들어 로드 밸런서 뒤에서 수평 확장하며, 반복 조회는 캐시로 흡수합니다. DB는 인덱스와 쿼리 튜닝을 먼저 하고 읽기 부하는 레플리카로, 쓰기 한계는 샤딩이나 큐를 통한 비동기 처리로 나눕니다. 각 단계마다 지표를 두고 실제 병목을 확인하며 늘려가는 것이 중요합니다.",
     keywords: ["병목 파악", "CDN", "무상태·수평 확장", "캐시", "레플리카·샤딩"],
     category: "system_design",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-1",
+    question: "인증과 인가의 차이를 설명해 주세요.",
+    answer:
+      "인증은 요청한 주체가 누구인지 확인하는 과정이고, 인가는 그 주체가 특정 자원에 접근할 권한이 있는지 판단하는 과정입니다. 로그인은 인증, 관리자만 접근 가능한 API를 막는 것은 인가입니다. 인증을 통과했다고 모든 자원에 접근할 수 있는 것은 아니므로, 서버는 두 검사를 분리해 수행해야 하고 인가는 반드시 서버에서 확인해야 합니다.",
+    keywords: ["신원 확인", "권한 확인", "역할 기반 접근 제어", "서버 검증", "최소 권한"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-2",
+    question: "REST API를 설계할 때 무엇을 신경 쓰나요?",
+    answer:
+      "자원을 명사로 표현하고 행위는 HTTP 메서드로 나타내며, 상태 코드를 의미에 맞게 사용합니다. GET·PUT·DELETE는 멱등하게 설계하고 POST만 생성으로 두어 재요청 시 동작을 예측할 수 있게 합니다. 목록 응답에는 페이지네이션과 정렬 기준을 두고, 오류는 내부 구현을 노출하지 않는 일관된 형식으로 반환합니다.",
+    keywords: ["자원 중심 URI", "HTTP 메서드", "상태 코드", "멱등성", "페이지네이션"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-3",
+    question: "여러 작업을 하나의 트랜잭션으로 묶을 때 주의할 점은 무엇인가요?",
+    answer:
+      "트랜잭션 범위는 필요한 최소한으로 잡아야 합니다. 외부 API 호출이나 파일 업로드처럼 오래 걸리는 작업을 트랜잭션 안에 두면 커넥션과 잠금을 오래 점유해 동시성이 떨어집니다. 롤백이 필요한 데이터 변경만 묶고, 외부 연동은 트랜잭션 밖에서 처리하거나 이벤트로 분리합니다. 중첩 호출에서는 전파 속성에 따라 롤백 범위가 달라지므로 확인이 필요합니다.",
+    keywords: ["최소 범위", "잠금 점유", "외부 호출 분리", "전파 속성", "롤백 범위"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-4",
+    question: "N+1 문제가 무엇이고 어떻게 해결하나요?",
+    answer:
+      "목록을 조회한 뒤 각 항목의 연관 데이터를 개별 쿼리로 가져와, 1번의 조회가 N번의 추가 쿼리를 부르는 문제입니다. 목록이 커질수록 쿼리 수가 선형으로 늘어 응답이 급격히 느려집니다. 조인으로 한 번에 가져오거나, 연관 id를 모아 IN 절로 일괄 조회하는 방식으로 해결합니다. ORM을 쓴다면 지연 로딩 설정과 실제 발생 쿼리를 함께 확인해야 합니다.",
+    keywords: ["지연 로딩", "추가 쿼리", "조인", "일괄 조회", "쿼리 로그 확인"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-5",
+    question: "동시에 같은 자원을 수정하는 요청은 어떻게 처리하나요?",
+    answer:
+      "재고 차감이나 포인트 사용처럼 순서가 중요한 작업은 애플리케이션에서 읽고 계산해 쓰면 갱신 손실이 발생할 수 있습니다. DB에서 원자적으로 갱신하는 조건부 UPDATE를 쓰거나, 비관적 락으로 행을 잠그거나, 버전 컬럼을 둔 낙관적 락으로 충돌을 감지해 재시도합니다. 여러 서버가 관여하면 분산 락을 고려하되 만료와 해제 실패까지 설계해야 합니다.",
+    keywords: ["갱신 손실", "조건부 UPDATE", "비관적 락", "낙관적 락", "분산 락"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-6",
+    question: "API의 멱등성을 보장해야 하는 이유와 방법을 설명해 주세요.",
+    answer:
+      "네트워크 오류나 타임아웃으로 클라이언트가 같은 요청을 재시도할 수 있어, 결제나 주문 생성이 중복 처리되면 안 됩니다. 클라이언트가 보낸 멱등성 키를 저장해 같은 키의 요청은 이전 결과를 그대로 반환하거나, 고유 제약으로 중복 삽입을 막는 방식을 씁니다. 조회와 삭제처럼 본래 멱등한 연산은 여러 번 호출해도 결과 상태가 같도록 구현합니다.",
+    keywords: ["재시도", "중복 처리", "멱등성 키", "고유 제약", "결과 재사용"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-7",
+    question: "API 버전 관리는 어떻게 하나요?",
+    answer:
+      "필드 추가처럼 하위 호환을 지키는 변경은 버전을 올리지 않고 진행합니다. 필드 삭제나 의미 변경처럼 기존 클라이언트를 깨뜨리는 변경은 새 버전으로 분리하고, 경로에 버전을 넣는 방식이 가장 명확합니다. 구버전은 사용량을 관측하며 폐기 일정을 미리 공지하고, 전환 기간 동안 두 버전을 함께 운영합니다.",
+    keywords: ["하위 호환", "파괴적 변경", "경로 버전", "폐기 공지", "전환 기간"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-8",
+    question: "파일 업로드는 어떻게 처리하는 것이 좋나요?",
+    answer:
+      "파일을 애플리케이션 서버로 모두 받으면 메모리와 대역폭을 소모하므로, 서명된 URL을 발급해 클라이언트가 스토리지에 직접 올리는 방식이 확장에 유리합니다. 서버는 업로드 전 파일 크기와 타입 제한을 정하고, 업로드 후 메타데이터만 저장합니다. 확장자만 믿지 말고 실제 콘텐츠 타입을 확인하며, 사용자 입력 파일명을 그대로 경로에 쓰지 않습니다.",
+    keywords: ["서명된 URL", "직접 업로드", "크기·타입 제한", "메타데이터", "파일명 검증"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-9",
+    question: "주기적으로 실행되는 배치 작업을 설계할 때 무엇을 고려하나요?",
+    answer:
+      "서버가 여러 대면 같은 작업이 동시에 실행될 수 있으므로 잠금이나 단일 실행 보장이 필요합니다. 한 번에 전체를 처리하면 DB와 메모리에 부담이 크니 범위를 나눠 처리하고 진행 지점을 기록해 중단 후 재개할 수 있게 합니다. 실패 시 재시도 정책과 알림을 두고, 재실행해도 결과가 같도록 멱등하게 작성합니다.",
+    keywords: ["단일 실행 보장", "청크 처리", "체크포인트", "재시도", "멱등성"],
+    category: "backend",
+    created_at: CREATED_AT,
+  },
+  {
+    id: "be-10",
+    question: "서버 로그는 어떤 기준으로 남기나요?",
+    answer:
+      "원인 추적이 가능하도록 요청 식별자와 함께 구조화된 형태로 남기고, 레벨을 구분해 운영에서 필요한 정보만 보이게 합니다. 비밀번호, 토큰, 개인정보는 절대 출력하지 않으며 오류 응답에도 내부 스택이나 DB 메시지를 그대로 노출하지 않습니다. 정상 흐름까지 과도하게 남기면 비용과 노이즈가 커지므로, 실패와 경계 지점을 중심으로 기록합니다.",
+    keywords: ["요청 식별자", "구조화 로그", "로그 레벨", "민감 정보 제외", "노이즈 관리"],
+    category: "backend",
     created_at: CREATED_AT,
   },
 ];

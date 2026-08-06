@@ -22,7 +22,7 @@ export default function FeedCategoryTab({
           role="tab"
           aria-selected={activeTab === FEED_CATEGORY.IT_NEWS}
           className={cn(
-            "-mb-px border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
+            "-mb-px cursor-pointer border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
             activeTab === FEED_CATEGORY.IT_NEWS
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -35,7 +35,7 @@ export default function FeedCategoryTab({
           role="tab"
           aria-selected={activeTab === FEED_CATEGORY.TECH_BLOG}
           className={cn(
-            "-mb-px border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
+            "-mb-px cursor-pointer border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
             activeTab === FEED_CATEGORY.TECH_BLOG
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -48,7 +48,7 @@ export default function FeedCategoryTab({
           role="tab"
           aria-selected={activeTab === "writing"}
           className={cn(
-            "-mb-px border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
+            "-mb-px cursor-pointer border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
             activeTab === "writing"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"

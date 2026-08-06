@@ -118,7 +118,7 @@ function InterestSettingsForm({
               disabled={isPending}
               onClick={() => toggleInterest(interest.id)}
               className={cn(
-                "inline-flex h-10 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait sm:h-8",
+                "inline-flex h-10 cursor-pointer items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait sm:h-8",
                 isSelected
                   ? "border-primary/30 bg-primary/10 text-primary"
                   : "border-border bg-background text-muted-foreground hover:text-foreground"

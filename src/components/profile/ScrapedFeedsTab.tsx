@@ -139,7 +139,7 @@ export default function ScrapedFeedsTab() {
             onClick={() => setFilter(item.id)}
             aria-pressed={filter === item.id}
             className={cn(
-              "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+              "shrink-0 cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors",
               filter === item.id
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-background text-muted-foreground hover:text-foreground"
