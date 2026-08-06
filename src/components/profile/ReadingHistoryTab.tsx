@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 import { addDaysToDateKey, getSeoulDateKey } from "@/utils/dateUtils";
+import { STATISTICS_QUERY_KEY } from "@/utils/profileUtils";
 
 const PAGE_SIZE = 20;
 
@@ -79,6 +80,7 @@ export default function ReadingHistoryTab({
       setSelectedIds(new Set());
       queryClient.invalidateQueries({ queryKey: ["feed-reads"] });
       queryClient.invalidateQueries({ queryKey: ["daily-activities"] });
+      queryClient.invalidateQueries({ queryKey: STATISTICS_QUERY_KEY });
     },
   });
   const createDraftMutation = useMutation({
