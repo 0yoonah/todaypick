@@ -7,6 +7,15 @@ export const isValidReadingGoal = (value: unknown): value is number =>
   Number(value) >= MIN_READING_GOAL &&
   Number(value) <= MAX_READING_GOAL;
 
+export const resolveReadingGoal = (
+  activityGoal: unknown,
+  userGoal: unknown
+): number => {
+  if (isValidReadingGoal(activityGoal)) return activityGoal;
+  if (isValidReadingGoal(userGoal)) return userGoal;
+  return DEFAULT_READING_GOAL;
+};
+
 export const getReadingGoalProgress = (readCount: number, goal: number) => {
   const safeGoal = isValidReadingGoal(goal) ? goal : DEFAULT_READING_GOAL;
   const safeReadCount = Math.max(0, Math.floor(readCount));

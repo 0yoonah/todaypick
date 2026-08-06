@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { parseFeedReadPagination } from "@/utils/feedReadUtils";
+import { syncReadingGoalCompletion } from "@/services/dailyActivityService";
 import { addDaysToDateKey, getSeoulDateKey } from "@/utils/dateUtils";
 
 const HISTORY_DAYS = 30;
@@ -90,14 +91,42 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const { data: targets, error: targetError } = await supabase
+      .from("feed_reads")
+      .select("id, read_date")
+      .in("id", ids)
+      .eq("user_id", user.id);
+    if (targetError) throw targetError;
+
+    if (!targets || targets.length === 0) {
+      return NextResponse.json({
+        success: true,
+        deletedCount: 0,
+        updatedDates: [],
+      });
+    }
+
     const { error } = await supabase
       .from("feed_reads")
       .delete()
-      .in("id", ids)
+      .in(
+        "id",
+        targets.map((target) => target.id)
+      )
       .eq("user_id", user.id);
     if (error) throw error;
 
-    return NextResponse.json({ success: true });
+    const updatedDates = await syncReadingGoalCompletion(
+      supabase,
+      user.id,
+      targets.map((target) => target.read_date)
+    );
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: targets.length,
+      updatedDates,
+    });
   } catch (error) {
     console.error("읽은 글 기록 삭제 오류:", error);
     return NextResponse.json(

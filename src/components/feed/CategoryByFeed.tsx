@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY } from "@/config/constants";
-import { getValidCategory } from "@/utils/feedUtils";
+import { getValidCategory, isWritingCategory } from "@/utils/feedUtils";
 import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
@@ -25,7 +25,7 @@ export default function CategoryByFeed() {
   const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
   const validCategory = getValidCategory(category);
   const router = useRouter();
-  const showWritingTab = category === "writing";
+  const showWritingTab = isWritingCategory(category);
 
   const {
     isLoading,
@@ -42,6 +42,7 @@ export default function CategoryByFeed() {
     category: validCategory,
     limit: 12,
     interest,
+    enabled: !showWritingTab,
   });
 
   const updateQuery = useCallback(

@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ROUTE_PATH, FEED_CATEGORY } from "@/config/constants";
+import { FEED_CATEGORY } from "@/config/constants";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
+import {
+  getFeedOverviewHref,
+  getHomePreviewItems,
+  HOME_PREVIEW_COUNT,
+} from "@/utils/homeFeedUtils";
 import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
@@ -41,7 +46,7 @@ export default function TodayFeed() {
             </p>
           </div>
           <Link
-            href={ROUTE_PATH.FEEDS + "?category=" + activeTab}
+            href={getFeedOverviewHref(showWritingTab ? "writing" : activeTab)}
             className="text-sm font-semibold text-primary hover:underline"
           >
             전체보기
@@ -59,11 +64,11 @@ export default function TodayFeed() {
       />
 
       {showWritingTab ? (
-        <WrittenPostsTab />
+        <WrittenPostsTab limit={HOME_PREVIEW_COUNT} />
       ) : (
         <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
-            Array.from({ length: 3 }).map((_, index) => (
+            Array.from({ length: HOME_PREVIEW_COUNT }).map((_, index) => (
               <SkeletonFeedCard key={index} />
             ))
           ) : error ? (
@@ -71,16 +76,14 @@ export default function TodayFeed() {
           ) : feeds.length === 0 ? (
             <FeedListState type="empty" />
           ) : (
-            feeds
-              .slice(0, 3)
-              .map((feed, index) => (
-                <FeedCard
-                  key={feed.id}
-                  feed={feed}
-                  handleScrap={handleScrap}
-                  priority={shouldPrioritizeImage(index)}
-                />
-              ))
+            getHomePreviewItems(feeds).map((feed, index) => (
+              <FeedCard
+                key={feed.id}
+                feed={feed}
+                handleScrap={handleScrap}
+                priority={shouldPrioritizeImage(index)}
+              />
+            ))
           )}
         </div>
       )}
