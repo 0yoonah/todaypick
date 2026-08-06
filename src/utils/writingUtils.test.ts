@@ -230,36 +230,40 @@ describe("paginateDrafts", () => {
 });
 
 describe("setDraftBookmarkInPages", () => {
-  const page = (drafts: { id: string; is_bookmarked: boolean }[]) => ({
+  const bookmarkDraft = (id: string, isBookmarked: boolean): WritingDraft => ({
+    id,
+    title: `글 ${id}`,
+    content: "",
+    tags: [],
+    visibility: "public",
+    thumbnail_url: null,
+    sources: [],
+    created_at: "2026-08-03T00:00:00.000Z",
+    updated_at: "2026-08-03T00:00:00.000Z",
+    is_bookmarked: isBookmarked,
+  });
+  const page = (drafts: WritingDraft[], currentPage: number) => ({
     drafts,
     totalCount: 3,
     totalPages: 2,
-    currentPage: 1,
+    currentPage,
   });
 
   it("모든 페이지에서 해당 글의 북마크 상태만 바꾼다", () => {
     const data = {
       pages: [
-        page([
-          { id: "a", is_bookmarked: false },
-          { id: "b", is_bookmarked: false },
-        ]),
-        page([{ id: "c", is_bookmarked: false }]),
+        page([bookmarkDraft("a", false), bookmarkDraft("b", false)], 1),
+        page([bookmarkDraft("c", false)], 2),
       ],
       pageParams: [1, 2],
     };
 
-    const updated = setDraftBookmarkInPages(
-      data as never,
-      "c",
-      true
-    ) as typeof data;
+    const updated = setDraftBookmarkInPages(data, "c", true);
 
-    expect(updated.pages[1].drafts[0].is_bookmarked).toBe(true);
-    expect(updated.pages[0].drafts.map((d) => d.is_bookmarked)).toEqual([
-      false,
-      false,
-    ]);
+    expect(updated?.pages[1].drafts[0].is_bookmarked).toBe(true);
+    expect(updated?.pages[0].drafts.map((draft) => draft.is_bookmarked)).toEqual(
+      [false, false]
+    );
   });
 
   it("캐시가 없으면 그대로 둔다", () => {
@@ -268,10 +272,12 @@ describe("setDraftBookmarkInPages", () => {
 
   it("원본 캐시를 변경하지 않는다", () => {
     const data = {
-      pages: [page([{ id: "a", is_bookmarked: false }])],
+      pages: [page([bookmarkDraft("a", false)], 1)],
       pageParams: [1],
     };
-    setDraftBookmarkInPages(data as never, "a", true);
+
+    setDraftBookmarkInPages(data, "a", true);
+
     expect(data.pages[0].drafts[0].is_bookmarked).toBe(false);
   });
 });
