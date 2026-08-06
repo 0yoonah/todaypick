@@ -8,6 +8,7 @@ import {
   needsReview,
   normalizeAnswerText,
   restoreGradeResult,
+  selectReviewQuestions,
   toReviewMap,
 } from "@/utils/csUtils";
 import type { CsQuestion, CsReview } from "@/types/cs";
@@ -214,5 +215,90 @@ describe("toReviewMap", () => {
 
   it("기록이 없으면 빈 맵을 반환한다", () => {
     expect(toReviewMap([]).size).toBe(0);
+  });
+});
+
+describe("selectReviewQuestions", () => {
+  const question = (id: string): CsQuestion => ({ ...base, id });
+  const questions = ["a", "b", "c", "d"].map(question);
+  const record = (
+    question_id: string,
+    score: number,
+    reviewed_at: string
+  ): CsReview => ({
+    question_id,
+    score,
+    matched_keywords: [],
+    answer: "답변",
+    used_hint: false,
+    reviewed_at,
+  });
+
+  it("기준 점수 미만인 질문만 남긴다", () => {
+    const reviews = toReviewMap([
+      record("a", 100, "2026-08-01T00:00:00.000Z"),
+      record("b", CS_PASS_SCORE, "2026-08-01T00:00:00.000Z"),
+      record("c", CS_PASS_SCORE - 1, "2026-08-01T00:00:00.000Z"),
+    ]);
+
+    expect(selectReviewQuestions(questions, reviews).map((q) => q.id)).toEqual([
+      "c",
+    ]);
+  });
+
+  it("점수가 낮은 질문을 먼저 보여준다", () => {
+    const reviews = toReviewMap([
+      record("a", 50, "2026-08-01T00:00:00.000Z"),
+      record("b", 0, "2026-08-01T00:00:00.000Z"),
+      record("c", 25, "2026-08-01T00:00:00.000Z"),
+    ]);
+
+    expect(selectReviewQuestions(questions, reviews).map((q) => q.id)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
+  });
+
+  it("점수가 같으면 오래전에 푼 질문을 먼저 보여준다", () => {
+    const reviews = toReviewMap([
+      record("a", 20, "2026-08-05T00:00:00.000Z"),
+      record("b", 20, "2026-08-01T00:00:00.000Z"),
+      record("c", 20, "2026-08-03T00:00:00.000Z"),
+    ]);
+
+    expect(selectReviewQuestions(questions, reviews).map((q) => q.id)).toEqual([
+      "b",
+      "c",
+      "a",
+    ]);
+  });
+
+  it("점수와 시각이 모두 같으면 질문 id로 순서를 고정한다", () => {
+    const same = "2026-08-01T00:00:00.000Z";
+    const reviews = toReviewMap([
+      record("c", 30, same),
+      record("a", 30, same),
+      record("b", 30, same),
+    ]);
+
+    const ordered = selectReviewQuestions(questions, reviews).map((q) => q.id);
+    expect(ordered).toEqual(["a", "b", "c"]);
+    expect(
+      selectReviewQuestions([...questions].reverse(), reviews).map((q) => q.id)
+    ).toEqual(ordered);
+  });
+
+  it("풀지 않은 질문은 복습 대상이 아니다", () => {
+    expect(selectReviewQuestions(questions, toReviewMap([]))).toEqual([]);
+  });
+
+  it("원본 배열을 바꾸지 않는다", () => {
+    const reviews = toReviewMap([
+      record("d", 10, "2026-08-01T00:00:00.000Z"),
+      record("a", 20, "2026-08-01T00:00:00.000Z"),
+    ]);
+    selectReviewQuestions(questions, reviews);
+    expect(questions.map((q) => q.id)).toEqual(["a", "b", "c", "d"]);
   });
 });

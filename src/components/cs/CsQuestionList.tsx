@@ -3,7 +3,8 @@
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FiHelpCircle } from "react-icons/fi";
+import { FiHelpCircle, FiRepeat } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE_PATH } from "@/config/constants";
 import CsCategoryFilter from "@/components/cs/CsCategoryFilter";
@@ -11,9 +12,11 @@ import CsQuestionCard from "@/components/cs/CsQuestionCard";
 import { csQuestions } from "@/data/csQuestions";
 import { isCsCategory, type CsCategory } from "@/types/cs";
 import {
+  CS_PASS_SCORE,
   CS_REVIEWS_QUERY_KEY,
   filterCsQuestions,
   getCsCategoryLabel,
+  selectReviewQuestions,
   toReviewMap,
 } from "@/utils/csUtils";
 import { useAuthStore } from "@/stores/authStore";
@@ -37,11 +40,7 @@ export default function CsQuestionList() {
   const category = isCsCategory(categoryParam)
     ? categoryParam
     : undefined;
-
-  const questions = useMemo(
-    () => filterCsQuestions(csQuestions, category),
-    [category]
-  );
+  const isReviewMode = searchParams.get("mode") === "review";
 
   const reviewsQuery = useQuery({
     queryKey: CS_REVIEWS_QUERY_KEY,
@@ -52,6 +51,16 @@ export default function CsQuestionList() {
     () => toReviewMap(reviewsQuery.data ?? []),
     [reviewsQuery.data]
   );
+  const reviewCount = useMemo(
+    () => selectReviewQuestions(csQuestions, reviewMap).length,
+    [reviewMap]
+  );
+  const questions = useMemo(() => {
+    const filtered = filterCsQuestions(csQuestions, category);
+    return isReviewMode
+      ? selectReviewQuestions(filtered, reviewMap)
+      : filtered;
+  }, [category, isReviewMode, reviewMap]);
 
   const saveReview = useMutation({
     mutationFn: async (input: {
@@ -84,14 +93,20 @@ export default function CsQuestionList() {
     },
   });
 
-  const updateCategory = useCallback(
-    (nextCategory?: CsCategory) => {
+  const updateQuery = useCallback(
+    (nextCategory?: CsCategory, nextReviewMode = isReviewMode) => {
       const params = new URLSearchParams();
       if (nextCategory) params.set("category", nextCategory);
+      if (nextReviewMode) params.set("mode", "review");
       const query = params.toString();
       router.push(query ? `?${query}` : ROUTE_PATH.CS);
     },
-    [router]
+    [router, isReviewMode]
+  );
+
+  const updateCategory = useCallback(
+    (nextCategory?: CsCategory) => updateQuery(nextCategory),
+    [updateQuery]
   );
 
   return (
@@ -109,28 +124,76 @@ export default function CsQuestionList() {
 
       <CsCategoryFilter value={category} onChange={updateCategory} />
 
+      {user && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            {reviewCount > 0
+              ? `${CS_PASS_SCORE}점 미만인 질문이 ${reviewCount}개 있어요.`
+              : "복습이 필요한 질문이 없어요."}
+          </p>
+          <Button
+            type="button"
+            variant={isReviewMode ? "default" : "outline"}
+            size="sm"
+            aria-pressed={isReviewMode}
+            onClick={() => updateQuery(category, !isReviewMode)}
+          >
+            <FiRepeat aria-hidden />
+            {isReviewMode ? "전체 질문 보기" : "복습할 질문만 보기"}
+          </Button>
+        </div>
+      )}
+
       {questions.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
             <FiHelpCircle className="size-8 text-muted-foreground" aria-hidden />
-            <div>
-              <h2 className="font-semibold">
-                {category
-                  ? `${getCsCategoryLabel(category)} 질문이 아직 없어요.`
-                  : "질문이 아직 없어요."}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                다른 분야를 선택해보세요.
-              </p>
-            </div>
+            {isReviewMode ? (
+              <div>
+                <h2 className="font-semibold">
+                  {reviewMap.size === 0
+                    ? "아직 풀어본 질문이 없어요."
+                    : category
+                      ? `${getCsCategoryLabel(category)} 분야에는 복습할 질문이 없어요.`
+                      : "복습할 질문이 없어요."}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {reviewMap.size === 0
+                    ? "질문에 답을 쓰고 채점하면 부족한 개념이 여기에 모여요."
+                    : `${CS_PASS_SCORE}점 미만으로 채점된 질문이 복습 대상이에요.`}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h2 className="font-semibold">
+                  {category
+                    ? `${getCsCategoryLabel(category)} 질문이 아직 없어요.`
+                    : "질문이 아직 없어요."}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  다른 분야를 선택해보세요.
+                </p>
+              </div>
+            )}
+            {isReviewMode && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => updateQuery(category, false)}
+              >
+                전체 질문 보기
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <>
           <p className="mb-4 text-sm text-muted-foreground">
+            {isReviewMode ? "복습 " : ""}
             {category
               ? `${getCsCategoryLabel(category)} ${questions.length}문항`
-              : `전체 ${questions.length}문항`}
+              : `${isReviewMode ? "" : "전체 "}${questions.length}문항`}
+            {isReviewMode && " · 점수가 낮은 순으로 보여드려요"}
           </p>
           <ul className="space-y-4">
             {questions.map((question) => (
