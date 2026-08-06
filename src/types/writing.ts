@@ -21,3 +21,10 @@ export type WritingDraft = {
 };
 
 export type WritingVisibility = "public" | "private";
+
+export type PublicWritingDraftPage = {
+  drafts: WritingDraft[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+};
