@@ -5,6 +5,8 @@ import {
   MAX_PUBLIC_DRAFT_LIMIT,
   paginateDrafts,
   parseWritingDraftPagination,
+  publicWritingDraftsQueryKey,
+  setDraftBookmarkInPages,
   sortPublicDrafts,
   hasWritingFormChanges,
   parseWritingSources,
@@ -224,5 +226,75 @@ describe("paginateDrafts", () => {
       totalPages: 0,
       currentPage: 1,
     });
+  });
+});
+
+describe("setDraftBookmarkInPages", () => {
+  const page = (drafts: { id: string; is_bookmarked: boolean }[]) => ({
+    drafts,
+    totalCount: 3,
+    totalPages: 2,
+    currentPage: 1,
+  });
+
+  it("모든 페이지에서 해당 글의 북마크 상태만 바꾼다", () => {
+    const data = {
+      pages: [
+        page([
+          { id: "a", is_bookmarked: false },
+          { id: "b", is_bookmarked: false },
+        ]),
+        page([{ id: "c", is_bookmarked: false }]),
+      ],
+      pageParams: [1, 2],
+    };
+
+    const updated = setDraftBookmarkInPages(
+      data as never,
+      "c",
+      true
+    ) as typeof data;
+
+    expect(updated.pages[1].drafts[0].is_bookmarked).toBe(true);
+    expect(updated.pages[0].drafts.map((d) => d.is_bookmarked)).toEqual([
+      false,
+      false,
+    ]);
+  });
+
+  it("캐시가 없으면 그대로 둔다", () => {
+    expect(setDraftBookmarkInPages(undefined, "a", true)).toBeUndefined();
+  });
+
+  it("원본 캐시를 변경하지 않는다", () => {
+    const data = {
+      pages: [page([{ id: "a", is_bookmarked: false }])],
+      pageParams: [1],
+    };
+    setDraftBookmarkInPages(data as never, "a", true);
+    expect(data.pages[0].drafts[0].is_bookmarked).toBe(false);
+  });
+});
+
+describe("publicWritingDraftsQueryKey", () => {
+  it("관심 분야와 미리보기 개수로 캐시를 구분한다", () => {
+    expect(publicWritingDraftsQueryKey()).toEqual([
+      "writing-drafts",
+      "public",
+      "all",
+      "all",
+    ]);
+    expect(publicWritingDraftsQueryKey("frontend", 3)).toEqual([
+      "writing-drafts",
+      "public",
+      "frontend",
+      3,
+    ]);
+    expect(publicWritingDraftsQueryKey(undefined, 0)).toEqual([
+      "writing-drafts",
+      "public",
+      "all",
+      "all",
+    ]);
   });
 });
