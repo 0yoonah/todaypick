@@ -21,9 +21,15 @@ import type { WritingDraft } from "@/types/writing";
 interface FeedCardProps {
   feed: Feed;
   handleScrap: (feed: Feed) => void;
+  /** 첫 화면의 LCP 후보 이미지에만 사용한다. */
+  priority?: boolean;
 }
 
-export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
+export default function FeedCard({
+  feed,
+  handleScrap,
+  priority = false,
+}: FeedCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -148,6 +154,7 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
                 imageLoading ? "opacity-0" : "opacity-100"
               }`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
               onLoad={() => setImageLoading(false)}
               onError={() => setImageLoading(false)}
             />

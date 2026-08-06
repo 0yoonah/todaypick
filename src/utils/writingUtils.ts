@@ -1,11 +1,63 @@
-import { parseInterestIds } from "@/config/interests";
-import type { WritingSource, WritingVisibility } from "@/types/writing";
+import { parseInterestIds, type InterestId } from "@/config/interests";
+import type {
+  WritingDraft,
+  WritingSource,
+  WritingVisibility,
+} from "@/types/writing";
 
 export const MAX_DRAFT_TITLE_LENGTH = 200;
 export const MAX_DRAFT_CONTENT_LENGTH = 50000;
 export const MAX_DRAFT_SOURCES = 20;
 export const MAX_DRAFT_THUMBNAIL_SIZE = 5 * 1024 * 1024;
 export const DEFAULT_WRITING_VISIBILITY: WritingVisibility = "public";
+
+export type WritingFormSnapshot = {
+  title: string;
+  content: string;
+  tags: InterestId[];
+  visibility: WritingVisibility;
+  sourceIds: string[];
+  thumbnailUrl: string | null;
+};
+
+/** 에디터의 변경 여부를 비교하기 위한 초기 상태를 만든다. */
+export function createWritingFormSnapshot(
+  draft: WritingDraft | null | undefined,
+  visibility: WritingVisibility = draft?.visibility ??
+    DEFAULT_WRITING_VISIBILITY
+): WritingFormSnapshot {
+  return {
+    title: draft?.title ?? "",
+    content: draft?.content ?? "",
+    tags: draft?.tags ?? [],
+    visibility,
+    sourceIds: (draft?.sources ?? []).map((source) => source.id),
+    thumbnailUrl: draft?.thumbnail_url ?? null,
+  };
+}
+
+const normalizeIds = (ids: string[]) => [...ids].sort().join("|");
+
+/**
+ * 초기 상태와 현재 입력값을 비교해 실제 변경이 있는지 판단한다.
+ * 값을 바꿨다가 되돌리면 변경 없음으로 본다.
+ */
+export function hasWritingFormChanges(
+  initial: WritingFormSnapshot,
+  current: WritingFormSnapshot,
+  hasNewThumbnailFile = false
+): boolean {
+  if (hasNewThumbnailFile) return true;
+
+  return (
+    initial.title.trim() !== current.title.trim() ||
+    initial.content.trim() !== current.content.trim() ||
+    initial.visibility !== current.visibility ||
+    initial.thumbnailUrl !== current.thumbnailUrl ||
+    normalizeIds(initial.tags) !== normalizeIds(current.tags) ||
+    normalizeIds(initial.sourceIds) !== normalizeIds(current.sourceIds)
+  );
+}
 
 export function parseWritingSource(value: unknown): WritingSource | null {
   if (!value || typeof value !== "object") return null;

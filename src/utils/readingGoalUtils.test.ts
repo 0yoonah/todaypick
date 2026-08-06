@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_READING_GOAL,
   getReadingGoalProgress,
   isValidReadingGoal,
+  resolveReadingGoal,
 } from "./readingGoalUtils";
 
 describe("readingGoalUtils", () => {
@@ -27,5 +29,13 @@ describe("readingGoalUtils", () => {
 
   it("목표를 초과해 읽어도 진행률은 100%를 넘지 않는다", () => {
     expect(getReadingGoalProgress(7, 5).percentage).toBe(100);
+  });
+
+  it("일일 목표, 사용자 기본 목표, 기본값 순으로 목표를 결정한다", () => {
+    expect(resolveReadingGoal(5, 2)).toBe(5);
+    expect(resolveReadingGoal(null, 2)).toBe(2);
+    expect(resolveReadingGoal(0, 2)).toBe(2);
+    expect(resolveReadingGoal(null, null)).toBe(DEFAULT_READING_GOAL);
+    expect(resolveReadingGoal(undefined, 30)).toBe(DEFAULT_READING_GOAL);
   });
 });

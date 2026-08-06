@@ -12,12 +12,15 @@ interface WrittenPostCardProps {
   draft: WritingDraft;
   onBookmark: (draft: WritingDraft) => void;
   bookmarkPending?: boolean;
+  /** 첫 화면의 LCP 후보 이미지에만 사용한다. */
+  priority?: boolean;
 }
 
 export default function WrittenPostCard({
   draft,
   onBookmark,
   bookmarkPending = false,
+  priority = false,
 }: WrittenPostCardProps) {
   return (
     <div className="relative h-full w-full min-w-0">
@@ -33,6 +36,7 @@ export default function WrittenPostCard({
               fill
               className="object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
             />
           </div>
           <CardHeader className="px-0 pt-4 pb-2">

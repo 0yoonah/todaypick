@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import { FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY } from "@/config/constants";
-import { getValidCategory } from "@/utils/feedUtils";
+import { getValidCategory, isWritingCategory } from "@/utils/feedUtils";
+import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
@@ -24,7 +25,7 @@ export default function CategoryByFeed() {
   const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
   const validCategory = getValidCategory(category);
   const router = useRouter();
-  const showWritingTab = category === "writing";
+  const showWritingTab = isWritingCategory(category);
 
   const {
     isLoading,
@@ -41,6 +42,7 @@ export default function CategoryByFeed() {
     category: validCategory,
     limit: 12,
     interest,
+    enabled: !showWritingTab,
   });
 
   const updateQuery = useCallback(
@@ -116,8 +118,13 @@ export default function CategoryByFeed() {
             ) : feeds.length === 0 ? (
               <FeedListState type="empty" interestLabel={interestLabel} />
             ) : (
-              feeds.map((feed) => (
-                <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+              feeds.map((feed, index) => (
+                <FeedCard
+                  key={feed.id}
+                  feed={feed}
+                  handleScrap={handleScrap}
+                  priority={shouldPrioritizeImage(index)}
+                />
               ))
             )}
           </div>
