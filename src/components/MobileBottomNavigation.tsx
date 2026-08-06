@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiBookOpen, FiHome, FiUser } from "react-icons/fi";
+import { FiBookOpen, FiHelpCircle, FiHome, FiUser } from "react-icons/fi";
 import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,12 @@ export default function MobileBottomNavigation() {
       href: ROUTE_PATH.FEEDS,
       icon: FiBookOpen,
       isActive: pathname === ROUTE_PATH.FEEDS,
+    },
+    {
+      label: "CS",
+      href: ROUTE_PATH.CS,
+      icon: FiHelpCircle,
+      isActive: pathname === ROUTE_PATH.CS,
     },
     {
       label: "프로필",

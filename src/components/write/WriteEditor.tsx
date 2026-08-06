@@ -172,7 +172,7 @@ export default function WriteEditor({
                   aria-selected={isActive}
                   onClick={() => setVisibility(tab.id)}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    "cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
                     isActive
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -288,7 +288,7 @@ export default function WriteEditor({
                       )
                     }
                     className={cn(
-                      "rounded-full border px-3 py-1 text-xs",
+                      "cursor-pointer rounded-full border px-3 py-1 text-xs",
                       selected
                         ? "border-primary bg-primary/10 text-primary"
                         : "text-muted-foreground"

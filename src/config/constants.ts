@@ -7,6 +7,7 @@ export const ROUTE_PATH = {
   FEEDS: "/feeds",
   WRITE: "/write",
   POSTS: "/posts",
+  CS: "/cs",
 } as const;
 
 // 폼 데이터
@@ -32,6 +33,7 @@ export const PROFILE_TAB = {
   SCRAPED_QUOTES: "scraped_quotes",
   LEARNING_STATISTICS: "learning_statistics",
   WRITING: "writing",
+  CS_REVIEW: "cs_review",
 } as const;
 
 export type ProfileTabType = (typeof PROFILE_TAB)[keyof typeof PROFILE_TAB];

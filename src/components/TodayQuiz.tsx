@@ -241,7 +241,7 @@ export default function TodayQuiz() {
                     onClick={() => !showResult && handleAnswerSelect(index)}
                     disabled={showResult}
                     className={cn(
-                      "w-full rounded-lg border p-4 text-left transition-colors duration-150",
+                      "w-full cursor-pointer rounded-lg border p-4 text-left transition-colors duration-150 disabled:cursor-default",
                       showResult
                         ? isCorrectAnswer
                           ? "border-correct bg-correct/10 text-correct"

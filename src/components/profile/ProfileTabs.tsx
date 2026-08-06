@@ -1,4 +1,11 @@
-import { FiBookmark, FiTarget, FiBarChart, FiClock, FiEdit3 } from "react-icons/fi";
+import {
+  FiBookmark,
+  FiTarget,
+  FiBarChart,
+  FiClock,
+  FiEdit3,
+  FiRepeat,
+} from "react-icons/fi";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +45,11 @@ export default function ProfileTabs({
       icon: FiEdit3,
     },
     {
+      id: PROFILE_TAB.CS_REVIEW,
+      label: "CS 복습",
+      icon: FiRepeat,
+    },
+    {
       id: PROFILE_TAB.LEARNING_STATISTICS,
       label: "학습 통계",
       icon: FiBarChart,
@@ -61,7 +73,7 @@ export default function ProfileTabs({
             role="tab"
             aria-selected={isActive}
             className={cn(
-              "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold transition-colors",
+              "-mb-px flex shrink-0 cursor-pointer items-center gap-2 border-b-2 px-1 py-3 text-sm font-semibold transition-colors",
               isActive
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"

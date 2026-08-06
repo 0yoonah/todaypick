@@ -16,6 +16,7 @@ import InterestSettings from "@/components/profile/InterestSettings";
 import ReadingHistoryTab from "@/components/profile/ReadingHistoryTab";
 import ReadingGoalSettings from "@/components/profile/ReadingGoalSettings";
 import WritingTab from "@/components/profile/WritingTab";
+import CsReviewTab from "@/components/profile/CsReviewTab";
 
 export default function ProfileContainer() {
   const router = useRouter();
@@ -41,6 +42,8 @@ export default function ProfileContainer() {
         return <LearningStatisticsTab />;
       case PROFILE_TAB.WRITING:
         return <WritingTab />;
+      case PROFILE_TAB.CS_REVIEW:
+        return <CsReviewTab />;
       case PROFILE_TAB.SCRAPED_FEEDS:
       default:
         return <ScrapedFeedsTab />;
