@@ -1,17 +1,92 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { getTodayQuiz } from "@/utils/quizUtils";
+import { getTodayQuiz, selectDailyQuiz } from "@/utils/quizUtils";
 import { quizzes } from "@/data/quizzes";
 import { getSeoulDateKey } from "@/utils/dateUtils";
 import { recordDailyActivity } from "@/services/dailyActivityService";
+import type { QuizResult } from "@/types/quiz";
+
+type SolvedQuizResult = Pick<
+  QuizResult,
+  "quiz_id" | "selected_answer" | "is_correct" | "answered_at"
+>;
+
+/**
+ * 사용자가 푼 문제와 오늘 푼 문제를 함께 조회한다.
+ * 오늘 이미 답한 문제가 있으면 그 문제가 오늘의 퀴즈다.
+ */
+async function loadSolvedQuizzes(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  dateKey: string
+) {
+  const { data, error } = await supabase
+    .from("quiz_results")
+    .select("quiz_id, selected_answer, is_correct, answered_at")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  const results = (data ?? []) as SolvedQuizResult[];
+
+  return {
+    solvedIds: results.map((result) => result.quiz_id),
+    todayResult:
+      results.find(
+        (result) => getSeoulDateKey(new Date(result.answered_at)) === dateKey
+      ) ?? null,
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const searchParams = new URL(request.url).searchParams;
     const quizId = searchParams.get("quizId");
+    const isTodayScope = searchParams.get("scope") === "today";
 
     const { data: user } = await supabase.auth.getUser();
+
+    if (isTodayScope) {
+      const dateKey = getSeoulDateKey();
+
+      // 비로그인 사용자는 개인화 없이 같은 문제를 본다.
+      if (!user.user) {
+        return NextResponse.json({
+          quiz: getTodayQuiz(),
+          result: null,
+          isCompleted: false,
+          solvedCount: 0,
+          totalCount: quizzes.length,
+        });
+      }
+
+      const { solvedIds, todayResult } = await loadSolvedQuizzes(
+        supabase,
+        user.user.id,
+        dateKey
+      );
+
+      if (todayResult) {
+        return NextResponse.json({
+          quiz: quizzes.find((quiz) => quiz.id === todayResult.quiz_id) ?? null,
+          result: todayResult,
+          isCompleted: false,
+          solvedCount: solvedIds.length,
+          totalCount: quizzes.length,
+        });
+      }
+
+      const quiz = selectDailyQuiz(quizzes, dateKey, solvedIds);
+
+      return NextResponse.json({
+        quiz,
+        result: null,
+        isCompleted: quiz === null,
+        solvedCount: solvedIds.length,
+        totalCount: quizzes.length,
+      });
+    }
 
     if (!user.user) {
       return NextResponse.json(
@@ -91,37 +166,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const todayQuiz = getTodayQuiz();
-    const quiz = quizzes.find((q) => q.id === todayQuiz.id);
+    const dateKey = getSeoulDateKey();
+    const { solvedIds, todayResult } = await loadSolvedQuizzes(
+      supabase,
+      user.user.id,
+      dateKey
+    );
 
-    if (!quiz) {
-      return NextResponse.json(
-        { error: "퀴즈를 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
-
-    const isCorrect = selectedAnswer === quiz.correct_answer;
-
-    // 이미 답안을 제출했는지 확인
-    const { data: existingResult } = await supabase
-      .from("quiz_results")
-      .select("id")
-      .eq("user_id", user.user.id)
-      .eq("quiz_id", todayQuiz.id)
-      .single();
-
-    if (existingResult) {
+    if (todayResult) {
       return NextResponse.json(
         { error: "이미 답안을 제출한 퀴즈입니다." },
         { status: 409 }
       );
     }
 
+    // GET과 같은 규칙으로 오늘의 문제를 다시 고른다.
+    const quiz = selectDailyQuiz(quizzes, dateKey, solvedIds);
+
+    if (!quiz) {
+      return NextResponse.json(
+        { error: "오늘 풀 수 있는 퀴즈가 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    const isCorrect = selectedAnswer === quiz.correct_answer;
+
     // 답안 저장
     const { error: resultError } = await supabase.from("quiz_results").insert({
       user_id: user.user.id,
-      quiz_id: todayQuiz.id,
+      quiz_id: quiz.id,
       selected_answer: selectedAnswer,
       is_correct: isCorrect,
       answered_at: new Date().toISOString(),
