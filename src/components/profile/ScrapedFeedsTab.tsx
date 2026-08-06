@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FiAlertTriangle } from "react-icons/fi";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
 import FeedCard from "@/components/feed/FeedCard";
@@ -12,6 +13,10 @@ import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  resolveSavedContentState,
+  type SavedContentSectionKey,
+} from "@/utils/savedContentUtils";
 import type { RSSFeedCategory } from "@/types/feed";
 import type { WritingDraft } from "@/types/writing";
 
@@ -91,11 +96,31 @@ export default function ScrapedFeedsTab() {
     },
   });
 
-  const loading = (showFeeds && isLoading) || (showWriting && bookmarksQuery.isLoading);
-  const hasError = (showFeeds && Boolean(error)) || (showWriting && bookmarksQuery.isError);
   const bookmarkedPosts = showWriting ? bookmarksQuery.data ?? [] : [];
   const visibleFeeds = showFeeds ? feeds : [];
-  const isEmpty = !loading && visibleFeeds.length === 0 && bookmarkedPosts.length === 0;
+  const retryBySection: Record<SavedContentSectionKey, () => void> = {
+    feeds: () => void refetch(),
+    writing: () => void bookmarksQuery.refetch(),
+  };
+  const contentState = resolveSavedContentState([
+    {
+      key: "feeds",
+      label: "RSS 스크랩",
+      active: showFeeds,
+      isLoading,
+      isError: Boolean(error),
+      count: visibleFeeds.length,
+    },
+    {
+      key: "writing",
+      label: "게시글 북마크",
+      active: showWriting,
+      isLoading: bookmarksQuery.isLoading,
+      isError: bookmarksQuery.isError,
+      count: bookmarkedPosts.length,
+    },
+  ]);
+  const partialFailures = contentState.isAllFailed ? [] : contentState.failed;
 
   return (
     <div>
@@ -122,13 +147,41 @@ export default function ScrapedFeedsTab() {
         ))}
       </div>
 
-      {loading ? (
+      {partialFailures.length > 0 && (
+        <div className="mb-6 space-y-2">
+          {partialFailures.map((section) => (
+            <div
+              key={section.key}
+              role="alert"
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3"
+            >
+              <FiAlertTriangle
+                className="size-4 shrink-0 text-destructive"
+                aria-hidden
+              />
+              <p className="min-w-0 flex-1 text-sm text-muted-foreground">
+                {section.label}을(를) 불러오지 못했습니다. 나머지 콘텐츠는 그대로
+                표시됩니다.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={retryBySection[section.key]}
+              >
+                {section.label} 다시 시도
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {contentState.isInitialLoading ? (
         <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <SkeletonFeedCard key={index} showActions={false} />
           ))}
         </div>
-      ) : hasError ? (
+      ) : contentState.isAllFailed ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
             <div>
@@ -137,16 +190,17 @@ export default function ScrapedFeedsTab() {
             </div>
             <Button
               variant="outline"
-              onClick={() => {
-                if (showFeeds) void refetch();
-                if (showWriting) void bookmarksQuery.refetch();
-              }}
+              onClick={() =>
+                contentState.failed.forEach((section) =>
+                  retryBySection[section.key]()
+                )
+              }
             >
               다시 시도
             </Button>
           </CardContent>
         </Card>
-      ) : isEmpty ? (
+      ) : contentState.isEmpty ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
             <div>
@@ -174,8 +228,16 @@ export default function ScrapedFeedsTab() {
                 bookmarkPending={bookmarkMutation.isPending}
               />
             ))}
+            {contentState.pending.map((section) => (
+              <SkeletonFeedCard key={section.key} showActions={false} />
+            ))}
           </div>
-          {showFeeds && (
+          {contentState.totalCount === 0 && contentState.pending.length === 0 && (
+            <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              불러온 저장 콘텐츠가 없습니다.
+            </p>
+          )}
+          {showFeeds && !error && (
             <InfiniteScrollTrigger
               hasNextPage={hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
