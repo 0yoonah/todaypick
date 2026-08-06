@@ -1,43 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FiTrendingUp, FiTarget } from "react-icons/fi";
 import { LearningStatistics } from "@/types/auth";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import SkeletonLearningStatisticsTab from "@/components/profile/SkeletonLearningStatisticsTab";
 import WeeklyLearningProgress from "@/components/profile/WeeklyLearningProgress";
 import WeeklyLearningReport from "@/components/profile/WeeklyLearningReport";
+import { STATISTICS_QUERY_KEY } from "@/utils/profileUtils";
+
+async function fetchStatistics(): Promise<LearningStatistics> {
+  const response = await fetch("/api/statistics");
+  const result = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(result?.error || "통계를 불러오지 못했습니다.");
+  }
+
+  return result as LearningStatistics;
+}
 
 export default function LearningStatisticsTab() {
-  const [statistics, setStatistics] = useState<LearningStatistics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: statistics,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: STATISTICS_QUERY_KEY,
+    queryFn: fetchStatistics,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    const fetchStatistics = async () => {
-      try {
-        const response = await fetch("/api/statistics");
-        if (!response.ok) {
-          throw new Error("통계를 불러오는데 실패했습니다.");
-        }
-        const data = await response.json();
-        setStatistics(data);
-      } catch (error) {
-        console.error("통계 조회 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (isLoading) return <SkeletonLearningStatisticsTab />;
 
-    fetchStatistics();
-  }, []);
-
-  if (loading) return <SkeletonLearningStatisticsTab />;
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+          <div>
+            <h2 className="font-semibold">통계를 불러오지 못했습니다.</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {error.message}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            {isFetching ? "불러오는 중..." : "다시 시도"}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!statistics) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">통계를 불러올 수 없습니다.</p>
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
+          <h2 className="font-semibold">아직 학습 기록이 없습니다.</h2>
+          <p className="text-sm text-muted-foreground">
+            피드를 읽고 퀴즈를 풀면 여기에 통계가 쌓여요.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 

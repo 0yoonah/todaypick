@@ -5,9 +5,12 @@ import {
   MAX_DRAFT_CONTENT_LENGTH,
   MAX_DRAFT_TITLE_LENGTH,
   MAX_DRAFT_THUMBNAIL_SIZE,
+  paginateDrafts,
+  parseWritingDraftPagination,
   parseWritingVisibility,
   parseWritingThumbnailUrl,
   parseWritingSources,
+  sortPublicDrafts,
 } from "@/utils/writingUtils";
 import type { WritingDraft } from "@/types/writing";
 
@@ -109,14 +112,34 @@ export async function GET(request: NextRequest) {
   const { supabase, user } = await getUser();
   const url = new URL(request.url);
   const draftId = url.searchParams.get("id");
-  const publicFeed = url.searchParams.get("scope") === "public";
+  const scope = url.searchParams.get("scope");
+  const publicFeed = scope === "public";
+  // 수정 화면처럼 본인 글만 필요한 경우 공개 게시글 조회를 건너뛴다.
+  const ownDraftOnly = scope === "mine";
   const interestValue = url.searchParams.get("interest");
   const interest = isInterestId(interestValue) ? interestValue : undefined;
   if (interestValue && !interest) {
     return NextResponse.json({ error: "유효한 관심 분야가 필요합니다." }, { status: 400 });
   }
 
-  if (publicFeed || draftId) {
+  let pagination: { page: number; limit: number } | null = null;
+  try {
+    pagination = parseWritingDraftPagination(url.searchParams);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "잘못된 요청입니다." },
+      { status: 400 }
+    );
+  }
+
+  if (ownDraftOnly && !draftId) {
+    return NextResponse.json(
+      { error: "조회할 글이 필요합니다." },
+      { status: 400 }
+    );
+  }
+
+  if (publicFeed || (draftId && !ownDraftOnly)) {
     const { data: publicDrafts, error: publicError } = await supabase.rpc(
       "get_public_writing_drafts",
       { p_id: draftId }
@@ -133,10 +156,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (publicFeed) {
-      const drafts = interest
+      const filtered = interest
         ? (publicDrafts ?? []).filter((draft: WritingDraft) => draft.tags.includes(interest))
         : publicDrafts ?? [];
-      return NextResponse.json({ drafts });
+      const drafts = sortPublicDrafts<WritingDraft>(filtered);
+
+      return NextResponse.json(
+        pagination
+          ? paginateDrafts(drafts, pagination.page, pagination.limit)
+          : { drafts }
+      );
     }
 
     if (publicDrafts?.[0]) {
@@ -146,7 +175,14 @@ export async function GET(request: NextRequest) {
 
   if (draftId) {
     if (!user) {
-      return NextResponse.json({ error: "게시글을 찾을 수 없습니다." }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: ownDraftOnly
+            ? "인증이 필요합니다."
+            : "게시글을 찾을 수 없습니다.",
+        },
+        { status: ownDraftOnly ? 401 : 404 }
+      );
     }
 
     const { data, error } = await supabase

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
@@ -8,13 +8,36 @@ import WriteEditor from "@/components/write/WriteEditor";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PROFILE_TAB, ROUTE_PATH } from "@/config/constants";
+import { ownWritingDraftQueryKey } from "@/utils/writingUtils";
 import type { WritingDraft } from "@/types/writing";
 
-async function fetchDrafts(): Promise<WritingDraft[]> {
-  const response = await fetch("/api/writing-drafts");
-  if (!response.ok) throw new Error("글 초안을 불러오지 못했습니다.");
-  const result = await response.json();
-  return result.drafts;
+/** 조회 실패 원인을 상태 코드로 구분하기 위한 오류 */
+class DraftFetchError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+    this.name = "DraftFetchError";
+  }
+}
+
+const NOT_FOUND_STATUSES = [401, 404];
+
+async function fetchOwnDraft(draftId: string): Promise<WritingDraft> {
+  const response = await fetch(
+    `/api/writing-drafts?id=${encodeURIComponent(draftId)}&scope=mine`
+  );
+  const result = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new DraftFetchError(
+      result?.error || "글을 불러오지 못했습니다.",
+      response.status
+    );
+  }
+
+  return result.draft as WritingDraft;
 }
 
 function WritePageContent() {
@@ -22,17 +45,22 @@ function WritePageContent() {
   const draftId = searchParams.get("draftId");
   const startAsPublic = searchParams.get("newDraft") === "true";
   const query = useQuery({
-    queryKey: ["writing-drafts"],
-    queryFn: fetchDrafts,
+    queryKey: ownWritingDraftQueryKey(draftId ?? ""),
+    queryFn: () => fetchOwnDraft(draftId as string),
+    enabled: Boolean(draftId),
+    retry: (failureCount, error) =>
+      !(
+        error instanceof DraftFetchError &&
+        NOT_FOUND_STATUSES.includes(error.status)
+      ) && failureCount < 2,
   });
 
-  const initialDraft = useMemo(() => {
-    if (!draftId) return null;
-    return query.data?.find((draft) => draft.id === draftId) ?? null;
-  }, [draftId, query.data]);
-  const isDraftNotFound = Boolean(
-    draftId && query.isSuccess && !initialDraft
-  );
+  const initialDraft = draftId ? query.data ?? null : null;
+  const isDraftNotFound =
+    query.error instanceof DraftFetchError &&
+    NOT_FOUND_STATUSES.includes(query.error.status);
+  const isLoadingDraft = Boolean(draftId) && query.isLoading;
+  const isDraftError = Boolean(query.error) && !isDraftNotFound;
 
   return (
     <main className="min-h-screen bg-background">
@@ -49,15 +77,20 @@ function WritePageContent() {
           </p>
         </div>
 
-        {query.isLoading ? (
+        {isLoadingDraft ? (
           <div className="space-y-4">
             <Skeleton className="h-16" />
             <Skeleton className="h-[40rem]" />
           </div>
-        ) : query.isError ? (
-          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-            글 초안을 불러오지 못했습니다.
-          </p>
+        ) : isDraftError ? (
+          <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed p-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              {query.error?.message || "글을 불러오지 못했습니다."}
+            </p>
+            <Button variant="outline" onClick={() => void query.refetch()}>
+              다시 시도
+            </Button>
+          </div>
         ) : isDraftNotFound ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed p-10 text-center">
             <p className="text-sm text-muted-foreground">

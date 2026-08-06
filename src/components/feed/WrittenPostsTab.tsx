@@ -2,27 +2,53 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { FiEdit3 } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import WrittenPostCard from "@/components/feed/WrittenPostCard";
 import { ROUTE_PATH } from "@/config/constants";
 import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
+import {
+  publicWritingDraftsQueryKey,
+  PUBLIC_DRAFT_PAGE_SIZE,
+  setDraftBookmarkInPages,
+} from "@/utils/writingUtils";
 import { useAuthStore } from "@/stores/authStore";
-import type { WritingDraft } from "@/types/writing";
+import type { PublicWritingDraftPage, WritingDraft } from "@/types/writing";
 import { INTERESTS, type InterestId } from "@/config/interests";
 
-async function fetchDrafts(interest?: InterestId): Promise<WritingDraft[]> {
-  const params = new URLSearchParams({ scope: "public" });
+async function fetchDraftPage(
+  page: number,
+  pageSize: number,
+  interest?: InterestId
+): Promise<PublicWritingDraftPage> {
+  const params = new URLSearchParams({
+    scope: "public",
+    page: String(page),
+    limit: String(pageSize),
+  });
   if (interest) params.set("interest", interest);
+
   const response = await fetch(`/api/writing-drafts?${params}`);
   const result = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(result?.error || "글 목록을 불러오지 못했습니다.");
   }
-  return result.drafts ?? [];
+
+  return {
+    drafts: result.drafts ?? [],
+    totalCount: result.totalCount ?? 0,
+    totalPages: result.totalPages ?? 0,
+    currentPage: result.currentPage ?? page,
+  };
 }
 
 export default function WrittenPostsTab({
@@ -30,16 +56,24 @@ export default function WrittenPostsTab({
   limit,
 }: {
   interest?: InterestId;
-  /** 홈처럼 미리보기만 노출할 때 사용할 최대 개수 */
+  /** 홈처럼 미리보기만 노출할 때 서버에서 받아올 최대 개수 */
   limit?: number;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const interestLabel = INTERESTS.find((item) => item.id === interest)?.label;
-  const query = useQuery({
-    queryKey: ["writing-drafts", "public", interest ?? "all"],
-    queryFn: () => fetchDrafts(interest),
+  // 홈 미리보기는 첫 페이지만 사용하고, 피드 페이지는 이어서 불러온다.
+  const isPreview = Boolean(limit && limit > 0);
+  const pageSize = isPreview ? (limit as number) : PUBLIC_DRAFT_PAGE_SIZE;
+  const query = useInfiniteQuery({
+    queryKey: publicWritingDraftsQueryKey(interest, limit),
+    queryFn: ({ pageParam }) => fetchDraftPage(pageParam, pageSize, interest),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      isPreview || lastPage.currentPage >= lastPage.totalPages
+        ? undefined
+        : lastPage.currentPage + 1,
   });
   const bookmarkMutation = useMutation({
     mutationFn: async (draft: WritingDraft) => {
@@ -64,12 +98,9 @@ export default function WrittenPostsTab({
       return { draftId: draft.id, isBookmarked: result.is_bookmarked as boolean };
     },
     onSuccess: ({ draftId, isBookmarked }) => {
-      queryClient.setQueriesData<WritingDraft[]>(
+      queryClient.setQueriesData<InfiniteData<PublicWritingDraftPage>>(
         { queryKey: ["writing-drafts", "public"] },
-        (drafts) =>
-          drafts?.map((draft) =>
-            draft.id === draftId ? { ...draft, is_bookmarked: isBookmarked } : draft
-          )
+        (data) => setDraftBookmarkInPages(data, draftId, isBookmarked)
       );
       queryClient.invalidateQueries({ queryKey: ["writing-bookmarks"] });
       queryClient.setQueryData<WritingDraft>(
@@ -87,10 +118,12 @@ export default function WrittenPostsTab({
     if (!bookmarkMutation.isPending) bookmarkMutation.mutate(draft);
   };
 
+  const publicDrafts = query.data?.pages.flatMap((page) => page.drafts) ?? [];
+
   if (query.isLoading) {
     return (
       <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, index) => (
+        {Array.from({ length: isPreview ? pageSize : 3 }).map((_, index) => (
           <SkeletonFeedCard key={index} showActions={false} />
         ))}
       </div>
@@ -110,7 +143,7 @@ export default function WrittenPostsTab({
     );
   }
 
-  if (!query.data || query.data.length === 0) {
+  if (publicDrafts.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
@@ -135,20 +168,26 @@ export default function WrittenPostsTab({
     );
   }
 
-  const publicDrafts =
-    limit && limit > 0 ? query.data.slice(0, limit) : query.data;
-
   return (
-    <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-      {publicDrafts.map((draft, index) => (
-        <WrittenPostCard
-          key={draft.id}
-          draft={draft}
-          onBookmark={handleBookmark}
-          bookmarkPending={bookmarkMutation.isPending}
-          priority={shouldPrioritizeImage(index)}
+    <>
+      <div className="grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
+        {publicDrafts.map((draft, index) => (
+          <WrittenPostCard
+            key={draft.id}
+            draft={draft}
+            onBookmark={handleBookmark}
+            bookmarkPending={bookmarkMutation.isPending}
+            priority={shouldPrioritizeImage(index)}
+          />
+        ))}
+      </div>
+      {!isPreview && (
+        <InfiniteScrollTrigger
+          hasNextPage={query.hasNextPage}
+          isFetchingNextPage={query.isFetchingNextPage}
+          fetchNextPage={query.fetchNextPage}
         />
-      ))}
-    </div>
+      )}
+    </>
   );
 }

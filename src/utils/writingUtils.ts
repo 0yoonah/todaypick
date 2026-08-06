@@ -11,6 +11,103 @@ export const MAX_DRAFT_SOURCES = 20;
 export const MAX_DRAFT_THUMBNAIL_SIZE = 5 * 1024 * 1024;
 export const DEFAULT_WRITING_VISIBILITY: WritingVisibility = "public";
 
+/**
+ * 수정 화면이 사용하는 본인 글 단건 조회 캐시 키.
+ * 공개 게시글 상세(`["writing-draft", id]`)와 응답 형태가 달라 키를 분리한다.
+ */
+export const ownWritingDraftQueryKey = (draftId: string) =>
+  ["writing-draft", draftId, "mine"] as const;
+
+export const DEFAULT_PUBLIC_DRAFT_LIMIT = 12;
+export const MAX_PUBLIC_DRAFT_LIMIT = 50;
+
+/**
+ * 공개 게시글 목록의 페이지 파라미터를 파싱한다.
+ * page와 limit이 모두 없으면 null을 반환해 기존 전체 목록 응답을 유지한다.
+ */
+export function parseWritingDraftPagination(
+  searchParams: URLSearchParams
+): { page: number; limit: number } | null {
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+  if (pageParam === null && limitParam === null) return null;
+
+  const page = Number(pageParam ?? "1");
+  const limit = Number(limitParam ?? DEFAULT_PUBLIC_DRAFT_LIMIT);
+
+  if (!Number.isInteger(page) || page < 1) {
+    throw new TypeError("page는 1 이상의 정수여야 합니다.");
+  }
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PUBLIC_DRAFT_LIMIT) {
+    throw new TypeError(
+      `limit은 1 이상 ${MAX_PUBLIC_DRAFT_LIMIT} 이하의 정수여야 합니다.`
+    );
+  }
+
+  return { page, limit };
+}
+
+/**
+ * 최근 수정순으로 정렬하되 같은 시각이면 id로 순서를 고정한다.
+ * 마지막 정렬 키가 없으면 페이지 경계에서 항목이 빠지거나 중복될 수 있다.
+ */
+export function sortPublicDrafts<T extends { id: string; updated_at: string }>(
+  drafts: T[]
+): T[] {
+  return [...drafts].sort(
+    (a, b) =>
+      b.updated_at.localeCompare(a.updated_at) || a.id.localeCompare(b.id)
+  );
+}
+
+export function paginateDrafts<T>(drafts: T[], page: number, limit: number) {
+  const start = (page - 1) * limit;
+
+  return {
+    drafts: drafts.slice(start, start + limit),
+    totalCount: drafts.length,
+    totalPages: Math.ceil(drafts.length / limit),
+    currentPage: page,
+  };
+}
+
+export const PUBLIC_DRAFT_PAGE_SIZE = 12;
+
+export const publicWritingDraftsQueryKey = (
+  interest?: string,
+  previewLimit?: number
+) =>
+  [
+    "writing-drafts",
+    "public",
+    interest ?? "all",
+    previewLimit && previewLimit > 0 ? previewLimit : "all",
+  ] as const;
+
+type DraftPages = { pages: { drafts: WritingDraft[] }[] };
+
+/**
+ * 페이지 단위로 쌓인 공개 게시글 캐시에서 한 글의 북마크 상태만 바꾼다.
+ * 목록이 무한 스크롤로 나뉘어 있어 모든 페이지를 훑어야 한다.
+ */
+export function setDraftBookmarkInPages<T extends DraftPages>(
+  data: T | undefined,
+  draftId: string,
+  isBookmarked: boolean
+): T | undefined {
+  if (!data) return data;
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      drafts: page.drafts.map((draft) =>
+        draft.id === draftId ? { ...draft, is_bookmarked: isBookmarked } : draft
+      ),
+    })),
+  };
+}
+
 export type WritingFormSnapshot = {
   title: string;
   content: string;

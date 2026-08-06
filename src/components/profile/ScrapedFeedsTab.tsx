@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { FiAlertTriangle } from "react-icons/fi";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
@@ -17,8 +22,9 @@ import {
   resolveSavedContentState,
   type SavedContentSectionKey,
 } from "@/utils/savedContentUtils";
+import { setDraftBookmarkInPages } from "@/utils/writingUtils";
 import type { RSSFeedCategory } from "@/types/feed";
-import type { WritingDraft } from "@/types/writing";
+import type { PublicWritingDraftPage, WritingDraft } from "@/types/writing";
 
 type SavedContentFilter = "all" | RSSFeedCategory | "writing";
 
@@ -83,12 +89,9 @@ export default function ScrapedFeedsTab() {
       queryClient.setQueryData<WritingDraft[]>(["writing-bookmarks"], (drafts) =>
         drafts?.filter((draft) => draft.id !== draftId)
       );
-      queryClient.setQueriesData<WritingDraft[]>({
-        queryKey: ["writing-drafts", "public"],
-      }, (drafts) =>
-        drafts?.map((draft) =>
-          draft.id === draftId ? { ...draft, is_bookmarked: false } : draft
-        )
+      queryClient.setQueriesData<InfiniteData<PublicWritingDraftPage>>(
+        { queryKey: ["writing-drafts", "public"] },
+        (data) => setDraftBookmarkInPages(data, draftId, false)
       );
       queryClient.setQueryData<WritingDraft>(["writing-draft", draftId], (draft) =>
         draft ? { ...draft, is_bookmarked: false } : draft
