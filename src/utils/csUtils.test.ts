@@ -9,6 +9,7 @@ import {
   normalizeAnswerText,
   restoreGradeResult,
   selectReviewQuestions,
+  summarizeCsProgress,
   toReviewMap,
 } from "@/utils/csUtils";
 import type { CsQuestion, CsReview } from "@/types/cs";
@@ -300,5 +301,91 @@ describe("selectReviewQuestions", () => {
     ]);
     selectReviewQuestions(questions, reviews);
     expect(questions.map((q) => q.id)).toEqual(["a", "b", "c", "d"]);
+  });
+});
+
+describe("summarizeCsProgress", () => {
+  const question = (id: string, category: CsQuestion["category"]): CsQuestion => ({
+    ...base,
+    id,
+    category,
+  });
+  const questions = [
+    question("net-1", "network"),
+    question("net-2", "network"),
+    question("os-1", "os"),
+  ];
+  const record = (question_id: string, score: number): CsReview => ({
+    question_id,
+    score,
+    matched_keywords: [],
+    answer: "답변",
+    used_hint: false,
+    reviewed_at: "2026-08-06T00:00:00.000Z",
+  });
+
+  it("기록이 없으면 모두 0으로 집계한다", () => {
+    const summary = summarizeCsProgress(questions, toReviewMap([]));
+
+    expect(summary.total).toBe(3);
+    expect(summary.solved).toBe(0);
+    expect(summary.averageScore).toBe(0);
+    expect(summary.needsReviewCount).toBe(0);
+  });
+
+  it("푼 문항만으로 평균 점수를 계산한다", () => {
+    const summary = summarizeCsProgress(
+      questions,
+      toReviewMap([record("net-1", 80), record("os-1", 40)])
+    );
+
+    expect(summary.solved).toBe(2);
+    expect(summary.averageScore).toBe(60);
+    expect(summary.needsReviewCount).toBe(1);
+  });
+
+  it("평균 점수를 반올림한다", () => {
+    const summary = summarizeCsProgress(
+      questions,
+      toReviewMap([record("net-1", 80), record("net-2", 81), record("os-1", 80)])
+    );
+
+    expect(summary.averageScore).toBe(80);
+  });
+
+  it("분야별 합계가 전체 문항 수와 일치한다", () => {
+    const summary = summarizeCsProgress(questions, toReviewMap([]));
+    const categoryTotal = summary.byCategory.reduce(
+      (sum, progress) => sum + progress.total,
+      0
+    );
+
+    expect(categoryTotal).toBe(summary.total);
+  });
+
+  it("분야별로 푼 개수와 복습 대상을 나눈다", () => {
+    const summary = summarizeCsProgress(
+      questions,
+      toReviewMap([record("net-1", 20), record("net-2", 100)])
+    );
+    const network = summary.byCategory.find((p) => p.category === "network");
+    const os = summary.byCategory.find((p) => p.category === "os");
+
+    expect(network).toMatchObject({
+      total: 2,
+      solved: 2,
+      averageScore: 60,
+      needsReviewCount: 1,
+    });
+    expect(os).toMatchObject({ total: 1, solved: 0, needsReviewCount: 0 });
+  });
+
+  it("문항이 없는 분야는 집계에서 제외한다", () => {
+    const summary = summarizeCsProgress(questions, toReviewMap([]));
+
+    expect(summary.byCategory.map((p) => p.category)).toEqual([
+      "network",
+      "os",
+    ]);
   });
 });

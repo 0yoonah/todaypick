@@ -1,3 +1,4 @@
+import { CS_CATEGORIES } from "@/types/cs";
 import type {
   CsCategory,
   CsGradeResult,
@@ -169,4 +170,63 @@ export function selectReviewQuestions(
         a.id.localeCompare(b.id)
       );
     });
+}
+
+export interface CsCategoryProgress {
+  category: CsCategory;
+  /** 해당 분야의 전체 문항 수 */
+  total: number;
+  /** 채점 기록이 있는 문항 수 */
+  solved: number;
+  /** 푼 문항의 평균 점수. 푼 문항이 없으면 0 */
+  averageScore: number;
+  /** 기준 점수 미만인 문항 수 */
+  needsReviewCount: number;
+}
+
+export interface CsProgressSummary extends Omit<CsCategoryProgress, "category"> {
+  byCategory: CsCategoryProgress[];
+}
+
+const averageOf = (scores: number[]): number =>
+  scores.length === 0
+    ? 0
+    : Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+
+/**
+ * 채점 기록을 전체와 분야별로 집계한다.
+ * 평균 점수는 푼 문항만 대상으로 하고 소수점 첫째 자리에서 반올림한다.
+ */
+export function summarizeCsProgress(
+  questions: CsQuestion[],
+  reviews: Map<string, CsReview>
+): CsProgressSummary {
+  const byCategory = CS_CATEGORIES.map((category) => {
+    const categoryQuestions = questions.filter(
+      (question) => question.category === category
+    );
+    const scores = categoryQuestions
+      .map((question) => reviews.get(question.id)?.score)
+      .filter((score): score is number => score !== undefined);
+
+    return {
+      category,
+      total: categoryQuestions.length,
+      solved: scores.length,
+      averageScore: averageOf(scores),
+      needsReviewCount: scores.filter(needsReview).length,
+    };
+  }).filter((progress) => progress.total > 0);
+
+  const allScores = questions
+    .map((question) => reviews.get(question.id)?.score)
+    .filter((score): score is number => score !== undefined);
+
+  return {
+    total: questions.length,
+    solved: allScores.length,
+    averageScore: averageOf(allScores),
+    needsReviewCount: allScores.filter(needsReview).length,
+    byCategory,
+  };
 }
