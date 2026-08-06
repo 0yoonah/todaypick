@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { dailyActivityQueryKey } from "@/utils/dailyActivityUtils";
+import { STATISTICS_QUERY_KEY } from "@/utils/profileUtils";
 import { isValidReadingGoal } from "@/utils/readingGoalUtils";
 
 export default function ReadingGoalSettings() {
@@ -36,6 +37,7 @@ export default function ReadingGoalSettings() {
       queryClient.invalidateQueries({
         queryKey: dailyActivityQueryKey(user?.id ?? "guest", date),
       });
+      queryClient.invalidateQueries({ queryKey: STATISTICS_QUERY_KEY });
     },
   });
 

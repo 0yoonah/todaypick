@@ -5,6 +5,9 @@ import {
   getSeoulDateKey,
 } from "@/utils/dateUtils";
 
+/** 학습 통계 조회 캐시 키. 읽기 기록·목표 변경 시 함께 무효화한다. */
+export const STATISTICS_QUERY_KEY = ["statistics"] as const;
+
 export const getInitials = (nickname: string) => {
   return nickname.slice(0, 2).toUpperCase();
 };
