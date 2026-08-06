@@ -35,3 +35,7 @@ export const PROFILE_TAB = {
 } as const;
 
 export type ProfileTabType = (typeof PROFILE_TAB)[keyof typeof PROFILE_TAB];
+
+export const isProfileTab = (value: unknown): value is ProfileTabType =>
+  typeof value === "string" &&
+  (Object.values(PROFILE_TAB) as string[]).includes(value);
