@@ -5,9 +5,12 @@ import {
   MAX_DRAFT_CONTENT_LENGTH,
   MAX_DRAFT_TITLE_LENGTH,
   MAX_DRAFT_THUMBNAIL_SIZE,
+  paginateDrafts,
+  parseWritingDraftPagination,
   parseWritingVisibility,
   parseWritingThumbnailUrl,
   parseWritingSources,
+  sortPublicDrafts,
 } from "@/utils/writingUtils";
 import type { WritingDraft } from "@/types/writing";
 
@@ -116,6 +119,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "유효한 관심 분야가 필요합니다." }, { status: 400 });
   }
 
+  let pagination: { page: number; limit: number } | null = null;
+  try {
+    pagination = parseWritingDraftPagination(url.searchParams);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "잘못된 요청입니다." },
+      { status: 400 }
+    );
+  }
+
   if (publicFeed || draftId) {
     const { data: publicDrafts, error: publicError } = await supabase.rpc(
       "get_public_writing_drafts",
@@ -133,10 +146,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (publicFeed) {
-      const drafts = interest
+      const filtered = interest
         ? (publicDrafts ?? []).filter((draft: WritingDraft) => draft.tags.includes(interest))
         : publicDrafts ?? [];
-      return NextResponse.json({ drafts });
+      const drafts = sortPublicDrafts<WritingDraft>(filtered);
+
+      return NextResponse.json(
+        pagination
+          ? paginateDrafts(drafts, pagination.page, pagination.limit)
+          : { drafts }
+      );
     }
 
     if (publicDrafts?.[0]) {
