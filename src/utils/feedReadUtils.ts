@@ -1,3 +1,12 @@
+export function countReadsByDate(
+  reads: { read_date: string }[]
+): Record<string, number> {
+  return reads.reduce<Record<string, number>>((counts, { read_date }) => {
+    counts[read_date] = (counts[read_date] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
 export function parseFeedReadPagination(searchParams: URLSearchParams) {
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "12");

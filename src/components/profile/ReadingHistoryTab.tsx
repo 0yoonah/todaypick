@@ -78,6 +78,7 @@ export default function ReadingHistoryTab({
     onSuccess: () => {
       setSelectedIds(new Set());
       queryClient.invalidateQueries({ queryKey: ["feed-reads"] });
+      queryClient.invalidateQueries({ queryKey: ["daily-activities"] });
     },
   });
   const createDraftMutation = useMutation({
