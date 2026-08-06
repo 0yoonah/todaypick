@@ -29,6 +29,12 @@ export const getCategoryLabel = (category: QuizCategory) => {
       return "알고리즘";
     case "devops":
       return "DevOps";
+    case "network":
+      return "네트워크";
+    case "mobile":
+      return "모바일";
+    case "general":
+      return "일반";
     default:
       return category;
   }
@@ -50,6 +56,12 @@ export const getCategoryColor = (category: QuizCategory) => {
       return "border-primary/25 bg-accent text-accent-foreground";
     case "devops":
       return "border-border bg-secondary text-secondary-foreground";
+    case "network":
+      return "border-info/25 bg-info/10 text-info";
+    case "mobile":
+      return "border-primary/25 bg-primary/10 text-primary";
+    case "general":
+      return "border-border bg-muted text-muted-foreground";
     default:
       return "border-border bg-muted text-muted-foreground";
   }
