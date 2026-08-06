@@ -1,7 +1,15 @@
 import type {
   InterviewCategory,
+  InterviewQuestion,
   ReviewConfidence,
 } from "@/types/interview";
+
+/** 선택한 분야의 질문만 남긴다. 분야를 고르지 않으면 전체를 반환한다. */
+export const filterInterviewQuestions = (
+  questions: InterviewQuestion[],
+  category?: InterviewCategory
+): InterviewQuestion[] =>
+  category ? questions.filter((question) => question.category === category) : questions;
 
 export const getInterviewCategoryLabel = (category: InterviewCategory) => {
   switch (category) {

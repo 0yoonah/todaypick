@@ -92,6 +92,20 @@ export default function Header() {
           >
             피드
           </Link>
+          <Link
+            href={ROUTE_PATH.INTERVIEW}
+            aria-current={
+              pathname === ROUTE_PATH.INTERVIEW ? "page" : undefined
+            }
+            className={cn(
+              "text-base transition-colors",
+              pathname === ROUTE_PATH.INTERVIEW
+                ? "font-bold text-primary"
+                : "font-semibold text-muted-foreground hover:text-foreground"
+            )}
+          >
+            면접 대비
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
