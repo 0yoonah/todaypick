@@ -4,8 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import CsCategoryFilter from "@/components/cs/CsCategoryFilter";
 import CsQuestionList from "@/components/cs/CsQuestionList";
 import { csQuestions } from "@/data/csQuestions";
+import { glossaryTerms } from "@/data/glossaryTerms";
 import { isCsCategory } from "@/types/cs";
 import { filterCsQuestions, getCsCategoryLabel } from "@/utils/csUtils";
+import { buildKeywordLinks } from "@/utils/glossaryUtils";
 
 export const metadata: Metadata = {
   title: "CS 지식 | TodayPick",
@@ -25,6 +27,8 @@ export default async function CsPage({ searchParams }: CsPageProps) {
   const params = await searchParams;
   const category = isCsCategory(params.category) ? params.category : undefined;
   const questions = filterCsQuestions(csQuestions, category);
+  // 용어사전 데이터가 아니라 연결된 키워드만 클라이언트로 넘긴다.
+  const keywordLinks = buildKeywordLinks(questions, glossaryTerms);
 
   return (
     <main className="min-h-screen bg-background">
@@ -65,7 +69,7 @@ export default async function CsPage({ searchParams }: CsPageProps) {
                 ? `${getCsCategoryLabel(category)} ${questions.length}문항`
                 : `전체 ${questions.length}문항`}
             </p>
-            <CsQuestionList questions={questions} />
+            <CsQuestionList questions={questions} keywordLinks={keywordLinks} />
           </>
         )}
       </div>

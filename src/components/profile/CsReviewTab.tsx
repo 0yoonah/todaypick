@@ -116,6 +116,7 @@ export default function CsReviewTab() {
             <CsQuestionCard
               question={question}
               review={reviewMap.get(question.id)}
+              keywordLinks={reviewsQuery.data?.keywordLinks}
               isSaving={
                 saveReview.isPending &&
                 saveReview.variables?.questionId === question.id

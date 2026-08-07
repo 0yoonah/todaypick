@@ -77,3 +77,69 @@ export function findRelatedCsQuestions(
     .sort((a, b) => a.id.localeCompare(b.id))
     .slice(0, limit);
 }
+
+/** 채점 결과 키워드에서 이어 갈 용어 정보 */
+export interface GlossaryKeywordLink {
+  id: string;
+  term: string;
+}
+
+/**
+ * 표제어와 별칭을 정규화해 용어를 찾을 수 있는 색인을 만든다.
+ * 서로 다른 용어가 같은 표기를 쓰면 id가 앞서는 용어를 남겨 결과를 고정한다.
+ */
+export function buildGlossaryKeywordIndex(
+  terms: GlossaryTerm[]
+): Map<string, GlossaryTerm> {
+  const index = new Map<string, GlossaryTerm>();
+
+  [...terms]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .forEach((term) => {
+      searchTargets(term)
+        .filter((target) => target.length >= MIN_LINK_LENGTH)
+        .forEach((target) => {
+          if (!index.has(target)) {
+            index.set(target, term);
+          }
+        });
+    });
+
+  return index;
+}
+
+/** 키워드와 표기가 정확히 일치하는 용어를 찾는다. 부분 일치는 오탐이 많아 쓰지 않는다. */
+export function findTermByKeyword(
+  keyword: string,
+  index: Map<string, GlossaryTerm>
+): GlossaryTerm | undefined {
+  const normalized = normalizeTermText(keyword);
+  if (normalized.length < MIN_LINK_LENGTH) return undefined;
+
+  return index.get(normalized);
+}
+
+/**
+ * 문항들의 키워드 중 용어사전에 있는 것만 골라 원문 표기 그대로 연결한다.
+ * 사전에 없는 키워드는 결과에 담기지 않아 링크 없이 표시된다.
+ */
+export function buildKeywordLinks(
+  questions: CsQuestion[],
+  terms: GlossaryTerm[]
+): Record<string, GlossaryKeywordLink> {
+  const index = buildGlossaryKeywordIndex(terms);
+  const links: Record<string, GlossaryKeywordLink> = {};
+
+  questions.forEach((question) => {
+    question.keywords.forEach((keyword) => {
+      if (links[keyword]) return;
+
+      const term = findTermByKeyword(keyword, index);
+      if (term) {
+        links[keyword] = { id: term.id, term: term.term };
+      }
+    });
+  });
+
+  return links;
+}

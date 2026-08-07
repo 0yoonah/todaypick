@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { csQuestions } from "@/data/csQuestions";
+import { glossaryTerms } from "@/data/glossaryTerms";
 import {
   gradeCsAnswer,
   MAX_CS_ANSWER_LENGTH,
@@ -11,6 +12,7 @@ import {
 import type { CsReview } from "@/types/cs";
 import { recordDailyActivity } from "@/services/dailyActivityService";
 import { getSeoulDateKey } from "@/utils/dateUtils";
+import { buildKeywordLinks } from "@/utils/glossaryUtils";
 
 const selectFields =
   "question_id, score, matched_keywords, answer, used_hint, reviewed_at";
@@ -42,12 +44,14 @@ export async function GET() {
 
   const reviews = (data ?? []) as CsReview[];
   const reviewMap = toReviewMap(reviews);
+  const reviewQuestions = selectReviewQuestions(csQuestions, reviewMap);
 
   // 복습 목록과 진도 집계를 서버에서 만들어, 문항 데이터가 클라이언트 번들에 실리지 않게 한다.
   return NextResponse.json({
     reviews,
-    reviewQuestions: selectReviewQuestions(csQuestions, reviewMap),
+    reviewQuestions,
     progress: summarizeCsProgress(csQuestions, reviewMap),
+    keywordLinks: buildKeywordLinks(reviewQuestions, glossaryTerms),
   });
 }
 
