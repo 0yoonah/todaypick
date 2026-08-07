@@ -208,4 +208,5 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 
 - [AGENTS.md](AGENTS.md) — 브랜치, 커밋, PR, 릴리스 규칙
 - [docs/release-operations.md](docs/release-operations.md) — migration 적용 확인과 릴리스·검증 절차
+- [docs/content-data-policy.md](docs/content-data-policy.md) — 콘텐츠를 코드와 DB 중 어디에 둘지 판단하는 기준
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
