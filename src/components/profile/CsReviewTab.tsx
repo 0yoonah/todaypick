@@ -7,33 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import CsQuestionCard from "@/components/cs/CsQuestionCard";
-import { csQuestions } from "@/data/csQuestions";
 import { ROUTE_PATH } from "@/config/constants";
 import { useCsReviews, useSaveCsReview } from "@/hooks/useCsReviews";
 import CsProgressSummary from "@/components/profile/CsProgressSummary";
-import {
-  CS_PASS_SCORE,
-  selectReviewQuestions,
-  summarizeCsProgress,
-  toReviewMap,
-} from "@/utils/csUtils";
+import { CS_PASS_SCORE, toReviewMap } from "@/utils/csUtils";
 
 export default function CsReviewTab() {
   const reviewsQuery = useCsReviews();
   const saveReview = useSaveCsReview();
 
+  // 복습 목록과 진도는 서버에서 계산해 내려준다.
   const reviewMap = useMemo(
-    () => toReviewMap(reviewsQuery.data ?? []),
+    () => toReviewMap(reviewsQuery.data?.reviews ?? []),
     [reviewsQuery.data],
   );
-  const reviewQuestions = useMemo(
-    () => selectReviewQuestions(csQuestions, reviewMap),
-    [reviewMap],
-  );
-  const summary = useMemo(
-    () => summarizeCsProgress(csQuestions, reviewMap),
-    [reviewMap],
-  );
+  const reviewQuestions = reviewsQuery.data?.reviewQuestions ?? [];
+  const summary = reviewsQuery.data?.progress;
 
   if (reviewsQuery.isLoading) {
     return (
@@ -87,7 +76,7 @@ export default function CsReviewTab() {
   if (reviewQuestions.length === 0) {
     return (
       <div>
-        <CsProgressSummary summary={summary} />
+        {summary && <CsProgressSummary summary={summary} />}
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
             <FiCheckCircle className="size-8 text-success" aria-hidden />
@@ -109,7 +98,7 @@ export default function CsReviewTab() {
 
   return (
     <div>
-      <CsProgressSummary summary={summary} />
+      {summary && <CsProgressSummary summary={summary} />}
 
       <div className="mb-4">
         <h2 className="font-bold">
