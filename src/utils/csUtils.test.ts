@@ -202,7 +202,6 @@ describe("toReviewMap", () => {
     score,
     matched_keywords: [],
     answer: "",
-    used_hint: false,
     reviewed_at: "2026-08-06T00:00:00.000Z",
   });
 
@@ -231,7 +230,6 @@ describe("selectReviewQuestions", () => {
     score,
     matched_keywords: [],
     answer: "답변",
-    used_hint: false,
     reviewed_at,
   });
 
@@ -320,7 +318,6 @@ describe("summarizeCsProgress", () => {
     score,
     matched_keywords: [],
     answer: "답변",
-    used_hint: false,
     reviewed_at: "2026-08-06T00:00:00.000Z",
   });
 

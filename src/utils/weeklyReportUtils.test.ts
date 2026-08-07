@@ -24,7 +24,7 @@ describe("주간 학습 리포트", () => {
           date: "2026-07-27",
           feed_clicked: true,
           quiz_completed: true,
-          quote_viewed: true,
+          cs_completed: true,
         },
         { date: "2026-07-28", feed_clicked: true },
         { date: "2026-07-20", feed_clicked: true },
@@ -85,8 +85,29 @@ describe("주간 학습 리포트", () => {
           date: "2026-07-27",
           feed_clicked: true,
           quiz_completed: true,
-          quote_viewed: true,
+          cs_completed: true,
           readingGoalCompleted: false,
+        },
+      ],
+      [],
+      [],
+      toDateKey
+    );
+
+    expect(report.learningDays).toBe(1);
+    expect(report.completedGoalDays).toBe(0);
+  });
+
+  it("명언 확인만 남은 날은 학습일로 세지 않는다", () => {
+    const report = createWeeklyReport(
+      dateKeys,
+      [
+        { date: "2026-07-27", quote_viewed: true },
+        {
+          date: "2026-07-28",
+          feed_clicked: true,
+          quiz_completed: true,
+          quote_viewed: true,
         },
       ],
       [],

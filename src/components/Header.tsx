@@ -106,6 +106,20 @@ export default function Header() {
           >
             CS 지식
           </Link>
+          <Link
+            href={ROUTE_PATH.GLOSSARY}
+            aria-current={
+              pathname === ROUTE_PATH.GLOSSARY ? "page" : undefined
+            }
+            className={cn(
+              "text-base transition-colors",
+              pathname === ROUTE_PATH.GLOSSARY
+                ? "font-bold text-primary"
+                : "font-semibold text-muted-foreground hover:text-foreground"
+            )}
+          >
+            용어사전
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiCheck, FiEye, FiHelpCircle, FiRotateCcw, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import type { CsGradeResult, CsQuestion, CsReview } from "@/types/cs";
+import type { GlossaryKeywordLink } from "@/utils/glossaryUtils";
 import {
   CS_PASS_SCORE,
   getCsCategoryColor,
@@ -23,9 +25,11 @@ interface CsQuestionCardProps {
   question: CsQuestion;
   /** 저장된 지난 채점 기록 */
   review?: CsReview;
-  onSave?: (input: { answer: string; usedHint: boolean }) => void;
+  onSave?: (input: { answer: string }) => void;
   isSaving?: boolean;
   saveError?: string;
+  /** 키워드 원문 표기로 찾는 용어사전 링크. 서버에서 만들어 넘긴다. */
+  keywordLinks?: Record<string, GlossaryKeywordLink>;
 }
 
 export default function CsQuestionCard({
@@ -34,6 +38,7 @@ export default function CsQuestionCard({
   onSave,
   isSaving = false,
   saveError,
+  keywordLinks,
 }: CsQuestionCardProps) {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -45,7 +50,6 @@ export default function CsQuestionCard({
   const [result, setResult] = useState<CsGradeResult | null>(savedResult);
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [usedHint, setUsedHint] = useState(review?.used_hint ?? false);
 
   const answerId = useId();
   const hintId = useId();
@@ -59,7 +63,7 @@ export default function CsQuestionCard({
 
     setResult(gradeCsAnswer(answer, question.keywords));
     setShowAnswer(true);
-    onSave?.({ answer, usedHint });
+    onSave?.({ answer });
   };
 
   const handleReset = () => {
@@ -67,16 +71,14 @@ export default function CsQuestionCard({
     setResult(null);
     setShowHint(false);
     setShowAnswer(false);
-    setUsedHint(false);
   };
 
   const handleShowHint = () => {
     setShowHint((current) => !current);
-    setUsedHint(true);
   };
 
   return (
-    <Card className="w-full shadow-none">
+    <Card id={question.id} className="w-full scroll-mt-24 shadow-none">
       <CardContent className="p-5 sm:p-6">
         <div className="mb-3 flex items-center gap-2">
           <span
@@ -87,11 +89,6 @@ export default function CsQuestionCard({
           >
             {getCsCategoryLabel(question.category)}
           </span>
-          {usedHint && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-              힌트 사용
-            </span>
-          )}
         </div>
 
         <h2 className="text-base font-semibold leading-relaxed text-card-foreground sm:text-lg">
@@ -202,26 +199,27 @@ export default function CsQuestionCard({
             </p>
             <ul className="flex flex-wrap gap-2">
               {result.matched.map((keyword) => (
-                <li
-                  key={keyword}
-                  className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs text-success"
-                >
-                  <FiCheck className="size-3" aria-hidden />
-                  <span className="sr-only">언급함: </span>
-                  {keyword}
+                <li key={keyword}>
+                  <KeywordChip
+                    keyword={keyword}
+                    link={keywordLinks?.[keyword]}
+                    state="matched"
+                  />
                 </li>
               ))}
               {result.missed.map((keyword) => (
-                <li
-                  key={keyword}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground"
-                >
-                  <FiX className="size-3" aria-hidden />
-                  <span className="sr-only">놓침: </span>
-                  {keyword}
+                <li key={keyword}>
+                  <KeywordChip
+                    keyword={keyword}
+                    link={keywordLinks?.[keyword]}
+                    state="missed"
+                  />
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-xs text-muted-foreground">
+              밑줄 있는 키워드는 용어사전에서 뜻을 볼 수 있어요.
+            </p>
             {saveError && (
               <p className="mt-3 text-xs text-destructive">{saveError}</p>
             )}
@@ -244,5 +242,52 @@ export default function CsQuestionCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+interface KeywordChipProps {
+  keyword: string;
+  link?: GlossaryKeywordLink;
+  state: "matched" | "missed";
+}
+
+/** 용어사전에 있는 키워드는 링크로, 없으면 그대로 보여준다. */
+function KeywordChip({ keyword, link, state }: KeywordChipProps) {
+  const isMatched = state === "matched";
+  const chipClassName = cn(
+    "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs",
+    isMatched
+      ? "border-success/30 bg-success/10 text-success"
+      : "border-border bg-muted text-muted-foreground"
+  );
+  const icon = isMatched ? (
+    <FiCheck className="size-3" aria-hidden />
+  ) : (
+    <FiX className="size-3" aria-hidden />
+  );
+  const stateLabel = isMatched ? "언급함: " : "놓침: ";
+
+  if (!link) {
+    return (
+      <span className={chipClassName}>
+        {icon}
+        <span className="sr-only">{stateLabel}</span>
+        {keyword}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={`${ROUTE_PATH.GLOSSARY}/${link.id}`}
+      aria-label={`${stateLabel}${keyword}, 용어사전에서 뜻 보기`}
+      className={cn(
+        chipClassName,
+        "cursor-pointer underline decoration-dotted underline-offset-4 transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      )}
+    >
+      {icon}
+      <span aria-hidden>{keyword}</span>
+    </Link>
   );
 }

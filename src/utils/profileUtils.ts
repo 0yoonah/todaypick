@@ -51,7 +51,7 @@ export const getLearningProgressByDate = (
     )?.dailyProgress || {
       feedClick: false,
       quizComplete: false,
-      quoteView: false,
+      csComplete: false,
     }
   );
 };
@@ -60,12 +60,12 @@ export const getLearningProgressByDate = (
 export const getCompletedActivitiesCount = (dailyProgress: {
   feedClick: boolean;
   quizComplete: boolean;
-  quoteView: boolean;
+  csComplete: boolean;
 }): number => {
   return [
     dailyProgress.feedClick,
     dailyProgress.quizComplete,
-    dailyProgress.quoteView,
+    dailyProgress.csComplete,
   ].filter(Boolean).length;
 };
 

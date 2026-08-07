@@ -15,6 +15,7 @@ export interface DatedFeedActivity {
 
 type GoalAwareDailyActivity = DailyLearningActivity & {
   readingGoalCompleted?: boolean;
+  cs_completed?: boolean | null;
 };
 
 export interface WeeklyReportSummary {
@@ -71,13 +72,14 @@ export function createWeeklyReport(
   return {
     startDate: dateKeys[0],
     endDate: dateKeys.at(-1) ?? dateKeys[0],
+    // 홈 체크리스트와 같은 기준(피드 읽기 · 퀴즈 · CS 지식)을 쓴다.
     learningDays: weekActivities.filter(
-      ({ feed_clicked, quiz_completed, quote_viewed }) =>
-        feed_clicked || quiz_completed || quote_viewed
+      ({ feed_clicked, quiz_completed, cs_completed }) =>
+        feed_clicked || quiz_completed || cs_completed
     ).length,
     completedGoalDays: weekActivities.filter(
-      ({ feed_clicked, quiz_completed, quote_viewed, readingGoalCompleted }) =>
-        (readingGoalCompleted ?? feed_clicked) && quiz_completed && quote_viewed
+      ({ feed_clicked, quiz_completed, cs_completed, readingGoalCompleted }) =>
+        (readingGoalCompleted ?? feed_clicked) && quiz_completed && cs_completed
     ).length,
     quizzesCompleted: weekQuizzes.length,
     correctQuizzes,

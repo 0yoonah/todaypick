@@ -93,7 +93,7 @@ export async function GET() {
           (readIdsByDate.get(dateStr)?.size ?? 0) >=
           (dayActivity?.reading_goal ?? 3),
         quizComplete: dayActivity?.quiz_completed || false,
-        quoteView: dayActivity?.quote_viewed || false,
+        csComplete: dayActivity?.cs_completed || false,
       };
 
       // 기존 데이터에서 해당 날짜의 수치들 계산

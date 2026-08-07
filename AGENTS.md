@@ -65,7 +65,11 @@ chore/32-release-config
 ### 브랜치 정리
 
 - 저장소의 `Automatically delete head branches` 설정이 켜져 있어 **원격 작업 브랜치는 PR 병합과 함께 자동으로 삭제된다.** 병합 후 별도로 `git push origin --delete`를 실행하지 않는다.
-- `master`, `develop`과 명시적인 보관 브랜치(`archive/*`)는 PR의 head가 아니므로 자동 삭제 대상이 아니다. 수동으로도 삭제하지 않는다.
+- 자동 삭제 대상은 **병합된 PR의 head 브랜치**다. 릴리스 PR은 `develop → master`이므로 **`develop`도 head가 된다.** 이 설정만 켜 두면 릴리스 PR을 병합할 때 `develop`이 삭제된다.
+- 그래서 `develop`과 `master`에 브랜치 보호를 적용해 두었다. GitHub는 보호된 브랜치를 자동 삭제하지 않는다.
+  - 삭제 금지와 강제 푸시 금지만 설정했고, 리뷰 필수나 상태 검사 필수는 걸지 않았다.
+  - 보호를 해제하면 다음 릴리스 병합에서 `develop`이 사라질 수 있다. 해제할 일이 있으면 자동 삭제 설정을 함께 확인한다.
+- `master`, `develop`과 명시적인 보관 브랜치(`archive/*`)는 수동으로도 삭제하지 않는다.
 - 로컬 브랜치는 자동으로 정리되지 않는다. 병합을 확인한 뒤 직접 정리한다.
 
 ```bash
@@ -81,6 +85,14 @@ git branch -d <브랜치>      # 병합되지 않았으면 삭제되지 않는�
   - `git rev-list --count origin/develop..<브랜치>`가 `0`이다.
 - `git branch -D`처럼 병합 여부를 무시하는 강제 삭제는 사용하지 않는다.
 - 병합되지 않은 커밋이 남은 브랜치는 임의로 지우지 않고 처리 방식을 먼저 정한다.
+
+기준 브랜치가 삭제됐다면 로컬 참조로 복구한다. 원격에 없던 커밋이 로컬에도 없는지 먼저 확인한다.
+
+```bash
+git ls-remote --heads origin        # 원격에 남은 브랜치 확인
+git log --oneline develop -1        # 로컬 참조가 가리키는 커밋 확인
+git push origin develop:develop     # 복구
+```
 
 ## 이슈와 PR
 
@@ -177,6 +189,15 @@ npm run build
 - 통계 집계 기준은 PR 본문과 타입에 명확히 기록한다.
 - 같은 데이터를 읽기와 저장처럼 여러 경로에서 집계할 때 고유 식별자 기준의 중복 여부를 명시한다.
 
+## 콘텐츠 데이터
+
+- 모든 사용자에게 같은 값인 콘텐츠는 `src/data`의 정적 파일로 관리하고, 사용자마다 다른 기록만 DB에 저장한다.
+- 콘텐츠 파일에는 정합성 테스트를 함께 작성한다. id 중복, 필수 값, 참조 유효성, 분류 범위를 확인한다.
+- 사용자 기록이 콘텐츠 id를 참조하므로 기존 id를 바꾸지 않는다. 분류나 문구가 바뀌어도 id는 유지한다.
+- `created_at`처럼 고정돼야 하는 값에 `new Date()`를 쓰지 않는다.
+- 콘텐츠 목록은 서버 컴포넌트에서 렌더링한다. 클라이언트 컴포넌트가 `src/data`를 직접 import하면 데이터 전체가 번들에 포함된다.
+- DB 전환 여부를 판단할 때는 [docs/content-data-policy.md](docs/content-data-policy.md)의 기준을 따른다.
+
 ## Supabase와 Migration
 
 - 스키마 변경은 `supabase/migrations`의 새 migration 파일로 관리한다.
@@ -271,6 +292,7 @@ npm run build
 6. GitHub Release 게시 후 릴리스 이슈와 마일스톤을 종료한다.
 
 - Production 확인 전에는 태그와 GitHub Release를 만들지 않는다.
+- 릴리스 PR을 병합한 뒤 `git ls-remote --heads origin`으로 `develop`이 남아 있는지 확인한다. 릴리스 PR은 head가 `develop`이라 브랜치 보호가 풀려 있으면 자동 삭제될 수 있다.
 - 잘못된 커밋에 태그를 생성했다면 임의로 덮어쓰지 말고 사용자와 수정 방식을 먼저 결정한다.
 - 릴리스 관리 이슈는 태그 생성, GitHub Release 게시와 Production 확인이 모두 끝난 뒤 체크리스트를 갱신하고 수동으로 종료한다.
 

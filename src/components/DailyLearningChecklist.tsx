@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FiBookOpen, FiCheck, FiMessageCircle, FiTarget } from "react-icons/fi";
+import { FiBookOpen, FiCheck, FiCpu, FiTarget } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ROUTE_PATH } from "@/config/constants";
 import { useDailyActivities } from "@/hooks/useDailyActivities";
 import { cn } from "@/lib/utils";
 import type { DailyChecklistItem } from "@/types/dailyActivity";
@@ -27,14 +28,14 @@ const CHECKLIST_ITEMS: DailyChecklistItem[] = [
     href: "#today-quiz",
   },
   {
-    activity: "quote_viewed",
-    title: "명언 확인",
-    description: "오늘의 한 문장으로 마무리하기",
-    href: "#today-quote",
+    activity: "cs_completed",
+    title: "CS 지식",
+    description: "질문 하나에 답을 써보기",
+    href: ROUTE_PATH.CS,
   },
 ];
 
-const ITEM_ICONS = [FiBookOpen, FiTarget, FiMessageCircle];
+const ITEM_ICONS = [FiBookOpen, FiTarget, FiCpu];
 
 export default function DailyLearningChecklist() {
   const {
@@ -64,7 +65,7 @@ export default function DailyLearningChecklist() {
               오늘 알아둘 내용을 준비했어요
             </h1>
             <p className="hidden max-w-2xl text-sm text-muted-foreground sm:block">
-              로그인하면 피드, 퀴즈, 명언 활동이 자동으로 기록되고 오늘의
+              로그인하면 피드, 퀴즈, CS 지식 활동이 자동으로 기록되고 오늘의
               진행률을 확인할 수 있어요.
             </p>
           </div>
