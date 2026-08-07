@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { FiSearch } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
-import GlossaryCategoryFilter from "@/components/glossary/GlossaryCategoryFilter";
 import GlossarySearchInput from "@/components/glossary/GlossarySearchInput";
 import GlossaryTermCard from "@/components/glossary/GlossaryTermCard";
 import { glossaryTerms } from "@/data/glossaryTerms";
-import { isCsCategory } from "@/types/cs";
-import { getCsCategoryLabel } from "@/utils/csUtils";
 import {
   getRelatedTerms,
   searchGlossaryTerms,
@@ -16,11 +13,11 @@ import {
 export const metadata: Metadata = {
   title: "IT 용어사전 | TodayPick",
   description:
-    "네트워크, 운영체제, 데이터베이스, 프론트엔드, 백엔드 등 개발자가 자주 만나는 IT 용어를 빠르게 찾아보세요.",
+    "네트워크, 운영체제, 데이터베이스, 프론트엔드, 백엔드 등 개발자가 자주 만나는 IT 용어를 가나다순으로 찾아보세요.",
 };
 
 interface GlossaryPageProps {
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 /**
@@ -32,9 +29,8 @@ export default async function GlossaryPage({
 }: GlossaryPageProps) {
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q : "";
-  const category = isCsCategory(params.category) ? params.category : undefined;
 
-  const terms = searchGlossaryTerms(glossaryTerms, { query, category });
+  const terms = searchGlossaryTerms(glossaryTerms, { query });
   const termMap = toTermMap(glossaryTerms);
 
   return (
@@ -47,12 +43,11 @@ export default async function GlossaryPage({
           </h1>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground">
             모르는 용어를 만나면 바로 확인해보세요. 영문 표기나 약어로도 찾을 수
-            있어요. 총 {glossaryTerms.length}개를 담았어요.
+            있어요. 총 {glossaryTerms.length}개를 가나다순으로 담았어요.
           </p>
         </div>
 
-        <GlossarySearchInput query={query} category={category} />
-        <GlossaryCategoryFilter value={category} query={query} />
+        <GlossarySearchInput query={query} />
 
         {terms.length === 0 ? (
           <Card>
@@ -60,12 +55,11 @@ export default async function GlossaryPage({
               <FiSearch className="size-8 text-muted-foreground" aria-hidden />
               <div>
                 <h2 className="font-semibold">
-                  {query
-                    ? `'${query}'에 해당하는 용어가 없어요.`
-                    : `${category ? getCsCategoryLabel(category) : ""} 용어가 아직 없어요.`}
+                  {`'${query}'에 해당하는 용어가 없어요.`}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  다른 검색어나 분야를 선택해보세요.
+                  표제어와 영문 표기로 검색할 수 있어요. 다른 검색어를
+                  입력해보세요.
                 </p>
               </div>
             </CardContent>
@@ -73,9 +67,7 @@ export default async function GlossaryPage({
         ) : (
           <>
             <p className="mb-4 text-sm text-muted-foreground">
-              {query && `'${query}' 검색 결과 `}
-              {category && `${getCsCategoryLabel(category)} `}
-              {terms.length}개
+              {query ? `'${query}' 검색 결과 ${terms.length}개` : `전체 ${terms.length}개`}
             </p>
             <ul className="space-y-4">
               {terms.map((term) => (

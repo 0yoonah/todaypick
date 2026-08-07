@@ -1,5 +1,4 @@
 import { normalizeAnswerText } from "@/utils/csUtils";
-import type { CsCategory } from "@/types/cs";
 import type { GlossaryTerm } from "@/types/glossary";
 
 /** 검색과 비교에 쓰는 정규화. CS 지식 채점과 같은 규칙을 사용한다. */
@@ -18,30 +17,20 @@ export function matchesQuery(term: GlossaryTerm, query: string): boolean {
 }
 
 /**
- * 분야와 검색어로 용어를 걸러 결정적 순서로 정렬한다.
- * 표제어가 검색어로 시작하는 항목을 먼저 보여주고, 같은 조건에서는 표제어와 id 순으로 고정한다.
+ * 검색어로 용어를 걸러 가나다순으로 정렬한다.
+ * 같은 표제어가 없도록 id를 마지막 정렬 키로 둬 순서를 고정한다.
+ * 한국어 로캘 기준이라 한글 표제어가 영문보다 앞선다.
  */
 export function searchGlossaryTerms(
   terms: GlossaryTerm[],
-  { query = "", category }: { query?: string; category?: CsCategory } = {}
+  { query = "" }: { query?: string } = {}
 ): GlossaryTerm[] {
-  const normalizedQuery = normalizeTermText(query);
-  const filtered = terms.filter(
-    (term) =>
-      (category === undefined || term.category === category) &&
-      matchesQuery(term, query)
-  );
-
-  const startsWithQuery = (term: GlossaryTerm) =>
-    normalizedQuery.length > 0 &&
-    searchTargets(term).some((target) => target.startsWith(normalizedQuery));
-
-  return [...filtered].sort((a, b) => {
-    const priority = Number(startsWithQuery(b)) - Number(startsWithQuery(a));
-    return (
-      priority || a.term.localeCompare(b.term, "ko") || a.id.localeCompare(b.id)
+  return terms
+    .filter((term) => matchesQuery(term, query))
+    .sort(
+      (a, b) =>
+        a.term.localeCompare(b.term, "ko") || a.id.localeCompare(b.id)
     );
-  });
 }
 
 /** id로 용어를 찾을 수 있게 정리한다. */

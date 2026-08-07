@@ -61,7 +61,7 @@ describe("matchesQuery", () => {
 });
 
 describe("searchGlossaryTerms", () => {
-  it("조건이 없으면 전체를 표제어 순으로 반환한다", () => {
+  it("검색어가 없으면 전체를 가나다순으로 반환한다", () => {
     const result = searchGlossaryTerms(terms);
 
     expect(result).toHaveLength(4);
@@ -74,22 +74,7 @@ describe("searchGlossaryTerms", () => {
     ]);
   });
 
-  it("분야로 거른다", () => {
-    expect(
-      searchGlossaryTerms(terms, { category: "os" }).map((item) => item.id)
-    ).toEqual(["virtual-memory"]);
-  });
-
-  it("검색어와 분야를 함께 적용한다", () => {
-    expect(
-      searchGlossaryTerms(terms, { query: "메모리", category: "network" })
-    ).toEqual([]);
-    expect(
-      searchGlossaryTerms(terms, { query: "메모리", category: "os" })
-    ).toHaveLength(1);
-  });
-
-  it("검색어로 시작하는 용어를 먼저 보여준다", () => {
+  it("검색 결과도 가나다순으로 정렬한다", () => {
     const list = [
       term("a", "메모리 누수"),
       term("b", "가상 메모리"),
@@ -98,7 +83,13 @@ describe("searchGlossaryTerms", () => {
 
     expect(
       searchGlossaryTerms(list, { query: "메모리" }).map((item) => item.id)
-    ).toEqual(["c", "a", "b"]);
+    ).toEqual(["b", "c", "a"]);
+  });
+
+  it("표제어가 같으면 id로 순서를 고정한다", () => {
+    const list = [term("z", "캐시"), term("a", "캐시")];
+
+    expect(searchGlossaryTerms(list).map((item) => item.id)).toEqual(["a", "z"]);
   });
 
   it("결과가 없으면 빈 배열을 반환한다", () => {

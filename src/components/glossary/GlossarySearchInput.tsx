@@ -4,27 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiSearch, FiX } from "react-icons/fi";
 import { ROUTE_PATH } from "@/config/constants";
-import type { CsCategory } from "@/types/cs";
 
 interface GlossarySearchInputProps {
   /** 현재 URL에 반영된 검색어 */
   query: string;
-  category?: CsCategory;
 }
 
 const DEBOUNCE_MS = 300;
 
-const buildHref = (query: string, category?: CsCategory) => {
-  const params = new URLSearchParams();
-  if (query.trim()) params.set("q", query.trim());
-  if (category) params.set("category", category);
-  const search = params.toString();
-  return search ? `${ROUTE_PATH.GLOSSARY}?${search}` : ROUTE_PATH.GLOSSARY;
+const buildHref = (query: string) => {
+  const trimmed = query.trim();
+  return trimmed
+    ? `${ROUTE_PATH.GLOSSARY}?q=${encodeURIComponent(trimmed)}`
+    : ROUTE_PATH.GLOSSARY;
 };
 
 export default function GlossarySearchInput({
   query,
-  category,
 }: GlossarySearchInputProps) {
   const router = useRouter();
   const [value, setValue] = useState(query);
@@ -40,11 +36,11 @@ export default function GlossarySearchInput({
     if (value.trim() === query.trim()) return;
 
     const timer = window.setTimeout(() => {
-      router.replace(buildHref(value, category), { scroll: false });
+      router.replace(buildHref(value), { scroll: false });
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [value, query, category, router]);
+  }, [value, query, router]);
 
   return (
     <div className="relative mb-6">
