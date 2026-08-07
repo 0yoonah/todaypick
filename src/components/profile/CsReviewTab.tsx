@@ -116,6 +116,7 @@ export default function CsReviewTab() {
             <CsQuestionCard
               question={question}
               review={reviewMap.get(question.id)}
+              keywordLinks={reviewsQuery.data?.keywordLinks}
               isSaving={
                 saveReview.isPending &&
                 saveReview.variables?.questionId === question.id
@@ -126,12 +127,8 @@ export default function CsReviewTab() {
                   ? saveReview.error.message
                   : undefined
               }
-              onSave={({ answer, usedHint }) =>
-                saveReview.mutate({
-                  questionId: question.id,
-                  answer,
-                  usedHint,
-                })
+              onSave={({ answer }) =>
+                saveReview.mutate({ questionId: question.id, answer })
               }
             />
           </li>

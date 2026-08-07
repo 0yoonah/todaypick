@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildGlossaryKeywordIndex,
+  buildKeywordLinks,
   findRelatedCsQuestions,
+  findTermByKeyword,
   getRelatedTerms,
   matchesQuery,
   normalizeTermText,
@@ -204,5 +207,88 @@ describe("findRelatedCsQuestions", () => {
       findRelatedCsQuestions(term("api", "API"), many).map((item) => item.id)
     ).toEqual(["a", "b", "c"]);
     expect(findRelatedCsQuestions(term("api", "API"), many, 2)).toHaveLength(2);
+  });
+});
+
+describe("채점 키워드와 용어 연결", () => {
+  const question = (id: string, keywords: string[]): CsQuestion => ({
+    id,
+    question: `${id} 질문`,
+    answer: "답안",
+    keywords,
+    category: "network",
+    created_at: "2026-08-07T00:00:00.000Z",
+  });
+
+  it("표제어와 표기가 같은 키워드를 연결한다", () => {
+    const index = buildGlossaryKeywordIndex(terms);
+    expect(findTermByKeyword("TCP", index)?.id).toBe("tcp");
+  });
+
+  it("별칭으로만 일치하는 키워드도 연결한다", () => {
+    const index = buildGlossaryKeywordIndex(terms);
+    expect(findTermByKeyword("Transmission Control Protocol", index)?.id).toBe(
+      "tcp"
+    );
+  });
+
+  it("대소문자와 공백 차이는 무시한다", () => {
+    const index = buildGlossaryKeywordIndex(terms);
+    expect(findTermByKeyword("  가상메모리 ", index)?.id).toBe(
+      "virtual-memory"
+    );
+    expect(findTermByKeyword("virtual  memory", index)?.id).toBe(
+      "virtual-memory"
+    );
+  });
+
+  it("부분만 겹치는 키워드는 연결하지 않는다", () => {
+    const index = buildGlossaryKeywordIndex(terms);
+    expect(findTermByKeyword("TCP 헤더", index)).toBeUndefined();
+    expect(findTermByKeyword("메모리", index)).toBeUndefined();
+  });
+
+  it("한 글자 키워드는 오탐이 많아 연결하지 않는다", () => {
+    const index = buildGlossaryKeywordIndex([term("a", "A")]);
+    expect(findTermByKeyword("A", index)).toBeUndefined();
+  });
+
+  it("같은 표기를 여러 용어가 쓰면 id가 앞서는 용어로 고정한다", () => {
+    const duplicated = [
+      term("zebra", "겹침"),
+      term("alpha", "다른 이름", { aliases: ["겹침"] }),
+    ];
+
+    expect(findTermByKeyword("겹침", buildGlossaryKeywordIndex(duplicated))?.id).toBe(
+      "alpha"
+    );
+    expect(
+      findTermByKeyword(
+        "겹침",
+        buildGlossaryKeywordIndex([...duplicated].reverse())
+      )?.id
+    ).toBe("alpha");
+  });
+
+  it("사전에 있는 키워드만 원문 표기 그대로 담는다", () => {
+    const links = buildKeywordLinks(
+      [question("net-1", ["TCP", "혼잡 제어", "caching"])],
+      terms
+    );
+
+    expect(links).toEqual({
+      TCP: { id: "tcp", term: "TCP" },
+      caching: { id: "cache", term: "캐시" },
+    });
+    expect(links["혼잡 제어"]).toBeUndefined();
+  });
+
+  it("여러 문항에 같은 키워드가 있어도 한 번만 담는다", () => {
+    const links = buildKeywordLinks(
+      [question("net-1", ["TCP"]), question("net-2", ["TCP", "UDP"])],
+      terms
+    );
+
+    expect(Object.keys(links).sort()).toEqual(["TCP", "UDP"]);
   });
 });

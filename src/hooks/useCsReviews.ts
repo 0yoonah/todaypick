@@ -7,6 +7,7 @@ import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 import { CS_REVIEWS_QUERY_KEY } from "@/utils/csUtils";
 import type { CsProgressSummary } from "@/utils/csUtils";
 import type { CsQuestion, CsReview } from "@/types/cs";
+import type { GlossaryKeywordLink } from "@/utils/glossaryUtils";
 
 export interface CsReviewsResponse {
   /** 사용자가 채점한 기록 */
@@ -15,6 +16,8 @@ export interface CsReviewsResponse {
   reviewQuestions: CsQuestion[];
   /** 분야별 진도 집계 */
   progress: CsProgressSummary;
+  /** 복습 문항 키워드에 붙일 용어사전 링크 */
+  keywordLinks: Record<string, GlossaryKeywordLink>;
 }
 
 async function fetchCsReviews(): Promise<CsReviewsResponse> {
@@ -40,7 +43,6 @@ export function useCsReviews() {
 export interface SaveCsReviewInput {
   questionId: string;
   answer: string;
-  usedHint: boolean;
 }
 
 /**
@@ -60,7 +62,6 @@ export function useSaveCsReview() {
         body: JSON.stringify({
           question_id: input.questionId,
           answer: input.answer,
-          used_hint: input.usedHint,
         }),
       });
       const result = await response.json().catch(() => null);

@@ -44,6 +44,5 @@ export interface CsReview {
   score: number;
   matched_keywords: string[];
   answer: string;
-  used_hint: boolean;
   reviewed_at: string;
 }
