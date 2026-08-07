@@ -47,12 +47,8 @@ export default function CsQuestionList({
                 ? saveReview.error.message
                 : undefined
             }
-            onSave={({ answer, usedHint }) =>
-              saveReview.mutate({
-                questionId: question.id,
-                answer,
-                usedHint,
-              })
+            onSave={({ answer }) =>
+              saveReview.mutate({ questionId: question.id, answer })
             }
           />
         </li>

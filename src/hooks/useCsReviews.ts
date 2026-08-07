@@ -43,7 +43,6 @@ export function useCsReviews() {
 export interface SaveCsReviewInput {
   questionId: string;
   answer: string;
-  usedHint: boolean;
 }
 
 /**
@@ -63,7 +62,6 @@ export function useSaveCsReview() {
         body: JSON.stringify({
           question_id: input.questionId,
           answer: input.answer,
-          used_hint: input.usedHint,
         }),
       });
       const result = await response.json().catch(() => null);

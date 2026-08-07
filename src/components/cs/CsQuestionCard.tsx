@@ -25,7 +25,7 @@ interface CsQuestionCardProps {
   question: CsQuestion;
   /** 저장된 지난 채점 기록 */
   review?: CsReview;
-  onSave?: (input: { answer: string; usedHint: boolean }) => void;
+  onSave?: (input: { answer: string }) => void;
   isSaving?: boolean;
   saveError?: string;
   /** 키워드 원문 표기로 찾는 용어사전 링크. 서버에서 만들어 넘긴다. */
@@ -50,7 +50,6 @@ export default function CsQuestionCard({
   const [result, setResult] = useState<CsGradeResult | null>(savedResult);
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [usedHint, setUsedHint] = useState(review?.used_hint ?? false);
 
   const answerId = useId();
   const hintId = useId();
@@ -64,7 +63,7 @@ export default function CsQuestionCard({
 
     setResult(gradeCsAnswer(answer, question.keywords));
     setShowAnswer(true);
-    onSave?.({ answer, usedHint });
+    onSave?.({ answer });
   };
 
   const handleReset = () => {
@@ -72,12 +71,10 @@ export default function CsQuestionCard({
     setResult(null);
     setShowHint(false);
     setShowAnswer(false);
-    setUsedHint(false);
   };
 
   const handleShowHint = () => {
     setShowHint((current) => !current);
-    setUsedHint(true);
   };
 
   return (
@@ -92,11 +89,6 @@ export default function CsQuestionCard({
           >
             {getCsCategoryLabel(question.category)}
           </span>
-          {usedHint && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-              힌트 사용
-            </span>
-          )}
         </div>
 
         <h2 className="text-base font-semibold leading-relaxed text-card-foreground sm:text-lg">

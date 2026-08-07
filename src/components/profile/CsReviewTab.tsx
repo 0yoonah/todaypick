@@ -127,12 +127,8 @@ export default function CsReviewTab() {
                   ? saveReview.error.message
                   : undefined
               }
-              onSave={({ answer, usedHint }) =>
-                saveReview.mutate({
-                  questionId: question.id,
-                  answer,
-                  usedHint,
-                })
+              onSave={({ answer }) =>
+                saveReview.mutate({ questionId: question.id, answer })
               }
             />
           </li>

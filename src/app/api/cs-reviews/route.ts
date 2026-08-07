@@ -15,7 +15,7 @@ import { getSeoulDateKey } from "@/utils/dateUtils";
 import { buildKeywordLinks } from "@/utils/glossaryUtils";
 
 const selectFields =
-  "question_id, score, matched_keywords, answer, used_hint, reviewed_at";
+  "question_id, score, matched_keywords, answer, reviewed_at";
 
 async function getAuthenticatedClient() {
   const supabase = await createClient();
@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const questionId = typeof body?.question_id === "string" ? body.question_id : "";
   const answer = typeof body?.answer === "string" ? body.answer : "";
-  const usedHint = body?.used_hint === true;
 
   const question = csQuestions.find((item) => item.id === questionId);
   if (!question) {
@@ -97,7 +96,6 @@ export async function POST(request: NextRequest) {
         score: result.score,
         matched_keywords: result.matched,
         answer,
-        used_hint: usedHint,
         reviewed_at: new Date().toISOString(),
       },
       { onConflict: "user_id,question_id" }
