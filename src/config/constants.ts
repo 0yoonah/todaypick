@@ -8,6 +8,7 @@ export const ROUTE_PATH = {
   WRITE: "/write",
   POSTS: "/posts",
   CS: "/cs",
+  GLOSSARY: "/glossary",
 } as const;
 
 // 폼 데이터

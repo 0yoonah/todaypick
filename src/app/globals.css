@@ -68,6 +68,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     text-rendering: optimizeLegibility;
+    /* 한글은 기본값에서 음절 단위로 끊겨 단어 중간이 잘린다. 단어를 유지하되
+       공백 없는 긴 문자열은 넘치지 않도록 함께 지정한다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
   ::selection {
     @apply bg-primary/20 text-foreground;

@@ -27,9 +27,26 @@ describe("glossaryTerms 데이터", () => {
     });
   });
 
-  it("정의를 한두 문장으로 짧게 유지한다", () => {
+  it("목록에 노출할 정의는 한두 문장으로 짧게 유지한다", () => {
     glossaryTerms.forEach((term) => {
       expect(term.definition.length).toBeLessThanOrEqual(200);
+    });
+  });
+
+  it("상세 설명이 요약보다 충분히 길다", () => {
+    glossaryTerms.forEach((term) => {
+      expect(term.detail.trim().length).toBeGreaterThanOrEqual(150);
+      expect(term.detail.trim()).not.toBe(term.definition.trim());
+      expect(term.detail.length).toBeGreaterThan(term.definition.length);
+    });
+  });
+
+  it("상세 설명이 여러 문장으로 이뤄진다", () => {
+    glossaryTerms.forEach((term) => {
+      const sentences = term.detail
+        .split(/(?<=다\.)\s+/)
+        .filter((sentence) => sentence.trim().length > 0);
+      expect(sentences.length).toBeGreaterThanOrEqual(3);
     });
   });
 

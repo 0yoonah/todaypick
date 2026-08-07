@@ -76,7 +76,7 @@ export default function CsQuestionCard({
   };
 
   return (
-    <Card className="w-full shadow-none">
+    <Card id={question.id} className="w-full scroll-mt-24 shadow-none">
       <CardContent className="p-5 sm:p-6">
         <div className="mb-3 flex items-center gap-2">
           <span

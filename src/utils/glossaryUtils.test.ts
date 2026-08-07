@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  findRelatedCsQuestions,
   getRelatedTerms,
   matchesQuery,
   normalizeTermText,
   searchGlossaryTerms,
   toTermMap,
 } from "@/utils/glossaryUtils";
+import type { CsQuestion } from "@/types/cs";
 import type { GlossaryTerm } from "@/types/glossary";
 
 const term = (
@@ -16,6 +18,7 @@ const term = (
   id,
   term: name,
   definition: `${name} 정의`,
+  detail: `${name}에 대한 상세 설명이다.`,
   aliases: [],
   category: "network",
   related: [],
@@ -61,7 +64,7 @@ describe("matchesQuery", () => {
 });
 
 describe("searchGlossaryTerms", () => {
-  it("조건이 없으면 전체를 표제어 순으로 반환한다", () => {
+  it("검색어가 없으면 전체를 가나다순으로 반환한다", () => {
     const result = searchGlossaryTerms(terms);
 
     expect(result).toHaveLength(4);
@@ -74,22 +77,7 @@ describe("searchGlossaryTerms", () => {
     ]);
   });
 
-  it("분야로 거른다", () => {
-    expect(
-      searchGlossaryTerms(terms, { category: "os" }).map((item) => item.id)
-    ).toEqual(["virtual-memory"]);
-  });
-
-  it("검색어와 분야를 함께 적용한다", () => {
-    expect(
-      searchGlossaryTerms(terms, { query: "메모리", category: "network" })
-    ).toEqual([]);
-    expect(
-      searchGlossaryTerms(terms, { query: "메모리", category: "os" })
-    ).toHaveLength(1);
-  });
-
-  it("검색어로 시작하는 용어를 먼저 보여준다", () => {
+  it("검색 결과도 가나다순으로 정렬한다", () => {
     const list = [
       term("a", "메모리 누수"),
       term("b", "가상 메모리"),
@@ -98,7 +86,13 @@ describe("searchGlossaryTerms", () => {
 
     expect(
       searchGlossaryTerms(list, { query: "메모리" }).map((item) => item.id)
-    ).toEqual(["c", "a", "b"]);
+    ).toEqual(["b", "c", "a"]);
+  });
+
+  it("표제어가 같으면 id로 순서를 고정한다", () => {
+    const list = [term("z", "캐시"), term("a", "캐시")];
+
+    expect(searchGlossaryTerms(list).map((item) => item.id)).toEqual(["a", "z"]);
   });
 
   it("결과가 없으면 빈 배열을 반환한다", () => {
@@ -147,5 +141,68 @@ describe("normalizeTermText", () => {
   it("공백과 구분 기호를 없애고 소문자로 맞춘다", () => {
     expect(normalizeTermText("Virtual Memory")).toBe("virtualmemory");
     expect(normalizeTermText("블루-그린 배포")).toBe("블루그린배포");
+  });
+});
+
+describe("findRelatedCsQuestions", () => {
+  const question = (
+    id: string,
+    text: string,
+    keywords: string[]
+  ): CsQuestion => ({
+    id,
+    question: text,
+    answer: "답안",
+    keywords,
+    category: "network",
+    created_at: "2026-08-07T00:00:00.000Z",
+  });
+
+  const questions = [
+    question("net-1", "TCP와 UDP의 차이를 설명해 주세요.", ["연결 지향"]),
+    question("os-1", "가상 메모리를 설명해 주세요.", ["페이지 테이블"]),
+    question("db-1", "인덱스는 어떻게 동작하나요?", ["B-Tree", "카디널리티"]),
+  ];
+
+  it("질문 본문에서 표제어를 찾는다", () => {
+    const result = findRelatedCsQuestions(term("tcp", "TCP"), questions);
+    expect(result.map((item) => item.id)).toEqual(["net-1"]);
+  });
+
+  it("키워드에서도 찾는다", () => {
+    const result = findRelatedCsQuestions(term("b-tree", "B-Tree"), questions);
+    expect(result.map((item) => item.id)).toEqual(["db-1"]);
+  });
+
+  it("다른 표기로도 찾는다", () => {
+    const result = findRelatedCsQuestions(
+      term("virtual-memory", "Virtual Memory", { aliases: ["가상 메모리"] }),
+      questions
+    );
+    expect(result.map((item) => item.id)).toEqual(["os-1"]);
+  });
+
+  it("관련 문항이 없으면 빈 배열을 반환한다", () => {
+    expect(findRelatedCsQuestions(term("x", "쿠버네티스"), questions)).toEqual(
+      []
+    );
+  });
+
+  it("한 글자 표기는 오탐을 막기 위해 무시한다", () => {
+    expect(findRelatedCsQuestions(term("y", "A"), questions)).toEqual([]);
+  });
+
+  it("결과 수를 제한하고 질문 id 순으로 고정한다", () => {
+    const many = [
+      question("c", "API 설계", ["API"]),
+      question("a", "API 인증", ["API"]),
+      question("d", "API 버전", ["API"]),
+      question("b", "API 캐시", ["API"]),
+    ];
+
+    expect(
+      findRelatedCsQuestions(term("api", "API"), many).map((item) => item.id)
+    ).toEqual(["a", "b", "c"]);
+    expect(findRelatedCsQuestions(term("api", "API"), many, 2)).toHaveLength(2);
   });
 });
