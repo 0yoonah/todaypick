@@ -59,7 +59,7 @@ export default async function GlossaryTermPage({
           용어사전
         </Link>
 
-        <div className="mb-8 max-w-2xl">
+        <div className="mb-8">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <span
               className={cn(
@@ -80,11 +80,11 @@ export default async function GlossaryTermPage({
           )}
         </div>
 
-        <p className="max-w-2xl text-base font-medium leading-relaxed text-foreground">
+        <p className="text-base font-medium leading-relaxed text-foreground">
           {term.definition}
         </p>
 
-        <p className="mt-4 max-w-2xl whitespace-pre-line text-base leading-loose text-muted-foreground">
+        <p className="mt-4 whitespace-pre-line text-base leading-loose text-muted-foreground">
           {term.detail}
         </p>
 
