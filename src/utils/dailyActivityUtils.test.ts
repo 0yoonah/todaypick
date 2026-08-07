@@ -19,13 +19,23 @@ describe("오늘의 학습 체크리스트", () => {
     ).toBe(2);
   });
 
-  it("모든 활동이 완료되면 완료 개수는 3이다", () => {
+  it("모든 활동이 완료되면 완료 개수는 4다", () => {
     expect(
       getCompletedActivityCount({
         feed_clicked: true,
         quiz_completed: true,
         quote_viewed: true,
+        cs_completed: true,
       })
-    ).toBe(3);
+    ).toBe(4);
+  });
+
+  it("CS 지식 활동도 완료 개수에 포함한다", () => {
+    expect(
+      getCompletedActivityCount({
+        ...EMPTY_DAILY_ACTIVITY,
+        cs_completed: true,
+      })
+    ).toBe(1);
   });
 });

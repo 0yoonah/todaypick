@@ -73,3 +73,20 @@ describe("calculateLearningStreaks", () => {
     ).toEqual({ currentStreak: 3, longestStreak: 3 });
   });
 });
+
+describe("연속 학습일 기준", () => {
+  // 체크리스트에 항목이 늘어도 스트릭 기준은 읽기 목표 달성일 하나뿐이다.
+  it("읽기 목표를 채우지 않은 날은 다른 활동을 해도 포함되지 않는다", () => {
+    const { currentStreak, longestStreak } = calculateLearningStreaks(
+      [
+        { date: "2026-08-05", reading_goal_completed: true },
+        { date: "2026-08-06", reading_goal_completed: false },
+        { date: "2026-08-07", reading_goal_completed: false },
+      ],
+      "2026-08-07"
+    );
+
+    expect(currentStreak).toBe(0);
+    expect(longestStreak).toBe(1);
+  });
+});

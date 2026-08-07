@@ -7,6 +7,7 @@ export const DAILY_ACTIVITY_TYPES = [
   "feed_clicked",
   "quiz_completed",
   "quote_viewed",
+  "cs_completed",
 ] as const;
 
 export type DailyActivityType = (typeof DAILY_ACTIVITY_TYPES)[number];
@@ -116,6 +117,7 @@ export async function recordDailyActivity(
     feed_clicked: activity === "feed_clicked",
     quiz_completed: activity === "quiz_completed",
     quote_viewed: activity === "quote_viewed",
+    cs_completed: activity === "cs_completed",
     reading_goal: readingGoal,
     updated_at: updatedAt,
   });

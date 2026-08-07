@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { syncReadingGoalCompletion } from "@/services/dailyActivityService";
+import {
+  DAILY_ACTIVITY_TYPES,
+  isDailyActivityType,
+  syncReadingGoalCompletion,
+} from "@/services/dailyActivityService";
 import { calculateLearningStreaks } from "@/utils/streakUtils";
 
 interface ActivityRow {
@@ -249,5 +253,19 @@ describe("syncReadingGoalCompletion", () => {
       await syncReadingGoalCompletion(stub.client, USER_ID, ["2026-13-99", ""])
     ).toEqual([]);
     expect(stub.updateCalls).toHaveLength(0);
+  });
+});
+
+describe("isDailyActivityType", () => {
+  it("체크리스트 활동 값을 모두 허용한다", () => {
+    expect(DAILY_ACTIVITY_TYPES).toContain("cs_completed");
+    DAILY_ACTIVITY_TYPES.forEach((activity) => {
+      expect(isDailyActivityType(activity)).toBe(true);
+    });
+  });
+
+  it("정의되지 않은 값은 거부한다", () => {
+    expect(isDailyActivityType("cs_reviewed")).toBe(false);
+    expect(isDailyActivityType(null)).toBe(false);
   });
 });

@@ -9,6 +9,8 @@ import {
   toReviewMap,
 } from "@/utils/csUtils";
 import type { CsReview } from "@/types/cs";
+import { recordDailyActivity } from "@/services/dailyActivityService";
+import { getSeoulDateKey } from "@/utils/dateUtils";
 
 const selectFields =
   "question_id, score, matched_keywords, answer, used_hint, reviewed_at";
@@ -105,6 +107,19 @@ export async function POST(request: NextRequest) {
       { error: "채점 기록을 저장하지 못했습니다." },
       { status: 500 }
     );
+  }
+
+  // 홈 체크리스트용 활동 기록. 같은 날 여러 문항을 풀어도 한 행만 갱신된다.
+  try {
+    await recordDailyActivity(
+      supabase,
+      user.id,
+      getSeoulDateKey(),
+      "cs_completed"
+    );
+  } catch (activityError) {
+    // 채점 자체는 성공했으므로 활동 기록 실패로 응답을 막지 않는다.
+    console.error("CS 지식 일일 활동 기록 실패:", activityError);
   }
 
   return NextResponse.json({ review: data as CsReview });

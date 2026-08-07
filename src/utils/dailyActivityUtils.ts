@@ -9,6 +9,7 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
   feed_clicked: false,
   quiz_completed: false,
   quote_viewed: false,
+  cs_completed: false,
   reading_goal: 3,
   read_count: 0,
   reading_goal_completed: false,
@@ -27,6 +28,7 @@ export function getCompletedActivityCount(
     state.feed_clicked,
     state.quiz_completed,
     state.quote_viewed,
+    state.cs_completed,
   ].filter(Boolean).length;
 }
 
@@ -44,6 +46,7 @@ export function markDailyActivityCompleted(
       feed_clicked: current?.feed_clicked ?? false,
       quiz_completed: current?.quiz_completed ?? false,
       quote_viewed: current?.quote_viewed ?? false,
+      cs_completed: current?.cs_completed ?? false,
       reading_goal: current?.reading_goal ?? 3,
       read_count: current?.read_count ?? 0,
       reading_goal_completed: current?.reading_goal_completed ?? false,
