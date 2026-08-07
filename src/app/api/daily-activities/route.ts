@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
         feed_clicked: readCount >= readingGoal,
         quiz_completed: activityResult.data?.quiz_completed ?? false,
         quote_viewed: activityResult.data?.quote_viewed ?? false,
+        cs_completed: activityResult.data?.cs_completed ?? false,
         reading_goal: readingGoal,
         read_count: readCount,
         reading_goal_completed:

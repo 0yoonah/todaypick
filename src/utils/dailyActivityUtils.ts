@@ -9,6 +9,7 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
   feed_clicked: false,
   quiz_completed: false,
   quote_viewed: false,
+  cs_completed: false,
   reading_goal: 3,
   read_count: 0,
   reading_goal_completed: false,
@@ -19,6 +20,10 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
 export const dailyActivityQueryKey = (userId: string, date: string) =>
   ["daily-activities", userId, date] as const;
 
+/**
+ * 홈 체크리스트에 노출하는 활동만 센다.
+ * quote_viewed는 홈에 들어오면 자동으로 기록돼 체크리스트에서 제외했다.
+ */
 export function getCompletedActivityCount(
   activity: DailyActivityState | null | undefined
 ): number {
@@ -26,7 +31,7 @@ export function getCompletedActivityCount(
   return [
     state.feed_clicked,
     state.quiz_completed,
-    state.quote_viewed,
+    state.cs_completed,
   ].filter(Boolean).length;
 }
 
@@ -44,6 +49,7 @@ export function markDailyActivityCompleted(
       feed_clicked: current?.feed_clicked ?? false,
       quiz_completed: current?.quiz_completed ?? false,
       quote_viewed: current?.quote_viewed ?? false,
+      cs_completed: current?.cs_completed ?? false,
       reading_goal: current?.reading_goal ?? 3,
       read_count: current?.read_count ?? 0,
       reading_goal_completed: current?.reading_goal_completed ?? false,

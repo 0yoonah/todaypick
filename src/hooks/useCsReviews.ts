@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/authStore";
+import { getSeoulDateKey } from "@/utils/dateUtils";
+import { markDailyActivityCompleted } from "@/utils/dailyActivityUtils";
 import { CS_REVIEWS_QUERY_KEY } from "@/utils/csUtils";
 import type { CsProgressSummary } from "@/utils/csUtils";
 import type { CsQuestion, CsReview } from "@/types/cs";
@@ -48,6 +50,7 @@ export interface SaveCsReviewInput {
  */
 export function useSaveCsReview() {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
   return useMutation({
     mutationFn: async (input: SaveCsReviewInput) => {
@@ -83,6 +86,15 @@ export function useSaveCsReview() {
             : current
       );
       void queryClient.invalidateQueries({ queryKey: CS_REVIEWS_QUERY_KEY });
+
+      if (user) {
+        markDailyActivityCompleted(
+          queryClient,
+          user.id,
+          getSeoulDateKey(),
+          "cs_completed"
+        );
+      }
     },
   });
 }

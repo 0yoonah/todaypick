@@ -6,6 +6,7 @@ export interface DailyActivity {
   feed_clicked: boolean;
   quiz_completed: boolean;
   quote_viewed: boolean;
+  cs_completed: boolean;
   reading_goal: number;
   read_count: number;
   reading_goal_completed: boolean;
@@ -17,7 +18,7 @@ export interface DailyActivity {
 
 export type DailyActivityState = Pick<
   DailyActivity,
-  "feed_clicked" | "quiz_completed" | "quote_viewed"
+  "feed_clicked" | "quiz_completed" | "quote_viewed" | "cs_completed"
 > &
   Partial<
     Pick<

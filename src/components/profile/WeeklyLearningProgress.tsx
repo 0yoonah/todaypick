@@ -96,7 +96,7 @@ export default function WeeklyLearningProgress({
                       <div
                         className={cn(
                           "h-2 w-2 rounded-full",
-                          dailyProgress.quoteView
+                          dailyProgress.csComplete
                             ? "bg-info"
                             : "bg-muted"
                         )}
@@ -121,7 +121,7 @@ export default function WeeklyLearningProgress({
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-3 w-3 rounded-full bg-info" />
-              <span>명언 확인</span>
+              <span>CS 지식</span>
             </div>
           </div>
         </div>
