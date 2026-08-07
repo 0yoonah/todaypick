@@ -80,8 +80,12 @@ export default async function GlossaryTermPage({
           )}
         </div>
 
-        <p className="max-w-2xl text-base leading-relaxed text-foreground">
+        <p className="max-w-2xl text-base font-medium leading-relaxed text-foreground">
           {term.definition}
+        </p>
+
+        <p className="mt-4 max-w-2xl whitespace-pre-line text-base leading-loose text-muted-foreground">
+          {term.detail}
         </p>
 
         {relatedQuestions.length > 0 && (

@@ -18,6 +18,7 @@ const term = (
   id,
   term: name,
   definition: `${name} 정의`,
+  detail: `${name}에 대한 상세 설명이다.`,
   aliases: [],
   category: "network",
   related: [],
