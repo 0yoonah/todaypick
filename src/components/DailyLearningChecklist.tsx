@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  FiBookOpen,
-  FiCheck,
-  FiCpu,
-  FiMessageCircle,
-  FiTarget,
-} from "react-icons/fi";
+import { FiBookOpen, FiCheck, FiCpu, FiTarget } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,15 +33,9 @@ const CHECKLIST_ITEMS: DailyChecklistItem[] = [
     description: "질문 하나에 답을 써보기",
     href: ROUTE_PATH.CS,
   },
-  {
-    activity: "quote_viewed",
-    title: "명언 확인",
-    description: "오늘의 한 문장으로 마무리하기",
-    href: "#today-quote",
-  },
 ];
 
-const ITEM_ICONS = [FiBookOpen, FiTarget, FiCpu, FiMessageCircle];
+const ITEM_ICONS = [FiBookOpen, FiTarget, FiCpu];
 
 export default function DailyLearningChecklist() {
   const {
@@ -77,8 +65,8 @@ export default function DailyLearningChecklist() {
               오늘 알아둘 내용을 준비했어요
             </h1>
             <p className="hidden max-w-2xl text-sm text-muted-foreground sm:block">
-              로그인하면 피드, 퀴즈, CS 지식, 명언 활동이 자동으로 기록되고
-              오늘의 진행률을 확인할 수 있어요.
+              로그인하면 피드, 퀴즈, CS 지식 활동이 자동으로 기록되고 오늘의
+              진행률을 확인할 수 있어요.
             </p>
           </div>
         </CardContent>
@@ -131,7 +119,7 @@ export default function DailyLearningChecklist() {
               <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                 {isComplete
                   ? "작은 학습을 모두 해낸 멋진 하루예요. 내일도 이어가요."
-                  : "네 가지 활동을 완료하고 오늘의 루틴을 채워보세요."}
+                  : "세 가지 활동을 완료하고 오늘의 루틴을 채워보세요."}
               </p>
             </div>
           </div>
@@ -153,7 +141,7 @@ export default function DailyLearningChecklist() {
             />
           </div>
 
-          <div className="mt-5 divide-y border-t lg:grid lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+          <div className="mt-5 divide-y border-t md:grid md:grid-cols-3 md:divide-x md:divide-y-0">
             {CHECKLIST_ITEMS.map((item, index) => {
               const isChecked = state[item.activity];
               const Icon = ITEM_ICONS[index];
@@ -163,7 +151,7 @@ export default function DailyLearningChecklist() {
                   key={item.activity}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2.5 px-1 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3 sm:py-4 lg:px-4",
+                    "flex items-center gap-2.5 px-1 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3 sm:py-4 md:px-4",
                     isChecked
                       ? "text-success"
                       : "hover:text-primary"
@@ -220,8 +208,8 @@ function ChecklistSkeleton() {
           <Skeleton className="h-4 w-96 max-w-full" />
         </div>
         <Skeleton className="h-2 w-full rounded-full" />
-        <div className="grid gap-3 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
+        <div className="grid gap-3 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
             <Skeleton key={index} className="h-14 rounded-xl sm:h-20" />
           ))}
         </div>

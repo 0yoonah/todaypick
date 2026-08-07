@@ -20,6 +20,10 @@ export const EMPTY_DAILY_ACTIVITY: DailyActivityState = {
 export const dailyActivityQueryKey = (userId: string, date: string) =>
   ["daily-activities", userId, date] as const;
 
+/**
+ * 홈 체크리스트에 노출하는 활동만 센다.
+ * quote_viewed는 홈에 들어오면 자동으로 기록돼 체크리스트에서 제외했다.
+ */
 export function getCompletedActivityCount(
   activity: DailyActivityState | null | undefined
 ): number {
@@ -27,7 +31,6 @@ export function getCompletedActivityCount(
   return [
     state.feed_clicked,
     state.quiz_completed,
-    state.quote_viewed,
     state.cs_completed,
   ].filter(Boolean).length;
 }

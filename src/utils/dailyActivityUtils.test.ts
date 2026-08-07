@@ -14,28 +14,28 @@ describe("오늘의 학습 체크리스트", () => {
       getCompletedActivityCount({
         ...EMPTY_DAILY_ACTIVITY,
         feed_clicked: true,
-        quote_viewed: true,
+        cs_completed: true,
       })
     ).toBe(2);
   });
 
-  it("모든 활동이 완료되면 완료 개수는 4다", () => {
+  it("체크리스트 활동이 모두 완료되면 완료 개수는 3이다", () => {
     expect(
       getCompletedActivityCount({
         feed_clicked: true,
         quiz_completed: true,
-        quote_viewed: true,
+        quote_viewed: false,
         cs_completed: true,
       })
-    ).toBe(4);
+    ).toBe(3);
   });
 
-  it("CS 지식 활동도 완료 개수에 포함한다", () => {
+  it("명언 확인은 체크리스트에서 빠져 완료 개수에 세지 않는다", () => {
     expect(
       getCompletedActivityCount({
         ...EMPTY_DAILY_ACTIVITY,
-        cs_completed: true,
+        quote_viewed: true,
       })
-    ).toBe(1);
+    ).toBe(0);
   });
 });
