@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import { FiSearch } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
 import GlossarySearchInput from "@/components/glossary/GlossarySearchInput";
-import GlossaryTermCard from "@/components/glossary/GlossaryTermCard";
+import GlossaryTermList from "@/components/glossary/GlossaryTermList";
 import { glossaryTerms } from "@/data/glossaryTerms";
-import {
-  getRelatedTerms,
-  searchGlossaryTerms,
-  toTermMap,
-} from "@/utils/glossaryUtils";
+import { searchGlossaryTerms } from "@/utils/glossaryUtils";
 
 export const metadata: Metadata = {
   title: "IT 용어사전 | TodayPick",
@@ -31,7 +27,6 @@ export default async function GlossaryPage({
   const query = typeof params.q === "string" ? params.q : "";
 
   const terms = searchGlossaryTerms(glossaryTerms, { query });
-  const termMap = toTermMap(glossaryTerms);
 
   return (
     <main className="min-h-screen bg-background">
@@ -69,16 +64,7 @@ export default async function GlossaryPage({
             <p className="mb-4 text-sm text-muted-foreground">
               {query ? `'${query}' 검색 결과 ${terms.length}개` : `전체 ${terms.length}개`}
             </p>
-            <ul className="space-y-4">
-              {terms.map((term) => (
-                <li key={term.id}>
-                  <GlossaryTermCard
-                    term={term}
-                    related={getRelatedTerms(term, termMap)}
-                  />
-                </li>
-              ))}
-            </ul>
+            <GlossaryTermList terms={terms} />
           </>
         )}
       </div>

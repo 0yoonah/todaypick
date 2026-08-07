@@ -1,4 +1,5 @@
 import { normalizeAnswerText } from "@/utils/csUtils";
+import type { CsQuestion } from "@/types/cs";
 import type { GlossaryTerm } from "@/types/glossary";
 
 /** 검색과 비교에 쓰는 정규화. CS 지식 채점과 같은 규칙을 사용한다. */
@@ -46,4 +47,33 @@ export function getRelatedTerms(
   return term.related
     .map((id) => terms.get(id))
     .filter((related): related is GlossaryTerm => related !== undefined);
+}
+
+/** 너무 짧은 표기는 오탐이 많아 연결 대상에서 제외한다. */
+const MIN_LINK_LENGTH = 2;
+
+/**
+ * 용어와 관련된 CS 지식 문항을 찾는다.
+ * 문항의 질문과 키워드에서 표제어나 다른 표기가 등장하는지 확인한다.
+ */
+export function findRelatedCsQuestions(
+  term: GlossaryTerm,
+  questions: CsQuestion[],
+  limit = 3
+): CsQuestion[] {
+  const targets = [term.term, ...term.aliases]
+    .map(normalizeTermText)
+    .filter((target) => target.length >= MIN_LINK_LENGTH);
+
+  if (targets.length === 0) return [];
+
+  return questions
+    .filter((question) => {
+      const haystack = normalizeTermText(
+        `${question.question} ${question.keywords.join(" ")}`
+      );
+      return targets.some((target) => haystack.includes(target));
+    })
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .slice(0, limit);
 }
