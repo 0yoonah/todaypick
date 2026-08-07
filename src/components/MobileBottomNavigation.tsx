@@ -21,13 +21,8 @@ export default function MobileBottomNavigation() {
 
   if (HIDDEN_PATHS.includes(pathname)) return null;
 
+  // 홈을 엄지가 가장 닿기 쉬운 가운데에 두고 나머지 항목의 상대 순서는 유지한다.
   const items = [
-    {
-      label: "오늘",
-      href: ROUTE_PATH.HOME,
-      icon: FiHome,
-      isActive: pathname === ROUTE_PATH.HOME,
-    },
     {
       label: "피드",
       href: ROUTE_PATH.FEEDS,
@@ -39,6 +34,12 @@ export default function MobileBottomNavigation() {
       href: ROUTE_PATH.CS,
       icon: FiHelpCircle,
       isActive: pathname === ROUTE_PATH.CS,
+    },
+    {
+      label: "오늘",
+      href: ROUTE_PATH.HOME,
+      icon: FiHome,
+      isActive: pathname === ROUTE_PATH.HOME,
     },
     {
       label: "용어",
