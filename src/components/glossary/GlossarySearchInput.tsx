@@ -57,7 +57,7 @@ export default function GlossarySearchInput({
         value={value}
         placeholder="용어나 영문 표기로 검색해보세요"
         onChange={(event) => setValue(event.target.value)}
-        className="h-11 w-full rounded-full border bg-background pl-9 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-11 w-full rounded-full border bg-background pl-9 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
       />
       {value && (
         <button
