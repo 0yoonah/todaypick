@@ -40,7 +40,7 @@ export interface LearningStatistics {
     dailyProgress: {
       feedClick: boolean;
       quizComplete: boolean;
-      quoteView: boolean;
+      csComplete: boolean;
     };
   }[];
   weeklyReport: {
