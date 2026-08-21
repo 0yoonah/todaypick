@@ -117,7 +117,7 @@ export default function FeedCard({
         draft,
         ...(drafts?.filter((item) => item.id !== draft.id) ?? []),
       ]);
-      router.push(`/write?draftId=${draft.id}&newDraft=true`);
+      router.push(`/write?draftId=${draft.id}`);
     },
   });
 

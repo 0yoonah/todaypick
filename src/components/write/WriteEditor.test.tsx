@@ -75,16 +75,6 @@ describe("WriteEditor 신규 작성", () => {
     expect(screen.getByText("공개 게시")).toBeInTheDocument();
   });
 
-  // 두 분기 모두 DEFAULT_WRITING_VISIBILITY를 쓰므로 새 글에서는 차이가 없다.
-  it("startAsPublic은 새 글의 공개 여부를 바꾸지 않는다", () => {
-    renderWithQuery(<WriteEditor startAsPublic />);
-
-    expect(screen.getByRole("tab", { name: "공개" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-  });
-
   it("공개 여부를 바꾸면 배지와 저장 가능 상태가 함께 바뀐다", async () => {
     const user = userEvent.setup();
     renderWithQuery(<WriteEditor />);
@@ -220,16 +210,17 @@ describe("WriteEditor 기존 글 수정", () => {
     );
   });
 
-  // 현재 동작을 그대로 고정한다. 저장된 비공개 설정이 공개로 덮인다.
-  it("startAsPublic이 함께 오면 저장된 비공개 설정을 덮어쓴다", () => {
-    renderWithQuery(<WriteEditor initialDraft={savedDraft} startAsPublic />);
+  // 인용 흐름은 초안을 비공개로 만든 뒤 이 화면으로 들어온다.
+  // 저장된 값을 그대로 보여야 하고, 건드리지 않았으므로 변경도 아니다.
+  it("비공개로 저장된 초안은 비공개로 열리고 변경으로 잡히지 않는다", () => {
+    renderWithQuery(<WriteEditor initialDraft={savedDraft} />);
 
-    expect(screen.getByRole("tab", { name: "공개" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "비공개" })).toHaveAttribute(
       "aria-selected",
       "true"
     );
-    // 값을 건드리지 않았는데도 변경으로 잡힌다.
-    expect(saveButton()).toBeEnabled();
+    expect(screen.getByText("비공개 보관")).toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
   });
 
   it("내용을 바꾸면 PUT으로 id와 함께 저장한다", async () => {
