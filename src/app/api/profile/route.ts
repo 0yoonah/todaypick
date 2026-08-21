@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 export async function GET() {
   try {
@@ -7,10 +8,7 @@ export async function GET() {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     // 사용자 프로필 정보 조회
@@ -39,16 +37,7 @@ export async function GET() {
 
     return NextResponse.json(profile || null, { status: 200 });
   } catch (error) {
-    console.error("프로필 조회 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "프로필을 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("프로필을 불러오는데 실패했습니다.", error);
   }
 }
 
@@ -58,10 +47,7 @@ export async function PUT(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const { data: existingProfile, error: profileLookupError } = await supabase
@@ -94,17 +80,11 @@ export async function PUT(request: NextRequest) {
     }
 
     if (!nickname) {
-      return NextResponse.json(
-        { error: "닉네임이 필요합니다." },
-        { status: 400 }
-      );
+      return badRequest("닉네임이 필요합니다.");
     }
 
     if (file && removeAvatar) {
-      return NextResponse.json(
-        { error: "이미지 변경과 제거를 동시에 요청할 수 없습니다." },
-        { status: 400 }
-      );
+      return badRequest("이미지 변경과 제거를 동시에 요청할 수 없습니다.");
     }
 
     const allowedImageTypes: Record<string, string> = {
@@ -115,17 +95,11 @@ export async function PUT(request: NextRequest) {
     };
 
     if (file && !allowedImageTypes[file.type]) {
-      return NextResponse.json(
-        { error: "JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다." },
-        { status: 400 }
-      );
+      return badRequest("JPG, PNG, WEBP, GIF 이미지만 업로드할 수 있습니다.");
     }
 
     if (file && file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "파일 크기는 5MB 이하여야 합니다." },
-        { status: 400 }
-      );
+      return badRequest("파일 크기는 5MB 이하여야 합니다.");
     }
 
     let nextAvatarPath = removeAvatar ? null : existingAvatarPath;
@@ -144,10 +118,7 @@ export async function PUT(request: NextRequest) {
 
       if (uploadError) {
         console.error("프로필 이미지 업로드 실패:", uploadError);
-        return NextResponse.json(
-          { error: "파일 업로드에 실패했습니다." },
-          { status: 500 }
-        );
+        return serverError("파일 업로드에 실패했습니다.");
       }
 
       nextAvatarPath = uploadedAvatarPath;
@@ -186,15 +157,6 @@ export async function PUT(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("프로필 업데이트 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "프로필 업데이트에 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("프로필 업데이트에 실패했습니다.", error);
   }
 }

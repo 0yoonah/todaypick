@@ -5,6 +5,7 @@ import { FEED_CATEGORY } from "@/config/constants";
 import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
 import { isInterestId, parseInterestIds } from "@/config/interests";
 import type { InterestId } from "@/config/interests";
+import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 const parseFeedParams = (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -67,7 +68,8 @@ const getScrapedFeeds = async (
     .range((page - 1) * limit, page * limit - 1);
 
   if (error) {
-    throw new Error(`스크랩된 피드 조회 실패: ${error.message}`);
+    console.error(`스크랩된 피드 조회 실패 (${error.code}): ${error.message}`);
+    throw new Error("스크랩한 피드를 불러오지 못했습니다.");
   }
 
   return {
@@ -90,7 +92,8 @@ const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
     .in("feed->>id", [...new Set(feedIds)]);
 
   if (error) {
-    throw new Error(`스크랩 상태 조회 실패: ${error.message}`);
+    console.error(`스크랩 상태 조회 실패 (${error.code}): ${error.message}`);
+    throw new Error("스크랩 상태를 불러오지 못했습니다.");
   }
 
   return new Set(
@@ -110,7 +113,7 @@ export async function GET(request: NextRequest) {
 
     if (category === FEED_CATEGORY.SCRAPED) {
       if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return unauthorized();
       }
 
       const result = await getScrapedFeeds(user.id, page, limit, sourceCategory);
@@ -156,17 +159,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("피드 API 오류:", error);
     if (error instanceof TypeError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return badRequest(error.message);
     }
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "피드를 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
-  }
+ return serverError("피드를 불러오는데 실패했습니다.", error);
+}
 }

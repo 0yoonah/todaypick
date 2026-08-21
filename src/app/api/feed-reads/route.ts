@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { parseFeedReadPagination } from "@/utils/feedReadUtils";
 import { syncReadingGoalCompletion } from "@/services/dailyActivityService";
 import { addDaysToDateKey, getSeoulDateKey } from "@/utils/dateUtils";
+import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 const HISTORY_DAYS = 30;
 const HISTORY_MAX_ITEMS = 100;
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+      return unauthorized();
     }
 
     const { page, limit } = parseFeedReadPagination(
@@ -59,13 +60,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof TypeError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return badRequest(error.message);
     }
     console.error("읽은 글 히스토리 조회 오류:", error);
-    return NextResponse.json(
-      { error: "읽은 글 히스토리를 불러오지 못했습니다." },
-      { status: 500 }
-    );
+    return serverError("읽은 글 히스토리를 불러오지 못했습니다.");
   }
 }
 
@@ -77,7 +75,7 @@ export async function DELETE(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json().catch(() => null);
@@ -85,10 +83,7 @@ export async function DELETE(request: NextRequest) {
       ? [...new Set(body.ids.filter((id: unknown) => typeof id === "string"))]
       : [];
     if (ids.length === 0 || ids.length > 50) {
-      return NextResponse.json(
-        { error: "삭제할 기록을 1개 이상 50개 이하로 선택해야 합니다." },
-        { status: 400 }
-      );
+      return badRequest("삭제할 기록을 1개 이상 50개 이하로 선택해야 합니다.");
     }
 
     const { data: targets, error: targetError } = await supabase
@@ -129,9 +124,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("읽은 글 기록 삭제 오류:", error);
-    return NextResponse.json(
-      { error: "읽은 글 기록을 삭제하지 못했습니다." },
-      { status: 500 }
-    );
+    return serverError("읽은 글 기록을 삭제하지 못했습니다.");
   }
 }

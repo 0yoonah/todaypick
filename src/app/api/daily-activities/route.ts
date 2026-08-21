@@ -8,6 +8,7 @@ import {
 import { parseInterestIds } from "@/config/interests";
 import { isValidReadingGoal } from "@/utils/readingGoalUtils";
 import { calculateLearningStreaks } from "@/utils/streakUtils";
+import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,20 +16,14 @@ export async function GET(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const searchParams = new URL(request.url).searchParams;
     const date = searchParams.get("date");
 
     if (!date || !isValidDateKey(date)) {
-      return NextResponse.json(
-        { error: "날짜가 필요합니다." },
-        { status: 400 }
-      );
+      return badRequest("날짜가 필요합니다.");
     }
 
     const [activityResult, userResult, readsResult, streakResult] = await Promise.all([
@@ -86,16 +81,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("일일 활동 조회 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일일 활동을 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("일일 활동을 불러오는데 실패했습니다.", error);
   }
 }
 
@@ -105,10 +91,7 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -116,10 +99,7 @@ export async function POST(request: NextRequest) {
     const date = getSeoulDateKey();
 
     if (!isDailyActivityType(activity)) {
-      return NextResponse.json(
-        { error: "유효하지 않은 활동입니다." },
-        { status: 400 }
-      );
+      return badRequest("유효하지 않은 활동입니다.");
     }
 
     const { data: settings, error: settingsError } = await supabase
@@ -166,16 +146,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("일일 활동 업데이트 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일일 활동 업데이트에 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("일일 활동 업데이트에 실패했습니다.", error);
   }
 }
 
@@ -185,16 +156,13 @@ export async function PUT(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json().catch(() => null);
     const readingGoal = body?.readingGoal;
     if (!isValidReadingGoal(readingGoal)) {
-      return NextResponse.json(
-        { error: "읽기 목표는 1개 이상 20개 이하로 설정해야 합니다." },
-        { status: 400 }
-      );
+      return badRequest("읽기 목표는 1개 이상 20개 이하로 설정해야 합니다.");
     }
 
     const date = getSeoulDateKey();
@@ -247,9 +215,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ readingGoal, date }, { status: 200 });
   } catch (error) {
     console.error("읽기 목표 변경 오류:", error);
-    return NextResponse.json(
-      { error: "읽기 목표를 변경하지 못했습니다." },
-      { status: 500 }
-    );
+    return serverError("읽기 목표를 변경하지 못했습니다.");
   }
 }

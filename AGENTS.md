@@ -186,7 +186,11 @@ npm run build
 - 낙관적 업데이트를 사용할 때 실패 시 이전 캐시를 복원한다.
 - API는 인증, 입력 검증, 정상 응답, 오류 응답을 구분한다.
 - 서버 로그에는 원인을 확인할 수 있는 오류를 남기되 토큰, 비밀번호, 개인정보는 출력하지 않는다.
-- 클라이언트에 내부 DB 오류를 그대로 노출하지 않는다.
+- 오류 응답은 `src/utils/apiResponse.ts`의 헬퍼(`unauthorized`, `badRequest`, `notFound`, `conflict`, `serverError`)로 만든다. `NextResponse.json({ error }, { status })`를 직접 쓰지 않는다.
+- 클라이언트에 내부 DB 오류를 그대로 노출하지 않는다. 500 응답에는 고정 문구만 담고, 원본 오류는 `serverError`의 두 번째 인자로 넘겨 서버 로그에만 남긴다.
+- Supabase의 `error.message`를 다른 `Error`의 message에 넣어 다시 던지지 않는다. 그 문구가 상위 catch를 거쳐 응답까지 흘러간다.
+- 검증 오류는 예외다. 코드가 `TypeError`로 던진 문구는 사용자에게 보일 검증 메시지이므로 400 응답에 그대로 담는다.
+- 인증 실패 문구는 `AUTH_REQUIRED_MESSAGE` 하나로 통일한다.
 - 사용자 입력 배열은 허용된 값만 파싱하고 중복을 제거한다.
 
 ## 날짜와 통계
