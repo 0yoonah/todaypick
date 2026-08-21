@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import {
+  badRequest,
+  conflict,
+  notFound,
+  serverError,
+  unauthorized,
+} from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,10 +17,7 @@ export async function GET(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     // quoteId가 있으면 오늘의 명언 스크랩 상태 확인
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest) {
         throw error;
       }
 
-      return NextResponse.json(!!data, { status: 200 });
+      return NextResponse.json({ isScraped: !!data }, { status: 200 });
     }
 
     // quoteId가 없으면 모든 스크랩된 명언 조회
@@ -45,16 +49,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data || [], { status: 200 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "명언을 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("명언을 불러오는데 실패했습니다.", error);
   }
 }
 
@@ -64,20 +59,14 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const body = await request.json();
     const { quote } = body;
 
     if (!quote || !quote.id) {
-      return NextResponse.json(
-        { error: "명언 정보가 필요합니다." },
-        { status: 400 }
-      );
+      return badRequest("명언 정보가 필요합니다.");
     }
 
     const { data: existingScrap, error: checkError } = await supabase
@@ -92,10 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingScrap) {
-      return NextResponse.json(
-        { error: "이미 스크랩한 명언입니다." },
-        { status: 409 }
-      );
+      return conflict("이미 스크랩한 명언입니다.");
     }
 
     // 명언 스크랩
@@ -114,16 +100,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error("명언 스크랩 실패:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "명언 스크랩에 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("명언 스크랩에 실패했습니다.", error);
   }
 }
 
@@ -133,20 +110,14 @@ export async function DELETE(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const searchParams = new URL(request.url).searchParams;
     const quoteId = searchParams.get("quoteId");
 
     if (!quoteId) {
-      return NextResponse.json(
-        { error: "quoteId가 필요합니다." },
-        { status: 400 }
-      );
+      return badRequest("quoteId가 필요합니다.");
     }
 
     // 명언 스크랩 해제
@@ -162,23 +133,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (!data || data.length === 0) {
-      return NextResponse.json(
-        { error: "스크랩한 명언을 찾을 수 없습니다." },
-        { status: 404 }
-      );
+      return notFound("스크랩한 명언을 찾을 수 없습니다.");
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("명언 스크랩 해제 실패:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "명언 스크랩 해제에 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("명언 스크랩 해제에 실패했습니다.", error);
   }
 }

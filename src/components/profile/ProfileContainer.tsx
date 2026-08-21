@@ -27,7 +27,7 @@ export default function ProfileContainer() {
   );
 
   const startWriting = useCallback((draftId: string) => {
-    router.push(`/write?draftId=${draftId}&newDraft=true`);
+    router.push(`/write?draftId=${draftId}`);
   }, [router]);
 
   const renderActiveTab = useMemo(() => {

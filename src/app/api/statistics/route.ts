@@ -8,6 +8,7 @@ import {
 } from "@/utils/dateUtils";
 import { calculateLearningStreaks } from "@/utils/streakUtils";
 import { parseInterestIds } from "@/config/interests";
+import { serverError, unauthorized } from "@/utils/apiResponse";
 import {
   compareWeeklyReports,
   createWeeklyReport,
@@ -20,10 +21,7 @@ export async function GET() {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const userId = user.user.id;
@@ -178,15 +176,6 @@ export async function GET() {
 
     return NextResponse.json(statistics, { status: 200 });
   } catch (error) {
-    console.error("통계 조회 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "통계를 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("통계를 불러오는데 실패했습니다.", error);
   }
 }

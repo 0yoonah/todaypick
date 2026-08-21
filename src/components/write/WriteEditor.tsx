@@ -24,15 +24,11 @@ import type {
 
 type WriteEditorProps = {
   initialDraft?: WritingDraft | null;
-  startAsPublic?: boolean;
 };
 
 const EMPTY_DRAFT: WritingDraft | null = null;
 
-export default function WriteEditor({
-  initialDraft,
-  startAsPublic = false,
-}: WriteEditorProps) {
+export default function WriteEditor({ initialDraft }: WriteEditorProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<WritingDraft | null>(
@@ -45,9 +41,7 @@ export default function WriteEditor({
     initialDraft?.sources ?? []
   );
   const [visibility, setVisibility] = useState<WritingVisibility>(
-    startAsPublic
-      ? DEFAULT_WRITING_VISIBILITY
-      : initialDraft?.visibility ?? DEFAULT_WRITING_VISIBILITY
+    initialDraft?.visibility ?? DEFAULT_WRITING_VISIBILITY
   );
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(
     initialDraft?.thumbnail_url ?? null
@@ -57,15 +51,10 @@ export default function WriteEditor({
     initialDraft?.thumbnail_url ?? null
   );
 
+  // 저장된 공개 여부가 기준이다. 새 글은 createWritingFormSnapshot의 기본값을 쓴다.
   const initialSnapshot = useMemo(
-    () =>
-      createWritingFormSnapshot(
-        editing,
-        startAsPublic && !editing
-          ? DEFAULT_WRITING_VISIBILITY
-          : editing?.visibility ?? DEFAULT_WRITING_VISIBILITY
-      ),
-    [editing, startAsPublic]
+    () => createWritingFormSnapshot(editing),
+    [editing]
   );
 
   const isDirty = hasWritingFormChanges(
@@ -198,6 +187,13 @@ export default function WriteEditor({
             {saveDraft.isPending ? "저장 중..." : "저장"}
           </Button>
         </div>
+        {saveDraft.isError && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {saveDraft.error instanceof Error
+              ? saveDraft.error.message
+              : "글 초안을 저장하지 못했습니다."}
+          </p>
+        )}
       </div>
 
       {sources.length > 0 && (

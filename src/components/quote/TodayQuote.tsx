@@ -52,7 +52,7 @@ export default function TodayQuote() {
 
         const scraped = await response.json();
         if (!cancelled) {
-          setIsScraped(scraped);
+          setIsScraped(Boolean(scraped?.isScraped));
         }
       } catch (err) {
         console.error("명언을 불러오는 중 오류가 발생했습니다.", err);
