@@ -246,6 +246,59 @@ afterEach(() => {
 const todayQuiz = selectDailyQuiz(quizzes, "2026-08-21", [])!;
 ```
 
+### 권한 경계 검증과 그 한계
+
+fake는 필터를 실제로 적용하지 않습니다. 그래서 "남의 글이 걸러졌다"를 직접 확인할 수 없습니다.
+대신 **소유자 조건이 쿼리에 들어갔는지**를 확인합니다.
+
+```ts
+const call = fake.calls("writing_drafts")[0];
+expect(call.op).toBe("update");
+// 소유자 조건이 빠지면 남의 글을 고칠 수 있다.
+expect(call.filters).toEqual([
+  ["eq", "id", "d1"],
+  ["eq", "user_id", "u1"],
+]);
+```
+
+이 검증은 **조건을 빼먹는 회귀**를 잡습니다. 실제 행 격리는 DB의 RLS 몫이며 이 테스트가 보장하지 않습니다.
+`user_id` 같은 소유자 필드는 클라이언트 입력을 쓰지 않고 서버가 붙이는지도 함께 봅니다.
+
+```ts
+// 본문에 남의 id를 넣어도 무시되는지 확인한다.
+expect(call.payload).toMatchObject({ user_id: "u1" });
+```
+
+### multipart 요청
+
+프로필 이미지나 썸네일처럼 파일을 받는 경로는 `formRequest`를 씁니다.
+`content-type`을 직접 지정하면 boundary가 빠져 파싱이 실패하므로 `FormData`가 채우게 둡니다.
+
+```ts
+const formData = new FormData();
+formData.set("nickname", "윤아");
+formData.set("file", new File([new Uint8Array(10)], "a.png", { type: "image/png" }));
+
+const response = await PUT(formRequest("PUT", "/api/profile", formData));
+```
+
+### storage
+
+`upload`와 `remove`는 응답을 주입합니다. `getPublicUrl`은 실제 Supabase처럼 동기로 주소만 만들며 주입할 응답이 없습니다.
+
+```ts
+expect(body.avatar_url).toBe(`${FAKE_STORAGE_ORIGIN}/avatars/u1-a.png?t=${now}`);
+expect(fake.storageCalls()).toEqual([
+  { bucket: "avatars", op: "getPublicUrl", path: "u1-a.png" },
+]);
+```
+
+업로드 경로에 `crypto.randomUUID()`가 들어가는 경우는 값을 고정하지 않고 형태로 확인합니다.
+
+```ts
+expect(uploaded.path).toMatch(/^u1-[0-9a-f-]+\.png$/);
+```
+
 ### 각 route에서 덮을 경로
 
 - 비로그인 요청이 401과 규약 문구를 반환한다

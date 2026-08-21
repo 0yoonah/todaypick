@@ -46,10 +46,17 @@ export type FakeCall = {
 
 export type StorageCall =
   | { bucket: string; op: "upload"; path: string }
-  | { bucket: string; op: "remove"; paths: string[] };
+  | { bucket: string; op: "remove"; paths: string[] }
+  | { bucket: string; op: "getPublicUrl"; path: string };
+
+/** getPublicUrl이 만드는 주소의 앞부분. 테스트에서 그대로 비교할 수 있게 고정한다. */
+export const FAKE_STORAGE_ORIGIN = "https://storage.test";
+
+/** route가 실제로 읽는 필드만 담는다. 필요해지면 여기에 추가한다. */
+export type FakeUser = { id: string; email?: string };
 
 export type FakeSupabaseOptions = {
-  user?: { id: string } | null;
+  user?: FakeUser | null;
   from?: Record<string, FakeResult | FakeResult[]>;
   rpc?: Record<string, FakeResult | FakeResult[]>;
   storage?: { upload?: FakeResult | FakeResult[]; remove?: FakeResult | FakeResult[] };
@@ -75,13 +82,14 @@ type QueryBuilder = {
 };
 
 type FakeClient = {
-  auth: { getUser(): Promise<{ data: { user: { id: string } | null }; error: null }> };
+  auth: { getUser(): Promise<{ data: { user: FakeUser | null }; error: null }> };
   from(table: string): QueryBuilder;
   rpc(name: string, args?: unknown): Promise<FakeResponse>;
   storage: {
     from(bucket: string): {
-      upload(path: string, file: unknown): Promise<FakeResponse>;
+      upload(path: string, file: unknown, options?: unknown): Promise<FakeResponse>;
       remove(paths: string[]): Promise<FakeResponse>;
+      getPublicUrl(path: string): { data: { publicUrl: string } };
     };
   };
 };
@@ -242,6 +250,13 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
           const result = takeRemove();
           storageCalls.push({ bucket, op: "remove", paths });
           return toResponse(result, "await");
+        },
+        // 실제 Supabase처럼 동기로 주소만 만든다. 주입할 응답이 없다.
+        getPublicUrl: (path) => {
+          storageCalls.push({ bucket, op: "getPublicUrl", path });
+          return {
+            data: { publicUrl: `${FAKE_STORAGE_ORIGIN}/${bucket}/${path}` },
+          };
         },
       }),
     },

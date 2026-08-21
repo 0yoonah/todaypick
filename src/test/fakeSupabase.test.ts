@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fakeSupabase } from "./fakeSupabase";
+import { FAKE_STORAGE_ORIGIN, fakeSupabase } from "./fakeSupabase";
 
 describe("fakeSupabase", () => {
   describe("auth", () => {
@@ -281,6 +281,19 @@ describe("fakeSupabase", () => {
   });
 
   describe("storage", () => {
+    it("getPublicUrl은 고정된 주소를 만들고 호출을 기록한다", () => {
+      const fake = fakeSupabase({});
+
+      const { data } = fake.client.storage
+        .from("avatars")
+        .getPublicUrl("u1/a.png");
+
+      expect(data.publicUrl).toBe(`${FAKE_STORAGE_ORIGIN}/avatars/u1/a.png`);
+      expect(fake.storageCalls()).toEqual([
+        { bucket: "avatars", op: "getPublicUrl", path: "u1/a.png" },
+      ]);
+    });
+
     it("upload와 remove 결과를 주고 인자를 기록한다", async () => {
       const fake = fakeSupabase({
         storage: { upload: { data: { path: "u1/a.png" } }, remove: { data: [] } },
