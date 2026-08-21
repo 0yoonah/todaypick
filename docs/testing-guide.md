@@ -15,7 +15,7 @@ v1.9.0 기준 테스트는 24개 파일 / 241개인데 전부 `src/utils`, `src/
 
 | 프로젝트 | environment | 대상 |
 | --- | --- | --- |
-| `node` | `node` | `src/{utils,services,data}/**/*.test.ts`, `src/app/api/**/*.test.ts` |
+| `node` | `node` | `src/{utils,services,data}/**/*.test.ts`, `src/app/api/**/*.test.ts`, `src/test/**/*.test.ts` |
 | `dom` | `jsdom` | `src/components/**/*.test.tsx` |
 
 **API route 테스트는 `node`입니다.** route는 DOM을 쓰지 않으므로 jsdom에서 돌릴 이유가 없습니다.
@@ -130,6 +130,9 @@ const { data, error } = user
 | `await query` | 주입한 `{ data, error }`를 그대로 반환 |
 | `.single()` | `data`를 단일 객체로 축약 |
 | `.maybeSingle()` | 비어 있으면 `data: null` |
+
+`single()`도 비어 있으면 `data: null`을 줍니다.
+실제 Supabase가 0행에서 내는 `PGRST116` 오류를 흉내내지 않으므로, 그 경로를 검증하려면 `error`를 직접 주입합니다.
 | `.select(cols, { count: "exact" })` | `count`를 함께 반환 |
 | `.select(cols, { count: "exact", head: true })` | `data` 없이 `count`만 반환 |
 
@@ -174,6 +177,19 @@ const { queryClient } = renderWithQuery(<TodayQuiz />);
 
 테스트마다 **새 `QueryClient`**를 만들고 `retry: false`, `gcTime: 0`으로 둡니다.
 공유 클라이언트를 쓰면 테스트 순서에 따라 결과가 바뀌는 실패가 생기는데, 원인을 찾기가 가장 어려운 종류입니다.
+
+### 로그인 상태
+
+컴포넌트가 쓰는 훅은 `useAuthStore`의 로그인 여부에 따라 동작이 갈립니다.
+`src/test/authState.ts`로 상태만 바꿉니다.
+
+```ts
+signInTestUser();       // 기본 id "u1"
+signOutTestUser();      // 비로그인
+```
+
+`afterEach`에서 `signOutTestUser()`를 불러 다음 테스트로 상태가 넘어가지 않게 합니다.
+store는 모듈 수준 싱글턴이라 자동으로 초기화되지 않습니다.
 
 ### 대상 선정
 
