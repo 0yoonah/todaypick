@@ -102,6 +102,31 @@ from: {
 배열을 다 소비한 뒤 또 호출되면 fake가 실패합니다.
 호출 횟수를 잘못 예상한 것을 마지막 응답이 재사용되며 가려지지 않게 하기 위해서입니다.
 
+### 호출 순서와 Promise.all
+
+배열로 주입한 응답은 **빌더가 종단에 도달한 순서**대로 소비됩니다.
+`Promise.all`로 여러 조회를 묶어도 배열 요소가 위에서 아래로 평가되며 그 시점에 종단 메서드가 불리므로 순서는 코드에 적힌 순서와 같습니다.
+
+`src/app/api/daily-activities/route.ts`의 GET은 `daily_activities`를 두 번 읽습니다.
+
+```ts
+from: {
+  daily_activities: [
+    { data: null },   // 첫 번째: 해당 날짜 한 건 (maybeSingle)
+    { data: [] },     // 두 번째: 스트릭 계산용 전체 목록
+  ],
+  users: { data: { daily_read_goal: 5 } },
+  feed_reads: { count: 2 },
+}
+```
+
+순서를 잘못 맞추면 배열 소진 오류나 예상과 다른 응답으로 드러납니다. 조용히 넘어가지 않습니다.
+
+### mutation 뒤의 select
+
+`upsert(...).select(...).single()`처럼 변경 뒤에 붙는 `select`는 returning 절이므로 기록된 `op`는 `upsert`로 남습니다.
+`select`가 `op`를 덮지 않습니다.
+
 ### 빌더는 불변이다
 
 `src/app/api/writing-drafts/route.ts`는 빌더를 변수에 담아두고 두 갈래로 나눠 각각 await합니다.
@@ -185,6 +210,30 @@ expect(JSON.stringify(body)).not.toContain("permission denied");
 ```
 
 `serverError`가 `console.error`로 원본을 남기므로, 테스트 출력이 지저분해지면 `beforeEach`에서 `console.error`를 stub합니다.
+
+### 시각 고정
+
+서울 날짜나 스트릭이 걸린 route는 시각을 고정해야 결과가 안정됩니다.
+`Date`만 대체해 프로미스와 타이머 동작을 건드리지 않습니다.
+
+```ts
+const FIXED_NOW = new Date("2026-08-21T05:00:00.000Z"); // 서울 2026-08-21 14:00 (금)
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+```
+
+오늘의 퀴즈처럼 날짜로 결정되는 값은 테스트에서도 같은 함수로 계산해 비교합니다.
+
+```ts
+const todayQuiz = selectDailyQuiz(quizzes, "2026-08-21", [])!;
+```
 
 ### 각 route에서 덮을 경로
 
