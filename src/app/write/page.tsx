@@ -43,7 +43,6 @@ async function fetchOwnDraft(draftId: string): Promise<WritingDraft> {
 function WritePageContent() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draftId");
-  const startAsPublic = searchParams.get("newDraft") === "true";
   const query = useQuery({
     queryKey: ownWritingDraftQueryKey(draftId ?? ""),
     queryFn: () => fetchOwnDraft(draftId as string),
@@ -109,10 +108,7 @@ function WritePageContent() {
             </div>
           </div>
         ) : (
-          <WriteEditor
-            initialDraft={initialDraft}
-            startAsPublic={startAsPublic}
-          />
+          <WriteEditor initialDraft={initialDraft} />
         )}
       </div>
     </main>
