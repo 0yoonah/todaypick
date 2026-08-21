@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import type { WritingDraft } from "@/types/writing";
+import {
+  badRequest,
+  notFound,
+  serverError,
+  unauthorized,
+} from "@/utils/apiResponse";
 
 async function getAuthenticatedClient() {
   const supabase = await createClient();
@@ -11,7 +17,7 @@ async function getAuthenticatedClient() {
 export async function GET() {
   const { supabase, user } = await getAuthenticatedClient();
   if (!user) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    return unauthorized();
   }
 
   const { data: bookmarks, error: bookmarkError } = await supabase
@@ -24,10 +30,7 @@ export async function GET() {
     console.error(
       `게시글 북마크 조회 오류 (${bookmarkError.code}): ${bookmarkError.message}`
     );
-    return NextResponse.json(
-      { error: "북마크한 게시글을 불러오지 못했습니다." },
-      { status: 500 }
-    );
+    return serverError("북마크한 게시글을 불러오지 못했습니다.");
   }
 
   if (!bookmarks?.length) {
@@ -42,10 +45,7 @@ export async function GET() {
     console.error(
       `북마크 게시글 조회 오류 (${draftError.code}): ${draftError.message}`
     );
-    return NextResponse.json(
-      { error: "북마크한 게시글을 불러오지 못했습니다." },
-      { status: 500 }
-    );
+    return serverError("북마크한 게시글을 불러오지 못했습니다.");
   }
 
   const draftsById = new Map(
@@ -62,13 +62,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const { supabase, user } = await getAuthenticatedClient();
   if (!user) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    return unauthorized();
   }
 
   const body = await request.json().catch(() => null);
   const draftId = body && typeof body.draft_id === "string" ? body.draft_id : "";
   if (!draftId) {
-    return NextResponse.json({ error: "게시글 ID가 필요합니다." }, { status: 400 });
+    return badRequest("게시글 ID가 필요합니다.");
   }
 
   const { data: publicDrafts, error: draftError } = await supabase.rpc(
@@ -76,10 +76,7 @@ export async function POST(request: NextRequest) {
     { p_id: draftId }
   );
   if (draftError || !publicDrafts?.length) {
-    return NextResponse.json(
-      { error: "공개 게시글을 찾을 수 없습니다." },
-      { status: 404 }
-    );
+    return notFound("공개 게시글을 찾을 수 없습니다.");
   }
 
   const { error } = await supabase.from("writing_bookmarks").upsert(
@@ -89,7 +86,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error(`게시글 북마크 추가 오류 (${error.code}): ${error.message}`);
-    return NextResponse.json({ error: "북마크를 저장하지 못했습니다." }, { status: 500 });
+    return serverError("북마크를 저장하지 못했습니다.");
   }
 
   return NextResponse.json({ is_bookmarked: true });
@@ -98,12 +95,12 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const { supabase, user } = await getAuthenticatedClient();
   if (!user) {
-    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+    return unauthorized();
   }
 
   const draftId = new URL(request.url).searchParams.get("draftId");
   if (!draftId) {
-    return NextResponse.json({ error: "게시글 ID가 필요합니다." }, { status: 400 });
+    return badRequest("게시글 ID가 필요합니다.");
   }
 
   const { error } = await supabase
@@ -114,7 +111,7 @@ export async function DELETE(request: NextRequest) {
 
   if (error) {
     console.error(`게시글 북마크 해제 오류 (${error.code}): ${error.message}`);
-    return NextResponse.json({ error: "북마크를 해제하지 못했습니다." }, { status: 500 });
+    return serverError("북마크를 해제하지 못했습니다.");
   }
 
   return NextResponse.json({ is_bookmarked: false });

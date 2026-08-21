@@ -148,6 +148,12 @@ const supabase = fakeSupabase({ user: null });
 installSupabaseMock(supabase.client);
 ```
 
+### server-only 의존
+
+`src/services/rssFeedService.ts`처럼 `import "server-only"`를 쓰는 모듈을 route가 전이 의존으로 끌고 옵니다.
+이 패키지는 Next 번들러만 해석하므로 `vitest.config.mts`에서 빈 모듈(`src/test/serverOnlyStub.ts`)로 alias했습니다.
+route 테스트에서 `Cannot find package 'server-only'`가 나면 이 alias를 확인합니다.
+
 ### 요청 만들기
 
 route가 `NextRequest`를 받으므로 실제 인스턴스를 만듭니다. `src/test/apiRequest.ts`를 씁니다.
@@ -156,6 +162,29 @@ route가 `NextRequest`를 받으므로 실제 인스턴스를 만듭니다. `src
 const res = await POST(jsonRequest("POST", "/api/cs-reviews", { answer: "" }));
 const res = await GET(getRequest("/api/feeds?page=2"));
 ```
+
+### 오류 응답 검증
+
+500 응답에는 고정 문구만 담고 원본 오류는 로그로만 남깁니다(`src/utils/apiResponse.ts`).
+그래서 오류 경로 테스트는 상태 코드와 고정 문구를 확인하고, **주입한 내부 문구가 응답에 없는지**까지 봅니다.
+
+```ts
+const { client } = fakeSupabase({
+  user: { id: "u1" },
+  from: {
+    scraped_quotes: {
+      error: { code: "42501", message: "permission denied for table scraped_quotes" },
+    },
+  },
+});
+
+const body = await response.json();
+expect(response.status).toBe(500);
+expect(body).toEqual({ error: "명언을 불러오는데 실패했습니다." });
+expect(JSON.stringify(body)).not.toContain("permission denied");
+```
+
+`serverError`가 `console.error`로 원본을 남기므로, 테스트 출력이 지저분해지면 `beforeEach`에서 `console.error`를 stub합니다.
 
 ### 각 route에서 덮을 경로
 

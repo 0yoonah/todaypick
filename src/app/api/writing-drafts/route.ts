@@ -13,6 +13,12 @@ import {
   sortPublicDrafts,
 } from "@/utils/writingUtils";
 import type { WritingDraft } from "@/types/writing";
+import {
+  badRequest,
+  notFound,
+  serverError,
+  unauthorized,
+} from "@/utils/apiResponse";
 
 const selectFields =
   "id, title, content, tags, visibility, thumbnail_url, sources, created_at, updated_at";
@@ -119,24 +125,21 @@ export async function GET(request: NextRequest) {
   const interestValue = url.searchParams.get("interest");
   const interest = isInterestId(interestValue) ? interestValue : undefined;
   if (interestValue && !interest) {
-    return NextResponse.json({ error: "유효한 관심 분야가 필요합니다." }, { status: 400 });
+    return badRequest("유효한 관심 분야가 필요합니다.");
   }
 
   let pagination: { page: number; limit: number } | null = null;
   try {
     pagination = parseWritingDraftPagination(url.searchParams);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "잘못된 요청입니다." },
-      { status: 400 }
+    // parseWritingDraftPagination이 던지는 TypeError의 message가 곧 사용자에게 보일 검증 문구다.
+    return badRequest(
+      error instanceof TypeError ? error.message : "잘못된 요청입니다."
     );
   }
 
   if (ownDraftOnly && !draftId) {
-    return NextResponse.json(
-      { error: "조회할 글이 필요합니다." },
-      { status: 400 }
-    );
+    return badRequest("조회할 글이 필요합니다.");
   }
 
   if (publicFeed || (draftId && !ownDraftOnly)) {
@@ -149,10 +152,7 @@ export async function GET(request: NextRequest) {
       console.error(
         `공개 게시글 조회 오류 (${publicError.code}): ${publicError.message}`
       );
-      return NextResponse.json(
-        { error: "공개 게시글을 불러오지 못했습니다." },
-        { status: 500 }
-      );
+      return serverError("공개 게시글을 불러오지 못했습니다.");
     }
 
     if (publicFeed) {
@@ -175,14 +175,9 @@ export async function GET(request: NextRequest) {
 
   if (draftId) {
     if (!user) {
-      return NextResponse.json(
-        {
-          error: ownDraftOnly
-            ? "인증이 필요합니다."
-            : "게시글을 찾을 수 없습니다.",
-        },
-        { status: ownDraftOnly ? 401 : 404 }
-      );
+      return ownDraftOnly
+        ? unauthorized()
+        : notFound("게시글을 찾을 수 없습니다.");
     }
 
     const { data, error } = await supabase
@@ -192,7 +187,7 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
     if (error) {
-      return NextResponse.json({ error: "게시글을 찾을 수 없습니다." }, { status: 404 });
+      return notFound("게시글을 찾을 수 없습니다.");
     }
 
     return NextResponse.json({ draft: data });
@@ -207,38 +202,40 @@ export async function GET(request: NextRequest) {
     ? await query.eq("user_id", user.id)
     : await query.eq("visibility", "public");
 
-  if (error) return NextResponse.json({ error: "글 초안을 불러오지 못했습니다." }, { status: 500 });
+  if (error) return serverError("글 초안을 불러오지 못했습니다.", error);
   return NextResponse.json({ drafts: data ?? [] });
 }
 
 export async function POST(request: NextRequest) {
   const { supabase, user } = await getUser();
-  if (!user) return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!user) return unauthorized();
   const parsed = await parseDraftFromRequest(request);
-  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
-  if (!parsed.draft) return NextResponse.json({ error: "글 초안 입력이 올바르지 않습니다." }, { status: 400 });
+  if ("error" in parsed)
+    return badRequest(parsed.error ?? "글 초안 입력이 올바르지 않습니다.");
+  if (!parsed.draft) return badRequest("글 초안 입력이 올바르지 않습니다.");
   const { data, error } = await supabase.from("writing_drafts").insert({ user_id: user.id, ...parsed.draft }).select(selectFields).single();
-  if (error) return NextResponse.json({ error: "글 초안을 만들지 못했습니다." }, { status: 500 });
+  if (error) return serverError("글 초안을 만들지 못했습니다.", error);
   return NextResponse.json(data, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
   const { supabase, user } = await getUser();
-  if (!user) return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!user) return unauthorized();
   const parsed = await parseDraftFromRequest(request);
-  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
-  if (!parsed.id || !parsed.draft) return NextResponse.json({ error: "글 초안 입력이 올바르지 않습니다." }, { status: 400 });
+  if ("error" in parsed)
+    return badRequest(parsed.error ?? "글 초안 입력이 올바르지 않습니다.");
+  if (!parsed.id || !parsed.draft) return badRequest("글 초안 입력이 올바르지 않습니다.");
   const { data, error } = await supabase.from("writing_drafts").update(parsed.draft).eq("id", parsed.id).eq("user_id", user.id).select(selectFields).single();
-  if (error) return NextResponse.json({ error: "글 초안을 저장하지 못했습니다." }, { status: 500 });
+  if (error) return serverError("글 초안을 저장하지 못했습니다.", error);
   return NextResponse.json(data);
 }
 
 export async function DELETE(request: NextRequest) {
   const { supabase, user } = await getUser();
-  if (!user) return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  if (!user) return unauthorized();
   const id = new URL(request.url).searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "삭제할 초안이 필요합니다." }, { status: 400 });
+  if (!id) return badRequest("삭제할 초안이 필요합니다.");
   const { error } = await supabase.from("writing_drafts").delete().eq("id", id).eq("user_id", user.id);
-  if (error) return NextResponse.json({ error: "글 초안을 삭제하지 못했습니다." }, { status: 500 });
+  if (error) return serverError("글 초안을 삭제하지 못했습니다.", error);
   return NextResponse.json({ success: true });
 }

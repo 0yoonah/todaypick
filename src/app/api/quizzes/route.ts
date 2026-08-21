@@ -5,6 +5,13 @@ import { quizzes } from "@/data/quizzes";
 import { getSeoulDateKey } from "@/utils/dateUtils";
 import { recordDailyActivity } from "@/services/dailyActivityService";
 import type { QuizResult } from "@/types/quiz";
+import {
+  badRequest,
+  conflict,
+  notFound,
+  serverError,
+  unauthorized,
+} from "@/utils/apiResponse";
 
 type SolvedQuizResult = Pick<
   QuizResult,
@@ -89,10 +96,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     if (!!quizId) {
@@ -132,15 +136,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(recordsWithQuizInfo, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "퀴즈를 불러오는데 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("퀴즈를 불러오는데 실패했습니다.", error);
   }
 }
 
@@ -150,20 +146,14 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase.auth.getUser();
 
     if (!user.user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const body = await request.json();
     const { selectedAnswer } = body;
 
     if (selectedAnswer === undefined || selectedAnswer === null) {
-      return NextResponse.json(
-        { error: "선택한 답안이 필요합니다." },
-        { status: 400 }
-      );
+      return badRequest("선택한 답안이 필요합니다.");
     }
 
     const dateKey = getSeoulDateKey();
@@ -174,20 +164,14 @@ export async function POST(request: NextRequest) {
     );
 
     if (todayResult) {
-      return NextResponse.json(
-        { error: "이미 답안을 제출한 퀴즈입니다." },
-        { status: 409 }
-      );
+      return conflict("이미 답안을 제출한 퀴즈입니다.");
     }
 
     // GET과 같은 규칙으로 오늘의 문제를 다시 고른다.
     const quiz = selectDailyQuiz(quizzes, dateKey, solvedIds);
 
     if (!quiz) {
-      return NextResponse.json(
-        { error: "오늘 풀 수 있는 퀴즈가 없습니다." },
-        { status: 404 }
-      );
+      return notFound("오늘 풀 수 있는 퀴즈가 없습니다.");
     }
 
     const isCorrect = selectedAnswer === quiz.correct_answer;
@@ -225,13 +209,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("퀴즈 답안 제출 실패:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "답안 제출에 실패했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("답안 제출에 실패했습니다.", error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseInterestIds } from "@/config/interests";
 import { createClient } from "@/utils/supabase/server";
+import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -10,10 +11,7 @@ export async function PUT(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json(
-        { error: "인증이 필요합니다." },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -23,10 +21,7 @@ export async function PUT(request: NextRequest) {
       !Array.isArray(body.interests) ||
       interests.length !== new Set(body.interests).size
     ) {
-      return NextResponse.json(
-        { error: "유효하지 않은 관심 분야가 포함되어 있습니다." },
-        { status: 400 }
-      );
+      return badRequest("유효하지 않은 관심 분야가 포함되어 있습니다.");
     }
 
     const { error } = await supabase
@@ -38,15 +33,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ interests }, { status: 200 });
   } catch (error) {
-    console.error("관심 분야 저장 오류:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "관심 분야를 저장하지 못했습니다.",
-      },
-      { status: 500 }
-    );
+    return serverError("관심 분야를 저장하지 못했습니다.", error);
   }
 }
