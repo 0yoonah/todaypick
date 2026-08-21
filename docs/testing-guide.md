@@ -176,8 +176,19 @@ installSupabaseMock(supabase.client);
 ### server-only 의존
 
 `src/services/rssFeedService.ts`처럼 `import "server-only"`를 쓰는 모듈을 route가 전이 의존으로 끌고 옵니다.
-이 패키지는 Next 번들러만 해석하므로 `vitest.config.mts`에서 빈 모듈(`src/test/serverOnlyStub.ts`)로 alias했습니다.
-route 테스트에서 `Cannot find package 'server-only'`가 나면 이 alias를 확인합니다.
+이 패키지는 Next 번들러만 해석하므로 그냥 두면 `Cannot find package 'server-only'`로 실패합니다.
+
+두 가지로 해결합니다.
+
+- 그 모듈 자체를 모킹한다. 외부 RSS를 다루는 서비스라면 어차피 모킹해야 하므로 이쪽이 먼저다.
+- 실제 모듈이 필요하면 `vi.mock("server-only", () => ({}))`를 함께 선언한다. `src/services/rssFeedService.test.ts`가 쓰는 방식이다.
+
+```ts
+// 서비스를 모킹하면 server-only도 함께 사라진다.
+vi.mock("@/services/rssFeedService", () => ({
+  getRSSFeedsWithPagination: vi.fn(),
+}));
+```
 
 ### 요청 만들기
 
