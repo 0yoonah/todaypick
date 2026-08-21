@@ -7,4 +7,30 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  test: {
+    projects: [
+      // 순수 함수와 API route는 DOM이 필요 없어 node에 둔다.
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: [
+            "src/{utils,services,data}/**/*.test.ts",
+            "src/app/api/**/*.test.ts",
+            "src/test/**/*.test.ts",
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "dom",
+          environment: "jsdom",
+          setupFiles: ["./src/test/setup.ts"],
+          include: ["src/components/**/*.test.tsx"],
+        },
+      },
+    ],
+  },
 });
