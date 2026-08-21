@@ -148,7 +148,7 @@ describe("WriteEditor 신규 작성", () => {
     expect(push).toHaveBeenCalledWith("/feeds?category=writing");
   });
 
-  it("저장에 실패하면 이동하지 않는다", async () => {
+  it("저장에 실패하면 서버 문구를 보여주고 이동하지 않는다", async () => {
     const user = userEvent.setup();
     stubFetch({ error: "글 초안을 만들지 못했습니다." }, false);
     renderWithQuery(<WriteEditor />);
@@ -156,8 +156,45 @@ describe("WriteEditor 신규 작성", () => {
     await user.type(screen.getByPlaceholderText("글 제목"), "제목");
     await user.click(saveButton());
 
-    await waitFor(() => expect(saveButton()).toBeEnabled());
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "글 초안을 만들지 못했습니다."
+    );
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("서버가 문구를 주지 않으면 기본 문구를 보여준다", async () => {
+    const user = userEvent.setup();
+    stubFetch(null, false);
+    renderWithQuery(<WriteEditor />);
+
+    await user.type(screen.getByPlaceholderText("글 제목"), "제목");
+    await user.click(saveButton());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "글 초안을 저장하지 못했습니다."
+    );
+  });
+
+  it("실패한 뒤 다시 저장해 성공하면 문구가 사라지고 이동한다", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "글 초안을 만들지 못했습니다." }),
+      })
+      .mockResolvedValueOnce({ ok: true, json: async () => savedDraft });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithQuery(<WriteEditor />);
+
+    await user.type(screen.getByPlaceholderText("글 제목"), "제목");
+    await user.click(saveButton());
+    await screen.findByRole("alert");
+
+    await user.click(saveButton());
+
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 
