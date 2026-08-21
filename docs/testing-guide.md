@@ -333,6 +333,62 @@ signOutTestUser();      // 비로그인
 `afterEach`에서 `signOutTestUser()`를 불러 다음 테스트로 상태가 넘어가지 않게 합니다.
 store는 모듈 수준 싱글턴이라 자동으로 초기화되지 않습니다.
 
+### 라우터와 전역 함수
+
+`useRouter`를 쓰는 컴포넌트는 `next/navigation`을 모킹합니다. 이동이 **몇 번** 일어났는지까지 확인합니다.
+
+```ts
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
+await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+expect(push).toHaveBeenCalledWith("/profile?tab=writing");
+```
+
+`alert`, `URL.createObjectURL`처럼 jsdom에 없거나 화면을 막는 전역은 `vi.stubGlobal`로 대체하고 `afterEach`에서 `vi.unstubAllGlobals()`합니다.
+
+### 여러 요청을 구분해야 할 때
+
+한 컴포넌트가 조회와 저장을 모두 하면 `fetch` 스텁이 요청을 구분해야 합니다.
+
+```ts
+const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+  if (init?.method === "POST") return { ok: true, json: async () => submitResponse };
+  return { ok: true, json: async () => loadResponse };
+});
+```
+
+`FormData`로 보내는 경우는 본문을 꺼내 확인합니다.
+
+```ts
+const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+const form = init.body as FormData;
+expect(init.method).toBe("PUT");
+expect(form.get("id")).toBe("d1");
+```
+
+### 버튼 이름이 겹칠 때
+
+선택지처럼 문구가 서로 부분 일치하면 `getByRole("button", { name: /내용/ })`이 여러 개를 잡습니다.
+접근성 이름의 고정된 접두사로 특정합니다.
+
+```ts
+// 버튼 이름은 "A. 내용" 형태다.
+screen.getByRole("button", { name: /^A\./ });
+```
+
+### 현재 동작을 고정할 때
+
+테스트를 쓰다 의도가 불분명한 동작을 만나면 **고쳐 넣지 않고 현재 동작을 고정한 뒤 이슈로 분리합니다.**
+테스트 안에는 무엇을 고정했는지 주석으로 남깁니다.
+
+```ts
+// 현재 동작을 그대로 고정한다. 저장된 비공개 설정이 공개로 덮인다.
+it("startAsPublic이 함께 오면 저장된 비공개 설정을 덮어쓴다", () => {
+```
+
+이렇게 두면 동작을 바꿀 때 어느 테스트를 함께 고쳐야 하는지 이슈에 적을 수 있습니다.
+
 ### 대상 선정
 
 컴포넌트 전부가 아니라 **상태 전이가 실제로 있는 것**만 테스트합니다.
