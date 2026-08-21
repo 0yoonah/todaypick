@@ -5,10 +5,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
-      // "server-only"는 Next 번들러만 해석한다. route가 전이 의존으로 끌고 오므로 빈 모듈로 바꾼다.
-      "server-only": fileURLToPath(
-        new URL("./src/test/serverOnlyStub.ts", import.meta.url)
-      ),
     },
   },
   test: {
