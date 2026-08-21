@@ -198,6 +198,13 @@ export default function WriteEditor({
             {saveDraft.isPending ? "저장 중..." : "저장"}
           </Button>
         </div>
+        {saveDraft.isError && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {saveDraft.error instanceof Error
+              ? saveDraft.error.message
+              : "글 초안을 저장하지 못했습니다."}
+          </p>
+        )}
       </div>
 
       {sources.length > 0 && (
