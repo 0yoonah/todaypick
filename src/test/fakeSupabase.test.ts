@@ -159,6 +159,28 @@ describe("fakeSupabase", () => {
       ]);
     });
 
+    it("mutation 뒤의 select는 op를 덮지 않는다", async () => {
+      const fake = fakeSupabase({ from: { cs_reviews: { data: [{ score: 40 }] } } });
+
+      await fake.client
+        .from("cs_reviews")
+        .upsert({ user_id: "u1" }, { onConflict: "user_id,question_id" })
+        .select("score")
+        .single();
+
+      expect(fake.calls("cs_reviews")).toEqual([
+        {
+          op: "upsert",
+          columns: "score",
+          payload: { user_id: "u1" },
+          options: { onConflict: "user_id,question_id" },
+          filters: [],
+          modifiers: [],
+          terminal: "single",
+        },
+      ]);
+    });
+
     it("in과 gte 필터를 기록한다", async () => {
       const fake = fakeSupabase({ from: { quiz_results: { data: [] } } });
 

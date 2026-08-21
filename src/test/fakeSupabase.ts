@@ -38,6 +38,7 @@ export type FakeCall = {
   op: Op;
   columns?: string;
   payload?: unknown;
+  options?: unknown;
   filters: Filter[];
   modifiers: Modifier[];
   terminal: Terminal;
@@ -56,9 +57,9 @@ export type FakeSupabaseOptions = {
 
 type QueryBuilder = {
   select(columns?: string, options?: { count?: CountOption; head?: boolean }): QueryBuilder;
-  insert(payload: unknown): QueryBuilder;
-  update(payload: unknown): QueryBuilder;
-  upsert(payload: unknown): QueryBuilder;
+  insert(payload: unknown, options?: unknown): QueryBuilder;
+  update(payload: unknown, options?: unknown): QueryBuilder;
+  upsert(payload: unknown, options?: unknown): QueryBuilder;
   delete(): QueryBuilder;
   eq(column: string, value: unknown): QueryBuilder;
   in(column: string, values: unknown[]): QueryBuilder;
@@ -97,6 +98,7 @@ type BuilderState = {
   op?: Op;
   columns?: string;
   payload?: unknown;
+  options?: unknown;
   count?: CountOption;
   head?: boolean;
   filters: Filter[];
@@ -171,6 +173,7 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
         op: state.op ?? "select",
         columns: state.columns,
         payload: state.payload,
+        options: state.options,
         filters: state.filters,
         modifiers: state.modifiers,
         terminal,
@@ -187,11 +190,12 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
     const next = (patch: Partial<BuilderState>) => createBuilder({ ...state, ...patch });
 
     const builder: QueryBuilder = {
+      // mutation 뒤의 select는 새 작업이 아니라 returning 절이므로 op를 덮지 않는다.
       select: (columns, opts) =>
-        next({ op: "select", columns, count: opts?.count, head: opts?.head }),
-      insert: (payload) => next({ op: "insert", payload }),
-      update: (payload) => next({ op: "update", payload }),
-      upsert: (payload) => next({ op: "upsert", payload }),
+        next({ columns, count: opts?.count, head: opts?.head }),
+      insert: (payload, options) => next({ op: "insert", payload, options }),
+      update: (payload, options) => next({ op: "update", payload, options }),
+      upsert: (payload, options) => next({ op: "upsert", payload, options }),
       delete: () => next({ op: "delete" }),
       eq: (column, value) => next({ filters: [...state.filters, ["eq", column, value]] }),
       in: (column, values) => next({ filters: [...state.filters, ["in", column, values]] }),
