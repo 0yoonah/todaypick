@@ -30,7 +30,7 @@ type SavedContentFilter = "all" | RSSFeedCategory | "writing";
 
 const FILTERS: { id: SavedContentFilter; label: string }[] = [
   { id: "all", label: "전체" },
-  { id: FEED_CATEGORY.IT_NEWS, label: "IT 기사" },
+  { id: FEED_CATEGORY.IT_NEWS, label: "IT 뉴스" },
   { id: FEED_CATEGORY.TECH_BLOG, label: "테크 블로그" },
   { id: "writing", label: "게시글" },
 ];

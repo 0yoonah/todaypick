@@ -28,7 +28,7 @@ export default function FeedCategoryTab({
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
-          IT 기사
+          IT 뉴스
         </button>
         <button
           onClick={() => handleChangeTab(FEED_CATEGORY.TECH_BLOG)}

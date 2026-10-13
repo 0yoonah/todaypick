@@ -146,8 +146,8 @@ export function getFeedSources(category: RSSFeedCategory): FeedSource[] {
 export const feedCategories = [
   {
     id: "it_news",
-    name: "IT 기사",
-    description: "최신 IT 뉴스와 업계 동향",
+    name: "IT 뉴스",
+    description: "개발자 커뮤니티가 고른 최신 IT 소식",
   },
   {
     id: "tech_blog",
