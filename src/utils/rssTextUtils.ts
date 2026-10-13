@@ -21,7 +21,7 @@ function decodeCodePoint(codePoint: number, original: string): string {
  * 엔티티를 한 번에 훑어 바꾼다. 순서대로 replace를 이어 붙이면
  * `&amp;quot;`처럼 이중 인코딩된 문자열이 두 번 풀린다.
  */
-function decodeHtmlEntities(value: string): string {
+export function decodeHtmlEntities(value: string): string {
   return value.replace(ENTITY_PATTERN, (match, decimal, hex, name) => {
     if (decimal) return decodeCodePoint(Number.parseInt(decimal, 10), match);
     if (hex) return decodeCodePoint(Number.parseInt(hex, 16), match);

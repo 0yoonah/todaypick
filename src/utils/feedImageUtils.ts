@@ -1,4 +1,5 @@
 import { isAllowedFeedImageUrl } from "../config/feedImages";
+import { decodeHtmlEntities } from "./rssTextUtils";
 
 const IMAGE_EXTENSION_PATTERN = /\.(avif|gif|jpe?g|png|webp)$/i;
 const IMAGE_TAG_PATTERN =
@@ -10,25 +11,37 @@ type FeedImageCandidate = {
 };
 
 function decodeImageUrl(value: string): string {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&#38;", "&")
-    .trim();
+  return decodeHtmlEntities(value).trim();
 }
 
-function isImageCandidate({ url, type }: FeedImageCandidate): boolean {
-  if (typeof url !== "string" || !url) return false;
-
-  const decodedUrl = decodeImageUrl(url);
-  if (!isAllowedFeedImageUrl(decodedUrl)) return false;
-  if (
-    typeof type === "string" &&
-    type.toLowerCase().startsWith("image/")
-  ) {
-    return true;
+/** 상대 경로는 글 주소 기준으로 바꾸고, 허용 호스트의 HTTPS 주소만 돌려준다. */
+function toAllowedImageUrl(value: string, baseUrl?: string): string | undefined {
+  try {
+    const url = new URL(decodeImageUrl(value), baseUrl).toString();
+    return isAllowedFeedImageUrl(url) ? url : undefined;
+  } catch {
+    return undefined;
   }
+}
 
-  return IMAGE_EXTENSION_PATTERN.test(new URL(decodedUrl).pathname);
+/**
+ * enclosure·media 후보는 첨부 파일일 수 있으므로 MIME 타입이나 확장자로 이미지인지 확인한다.
+ */
+function selectCandidateImageUrl(
+  { url, type }: FeedImageCandidate,
+  baseUrl?: string
+): string | undefined {
+  if (typeof url !== "string" || !url) return undefined;
+
+  const allowedUrl = toAllowedImageUrl(url, baseUrl);
+  if (!allowedUrl) return undefined;
+
+  if (typeof type === "string" && type.toLowerCase().startsWith("image/")) {
+    return allowedUrl;
+  }
+  return IMAGE_EXTENSION_PATTERN.test(new URL(allowedUrl).pathname)
+    ? allowedUrl
+    : undefined;
 }
 
 export function extractFirstImageUrl(htmlValues: unknown[]) {
@@ -43,18 +56,23 @@ export function extractFirstImageUrl(htmlValues: unknown[]) {
   return undefined;
 }
 
+/**
+ * 글 단위 이미지 후보를 먼저 쓰고, 없으면 본문의 첫 `<img>`를 쓴다.
+ * `<img>`는 태그 자체가 이미지이므로 확장자를 검사하지 않는다.
+ * `baseUrl`(글 주소)이 있으면 상대 경로를 절대 주소로 바꾼다.
+ */
 export function selectFeedImageUrl(
   candidates: FeedImageCandidate[],
-  htmlValues: unknown[]
+  htmlValues: unknown[],
+  baseUrl?: string
 ): string | undefined {
-  const embeddedImageUrl = extractFirstImageUrl(htmlValues);
-  const allCandidates = [
-    ...candidates,
-    embeddedImageUrl ? { url: embeddedImageUrl } : {},
-  ];
-  const selected = allCandidates.find(isImageCandidate)?.url;
+  for (const candidate of candidates) {
+    const url = selectCandidateImageUrl(candidate, baseUrl);
+    if (url) return url;
+  }
 
-  return typeof selected === "string"
-    ? decodeImageUrl(selected)
+  const embeddedImageUrl = extractFirstImageUrl(htmlValues);
+  return embeddedImageUrl
+    ? toAllowedImageUrl(embeddedImageUrl, baseUrl)
     : undefined;
 }
