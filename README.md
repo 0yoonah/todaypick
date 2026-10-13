@@ -193,10 +193,14 @@ npm run start        # 프로덕션 서버
 npm run lint         # ESLint
 npm run type-check   # tsc --noEmit
 npm test             # Vitest 단위 테스트
+npm run check:feeds  # RSS 소스 상태 점검
 ```
 
 코드 변경 후에는 위 네 가지 검증(`lint`, `type-check`, `test`, `build`)을 모두 실행합니다.
 GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
+
+`check:feeds`는 모든 RSS 소스를 실제로 요청해 실패, 리다이렉트, 365일 이상 미갱신, 허용 목록 밖 썸네일 호스트를 보여 줍니다.
+외부 네트워크 상태에 따라 결과가 달라지므로 CI에서는 실행하지 않습니다. 소스를 추가하거나 정리할 때 직접 실행합니다.
 
 ## 📱 주요 페이지
 
