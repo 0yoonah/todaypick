@@ -1,7 +1,6 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import Parser from "rss-parser";
 import { FEED_CATEGORY } from "@/config/constants";
 import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { getFeedSources } from "@/data/feeds";
@@ -18,23 +17,18 @@ import {
 } from "@/utils/feedInterestUtils";
 import { selectFeedImageUrl } from "@/utils/feedImageUtils";
 import {
-  assertRssContentType,
-  assertSafeRssUrl,
-  assertSafeXml,
-  readResponseTextWithLimit,
-} from "@/utils/rssSecurityUtils";
+  getRssItemImageInputs,
+  readRssSource,
+  RSS_TIMEOUT_MS,
+} from "@/services/rssSourceReader";
 
 const RSS_REVALIDATE_SECONDS = 15 * 60;
-const RSS_TIMEOUT_MS = 8_000;
 const RSS_CATEGORY_TIMEOUT_MS = 12_000;
-const RSS_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
-const RSS_MAX_REDIRECTS = 3;
 const MAX_ITEMS_PER_SOURCE = 50;
 const BATCH_SIZE = 5;
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_AUTHOR_LENGTH = 100;
-const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 
 function cleanText(value: unknown, maxLength: number): string {
   if (typeof value !== "string") return "";
@@ -71,79 +65,18 @@ function normalizeUrl(value: string): string {
   }
 }
 
-async function fetchRssResponse(
-  initialUrl: string,
-  signal: AbortSignal
-): Promise<Response> {
-  let currentUrl = await assertSafeRssUrl(initialUrl);
-
-  for (let redirectCount = 0; redirectCount <= RSS_MAX_REDIRECTS; redirectCount++) {
-    const response = await fetch(currentUrl, {
-      cache: "no-store",
-      headers: {
-        Accept:
-          "application/rss+xml, application/atom+xml, application/xml, text/xml",
-        "User-Agent": "TodayPick RSS Reader/1.4",
-      },
-      redirect: "manual",
-      signal,
-    });
-
-    if (!REDIRECT_STATUS_CODES.has(response.status)) {
-      return response;
-    }
-
-    const location = response.headers.get("location");
-    if (!location || redirectCount === RSS_MAX_REDIRECTS) {
-      throw new Error("RSS 리다이렉트 횟수 제한을 초과했습니다.");
-    }
-
-    await response.body?.cancel();
-    currentUrl = await assertSafeRssUrl(
-      new URL(location, currentUrl).toString()
-    );
-  }
-
-  throw new Error("RSS 요청을 완료하지 못했습니다.");
-}
-
 async function fetchRSSFeed(
   source: FeedSource,
   collectionSignal: AbortSignal
 ): Promise<Feed[]> {
   try {
-    const response = await fetchRssResponse(
+    const { feed: parsedFeed } = await readRssSource(
       source.rss_url,
       AbortSignal.any([
         collectionSignal,
         AbortSignal.timeout(RSS_TIMEOUT_MS),
       ])
     );
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    assertRssContentType(response.headers.get("content-type"));
-    const xml = await readResponseTextWithLimit(
-      response,
-      RSS_MAX_RESPONSE_BYTES
-    );
-    assertSafeXml(xml);
-
-    const parser = new Parser({
-      customFields: {
-        feed: ["image", "icon", "logo"],
-        item: [
-          "media:content",
-          "media:thumbnail",
-          "enclosure",
-          "content:encoded",
-          "description",
-        ],
-      },
-    });
-    const parsedFeed = await parser.parseString(xml);
 
     return (parsedFeed.items || [])
       .slice(0, MAX_ITEMS_PER_SOURCE)
@@ -152,12 +85,10 @@ async function fetchRSSFeed(
         if (!url) return [];
 
         const publishedAt = item.pubDate || item.isoDate || "";
-        const htmlValues = [
-          item["content:encoded"],
-          item.content,
-          item.description,
-          item.summary,
-        ];
+        const { candidates, htmlValues } = getRssItemImageInputs(
+          item,
+          parsedFeed
+        );
 
         const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
@@ -174,35 +105,8 @@ async function fetchRSSFeed(
           published_at: publishedAt || new Date(0).toISOString(),
           category: source.category,
           image_url:
-            selectFeedImageUrl(
-              [
-                {
-                  url: item.enclosure?.url,
-                  type: item.enclosure?.type,
-                },
-                {
-                  url: item["media:content"]?.$?.url,
-                  type: item["media:content"]?.$?.type,
-                },
-                {
-                  url: item["media:thumbnail"]?.$?.url,
-                  type: item["media:thumbnail"]?.$?.type,
-                },
-                {
-                  url: parsedFeed.image?.url,
-                  type: "image/*",
-                },
-                {
-                  url: parsedFeed.logo,
-                  type: "image/*",
-                },
-                {
-                  url: parsedFeed.icon,
-                  type: "image/*",
-                },
-              ],
-              htmlValues
-            ) || DEFAULT_FEED_IMAGE_URL,
+            selectFeedImageUrl(candidates, htmlValues) ||
+            DEFAULT_FEED_IMAGE_URL,
           author: cleanText(
             item.creator || source.name,
             MAX_AUTHOR_LENGTH
