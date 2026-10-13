@@ -59,8 +59,8 @@ export default function TermsPage() {
               </li>
               <li>다른 사람의 이메일로 가입하거나 계정을 넘겨주지 않습니다.</li>
               <li>
-                탈퇴(계정 삭제)는 가입한 이메일로 <ContactLink />에 요청할 수
-                있습니다. 개인정보 처리는{" "}
+                회원 탈퇴는 프로필 화면에서 비밀번호를 확인한 뒤 직접 할 수
+                있으며, 탈퇴하면 계정과 기록이 즉시 삭제됩니다. 개인정보 처리는{" "}
                 <Link href={ROUTE_PATH.PRIVACY} className={linkClassName}>
                   개인정보처리방침
                 </Link>
