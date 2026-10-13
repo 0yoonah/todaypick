@@ -21,6 +21,14 @@ export default function SiteFooter() {
             </li>
             <li>
               <Link
+                href={ROUTE_PATH.TERMS}
+                className="inline-flex min-h-11 items-center hover:text-foreground sm:min-h-0"
+              >
+                이용약관
+              </Link>
+            </li>
+            <li>
+              <Link
                 href={ROUTE_PATH.PRIVACY}
                 className="inline-flex min-h-11 items-center font-semibold text-foreground hover:text-primary sm:min-h-0"
               >
