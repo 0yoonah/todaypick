@@ -29,6 +29,9 @@ export const FEED_IMAGE_HOSTNAMES = [
   "images.unsplash.com",
 ] as const;
 
+// 이미지가 없는 피드·게시글 카드에 쓰는 TodayPick 기본 썸네일 (public/images).
+export const DEFAULT_THUMBNAIL_IMAGE = "/images/default-thumbnail.jpg";
+
 // v1.11.0까지 이미지 없는 글에 저장하던 기본 이미지.
 // 저장된 스크랩·읽은 글 스냅숏에 남아 있어 대체 썸네일로 바꿔 보여 줄 때 비교에 쓴다.
 export const LEGACY_DEFAULT_FEED_IMAGE_URL =
