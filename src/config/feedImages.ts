@@ -3,12 +3,15 @@ export const FEED_IMAGE_HOSTNAMES = [
   "miro.medium.com",
   "*.medium.com",
   "d2.naver.com",
+  "d2-serving.pstatic.net",
+  "dthumb-phinf.pstatic.net",
   "blog.banksalad.com",
   "toss.tech",
   "static.toss.im",
   "tech.kakao.com",
   "tech.kakaoenterprise.com",
   "techblog.woowahan.com",
+  "techblog.woowa.in",
   "tech.devsisters.com",
   "techblog.lycorp.co.jp",
   "meetup.toast.com",
@@ -25,6 +28,9 @@ export const FEED_IMAGE_HOSTNAMES = [
   "d2908q01vomqb2.cloudfront.net",
   "images.unsplash.com",
 ] as const;
+
+// 이미지가 없는 피드·게시글 카드에 쓰는 TodayPick 기본 썸네일 (public/images).
+export const DEFAULT_THUMBNAIL_IMAGE = "/images/default-thumbnail.jpg";
 
 // v1.11.0까지 이미지 없는 글에 저장하던 기본 이미지.
 // 저장된 스크랩·읽은 글 스냅숏에 남아 있어 대체 썸네일로 바꿔 보여 줄 때 비교에 쓴다.
