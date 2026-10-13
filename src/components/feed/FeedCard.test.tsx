@@ -125,3 +125,16 @@ describe("FeedCard 인용하여 글쓰기", () => {
     await waitFor(() => expect(push).not.toHaveBeenCalled());
   });
 });
+
+describe("FeedCard 썸네일", () => {
+  it("외부 썸네일을 이미지 최적화를 거치지 않고 원본 주소에서 불러온다", () => {
+    const imageUrl = "https://cdn-images-1.medium.com/max/1024/thumb.png";
+    renderWithQuery(
+      <FeedCard feed={{ ...feed, image_url: imageUrl }} handleScrap={vi.fn()} />
+    );
+
+    const image = screen.getByRole("img", { name: feed.title });
+    expect(image).toHaveAttribute("src", imageUrl);
+    expect(image).toHaveAttribute("referrerpolicy", "no-referrer");
+  });
+});
