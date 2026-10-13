@@ -52,6 +52,53 @@ describe("RSS feed image selection", () => {
     ).toBeUndefined();
   });
 
+  it("resolves a relative embedded image against the item URL", () => {
+    expect(
+      selectFeedImageUrl(
+        [],
+        ['<img src="/static/abc/25946/tri-z.png">'],
+        "https://tech.devsisters.com/posts/metric-view"
+      )
+    ).toBe("https://tech.devsisters.com/static/abc/25946/tri-z.png");
+  });
+
+  it("rejects a relative embedded image without an item URL", () => {
+    expect(
+      selectFeedImageUrl([], ['<img src="/static/abc/tri-z.png">'])
+    ).toBeUndefined();
+  });
+
+  it("accepts an embedded image without a file extension", () => {
+    expect(
+      selectFeedImageUrl(
+        [],
+        [
+          '<img src="https://d2-serving.pstatic.net/v1/images?objectPath=d2%2Ffig-01.png">',
+        ]
+      )
+    ).toBe(
+      "https://d2-serving.pstatic.net/v1/images?objectPath=d2%2Ffig-01.png"
+    );
+  });
+
+  it("decodes numeric entities in an embedded image URL", () => {
+    expect(
+      selectFeedImageUrl(
+        [],
+        ['<img src="https://dthumb-phinf.pstatic.net/?src&#x3D;a&amp;type&#x3D;ff500_300">']
+      )
+    ).toBe("https://dthumb-phinf.pstatic.net/?src=a&type=ff500_300");
+  });
+
+  it("keeps the extension check for enclosures without an image type", () => {
+    expect(
+      selectFeedImageUrl(
+        [{ url: "https://d2.naver.com/media/file?id=1" }],
+        []
+      )
+    ).toBeUndefined();
+  });
+
   it("ignores RSS content parsed as a non-string value", () => {
     expect(
       selectFeedImageUrl([], [{ _: "<img src='invalid.jpg'>" }])

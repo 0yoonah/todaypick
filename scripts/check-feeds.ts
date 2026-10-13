@@ -59,21 +59,21 @@ async function checkSource(source: FeedSource, now: number): Promise<CheckResult
 
     for (const item of feed.items) {
       const { candidates, htmlValues } = getRssItemImageInputs(item);
-      const selected = selectFeedImageUrl(candidates, htmlValues);
+      // 서비스와 같이 글 주소를 기준으로 상대 경로를 푼다.
+      const baseUrl = item.link || finalUrl;
+      const selected = selectFeedImageUrl(candidates, htmlValues, baseUrl);
       if (selected) {
-        const url = toAbsoluteUrl(selected, finalUrl);
-        if (url) imageHosts.add(url.hostname);
+        imageHosts.add(new URL(selected).hostname);
         continue;
       }
 
       // 서비스가 고르지 못한 글 이미지 중 호스트 때문에 빠진 것만 남긴다.
-      // 상대 경로는 절대 주소로 바꿔 판정해 허용 호스트의 오탐을 막는다.
       const rawImageUrl =
         candidates
           .map((candidate) => candidate.url)
           .find((url): url is string => typeof url === "string" && !!url) ??
         extractFirstImageUrl(htmlValues);
-      const url = rawImageUrl ? toAbsoluteUrl(rawImageUrl, finalUrl) : null;
+      const url = rawImageUrl ? toAbsoluteUrl(rawImageUrl, baseUrl) : null;
       if (url && !isAllowedFeedImageUrl(url.toString())) {
         disallowedImageHosts.add(url.hostname);
       }
