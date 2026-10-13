@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { isProfileTab, PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import AccountDeletionSection from "@/components/profile/AccountDeletionSection";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ScrapedFeedsTab from "@/components/profile/ScrapedFeedsTab";
@@ -99,6 +100,7 @@ export default function ProfileContainer() {
 
       <ProfileTabs activeTab={activeTab} handleChangeTab={handleChangeTab} />
       <div>{renderActiveTab}</div>
+      <AccountDeletionSection />
     </div>
   );
 }
