@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPolicyDate } from "@/config/policy";
 import Link from "next/link";
 import {
   ContactLink,
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 // 내용을 바꾸면 시행일도 함께 갱신한다.
-const EFFECTIVE_DATE = "2026년 10월 13일";
+const EFFECTIVE_DATE = formatPolicyDate();
 
 const linkClassName =
   "font-semibold text-foreground underline underline-offset-4 hover:text-primary";
@@ -54,13 +55,14 @@ export default function TermsPage() {
           <Section title="2. 회원 계정">
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                이메일과 비밀번호로 가입하며, 계정 정보는 본인이 안전하게
-                관리해야 합니다.
+                만 14세 이상이어야 가입할 수 있고, 가입할 때 이 약관과
+                개인정보처리방침에 동의해야 합니다. 이메일과 비밀번호로 가입하며,
+                계정 정보는 본인이 안전하게 관리해야 합니다.
               </li>
               <li>다른 사람의 이메일로 가입하거나 계정을 넘겨주지 않습니다.</li>
               <li>
-                탈퇴(계정 삭제)는 가입한 이메일로 <ContactLink />에 요청할 수
-                있습니다. 개인정보 처리는{" "}
+                회원 탈퇴는 프로필 화면에서 비밀번호를 확인한 뒤 직접 할 수
+                있으며, 탈퇴하면 계정과 기록이 즉시 삭제됩니다. 개인정보 처리는{" "}
                 <Link href={ROUTE_PATH.PRIVACY} className={linkClassName}>
                   개인정보처리방침
                 </Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPolicyDate } from "@/config/policy";
 import {
   ContactLink,
   PolicySection as Section,
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 // 내용을 바꾸면 시행일도 함께 갱신한다.
-const EFFECTIVE_DATE = "2026년 10월 13일";
+const EFFECTIVE_DATE = formatPolicyDate();
 
 export default function PrivacyPage() {
   return (
@@ -37,8 +38,9 @@ export default function PrivacyPage() {
                 <strong className="font-semibold text-foreground">
                   회원가입 시 필수
                 </strong>
-                : 이메일, 비밀번호, 닉네임. 비밀번호는 인증 서비스가 암호화해
-                저장하며 운영자도 볼 수 없습니다.
+                : 이메일, 비밀번호, 닉네임, 만 14세 이상 확인과 약관 동의
+                일시·동의한 약관 버전. 비밀번호는 인증 서비스가 암호화해 저장하며
+                운영자도 볼 수 없습니다.
               </li>
               <li>
                 <strong className="font-semibold text-foreground">
@@ -74,8 +76,8 @@ export default function PrivacyPage() {
 
           <Section title="3. 보유 기간">
             <p>
-              회원 탈퇴(계정 삭제)를 요청할 때까지 보관하며, 요청을 받으면 지체
-              없이 파기합니다. 다만 읽은 글 기록은 최근 30일, 최대 100개까지만
+              회원 탈퇴(계정 삭제) 때까지 보관하며, 탈퇴하면 즉시
+              파기합니다. 다만 읽은 글 기록은 최근 30일, 최대 100개까지만
               보관하고 기준을 넘는 기록은 매일 자동으로 삭제합니다.
             </p>
           </Section>
@@ -123,7 +125,7 @@ export default function PrivacyPage() {
 
           <Section title="6. 파기 절차와 방법">
             <p>
-              계정을 삭제하면 해당 계정에 연결된 학습 기록, 스크랩, 작성한 글,
+              회원 탈퇴로 계정을 삭제하면 해당 계정에 연결된 학습 기록, 스크랩, 작성한 글,
               북마크가 데이터베이스에서 함께 삭제되며 프로필 이미지 파일도 함께
               지웁니다. 전자적 파일은 복구할 수 없는 방법으로 삭제합니다.
             </p>
@@ -137,9 +139,10 @@ export default function PrivacyPage() {
               기록도 직접 삭제할 수 있습니다.
             </p>
             <p>
-              서비스 안에 회원 탈퇴 기능은 아직 없습니다. 계정 삭제를 원하시면
-              가입한 이메일로 <ContactLink />에 요청해 주세요. 본인 확인 후
-              지체 없이 처리합니다.
+              회원 탈퇴는 프로필 화면 맨 아래의 회원 탈퇴에서 비밀번호를 확인한
+              뒤 즉시 처리됩니다. 로그인할 수 없는 경우에는 가입한 이메일로{" "}
+              <ContactLink />에 요청해 주세요. 본인 확인 후 지체 없이
+              처리합니다.
             </p>
           </Section>
 

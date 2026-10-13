@@ -54,9 +54,10 @@ const supabase = fakeSupabase({
 | `user` | `auth.getUser()`. `null`이면 비로그인 |
 | `from` | `from(table)` 이후의 조회·변경 결과 |
 | `rpc` | `rpc(name, args)` |
-| `storage` | `storage.from(bucket).upload()` / `.remove()` |
+| `auth` | `auth.signInWithPassword()` / `.signUp()` / `.signOut()` |
+| `storage` | `storage.from(bucket).upload()` / `.remove()` / `.list()` |
 
-반환값은 `{ client, calls, rpcCalls }`입니다.
+반환값은 `{ client, calls, rpcCalls, storageCalls, authCalls }`입니다.
 
 ### 필터는 기록으로 검증한다
 
@@ -282,9 +283,24 @@ formData.set("file", new File([new Uint8Array(10)], "a.png", { type: "image/png"
 const response = await PUT(formRequest("PUT", "/api/profile", formData));
 ```
 
+### auth 쓰기
+
+`signInWithPassword`, `signUp`, `signOut`은 `auth` 옵션으로 응답을 주입하고 `authCalls()`로 호출 순서와 인자를 확인합니다. 시도 제한 같은 Auth 오류는 `error.status`로 넘깁니다.
+
+```ts
+const fake = fakeSupabase({
+  user: { id: "u1", email: "user@example.com" },
+  auth: { signInWithPassword: { error: { message: "rate limit", status: 429 } } },
+});
+
+expect(fake.authCalls()).toEqual([
+  { op: "signInWithPassword", args: { email: "user@example.com", password: "pw" } },
+]);
+```
+
 ### storage
 
-`upload`와 `remove`는 응답을 주입합니다. `getPublicUrl`은 실제 Supabase처럼 동기로 주소만 만들며 주입할 응답이 없습니다.
+`upload`, `remove`, `list`는 응답을 주입합니다. `getPublicUrl`은 실제 Supabase처럼 동기로 주소만 만들며 주입할 응답이 없습니다.
 
 ```ts
 expect(body.avatar_url).toBe(`${FAKE_STORAGE_ORIGIN}/avatars/u1-a.png?t=${now}`);
