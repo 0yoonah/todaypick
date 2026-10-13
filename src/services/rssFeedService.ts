@@ -16,6 +16,7 @@ import {
   sortFeedsByInterests,
 } from "@/utils/feedInterestUtils";
 import { selectFeedImageUrl } from "@/utils/feedImageUtils";
+import { cleanRssText } from "@/utils/rssTextUtils";
 import {
   getRssItemImageInputs,
   readRssSource,
@@ -29,26 +30,6 @@ const BATCH_SIZE = 5;
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_AUTHOR_LENGTH = 100;
-
-function cleanText(value: unknown, maxLength: number): string {
-  if (typeof value !== "string") return "";
-
-  const cleaned = value
-    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return cleaned.length > maxLength
-    ? `${cleaned.slice(0, maxLength - 1).trimEnd()}…`
-    : cleaned;
-}
 
 function normalizeUrl(value: string): string {
   try {
@@ -92,11 +73,11 @@ async function fetchRSSFeed(
 
         const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
-          title: cleanText(
+          title: cleanRssText(
             item.title || "제목 없음",
             MAX_TITLE_LENGTH
           ),
-          description: cleanText(
+          description: cleanRssText(
             item.content || item.description || item.contentSnippet || "",
             MAX_DESCRIPTION_LENGTH
           ),
@@ -107,7 +88,7 @@ async function fetchRSSFeed(
           image_url:
             selectFeedImageUrl(candidates, htmlValues) ||
             DEFAULT_FEED_IMAGE_URL,
-          author: cleanText(
+          author: cleanRssText(
             item.creator || source.name,
             MAX_AUTHOR_LENGTH
           ),
