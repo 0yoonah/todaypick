@@ -16,19 +16,13 @@ export const feedSources: FeedSource[] = [
   {
     id: "woowahan",
     name: "우아한형제들",
-    rss_url: "https://techblog.woowahan.com/feed",
-    category: "tech_blog",
-  },
-  {
-    id: "kakao-enterprise",
-    name: "카카오엔터프라이즈",
-    rss_url: "https://tech.kakaoenterprise.com/feed",
+    rss_url: "https://techblog.woowahan.com/feed/",
     category: "tech_blog",
   },
   {
     id: "kakao",
     name: "카카오",
-    rss_url: "https://tech.kakao.com/feed/",
+    rss_url: "https://tech.kakao.com/feed",
     category: "tech_blog",
   },
   {
@@ -44,12 +38,6 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
   {
-    id: "coupang",
-    name: "쿠팡",
-    rss_url: "https://medium.com/feed/coupang-engineering",
-    category: "tech_blog",
-  },
-  {
     id: "daangn",
     name: "당근마켓",
     rss_url: "https://medium.com/feed/daangn",
@@ -59,12 +47,6 @@ export const feedSources: FeedSource[] = [
     id: "toss",
     name: "토스",
     rss_url: "https://toss.tech/rss.xml",
-    category: "tech_blog",
-  },
-  {
-    id: "zigbang",
-    name: "직방",
-    rss_url: "https://medium.com/feed/zigbang",
     category: "tech_blog",
   },
   {
@@ -104,33 +86,9 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
   {
-    id: "gmarket",
-    name: "지마켓",
-    rss_url: "https://ebay-korea.tistory.com/rss",
-    category: "tech_blog",
-  },
-  {
     id: "gccompany",
     name: "여기어때",
     rss_url: "https://techblog.gccompany.co.kr/feed",
-    category: "tech_blog",
-  },
-  {
-    id: "netmarble",
-    name: "넷마블",
-    rss_url: "https://netmarble.engineering/feed",
-    category: "tech_blog",
-  },
-  {
-    id: "29cm",
-    name: "29cm",
-    rss_url: "https://medium.com/feed/@dev29cm",
-    category: "tech_blog",
-  },
-  {
-    id: "skcc",
-    name: "SK C&C",
-    rss_url: "https://engineering-skcc.github.io/feed.xml",
     category: "tech_blog",
   },
   {
@@ -141,7 +99,7 @@ export const feedSources: FeedSource[] = [
   },
   {
     id: "naver-place",
-    name: "네이버 플래이스",
+    name: "네이버 플레이스",
     rss_url: "https://medium.com/feed/naver-place-dev",
     category: "tech_blog",
   },
@@ -154,7 +112,7 @@ export const feedSources: FeedSource[] = [
   {
     id: "44bits",
     name: "44BITS",
-    rss_url: "https://www.44bits.io/ko/feed/all",
+    rss_url: "https://www.44bits.io/feed.xml",
     category: "tech_blog",
   },
   {
