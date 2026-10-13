@@ -1,6 +1,6 @@
 {
   "name": "todaypick",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "engines": {
     "node": ">=20.9.0"
@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:feeds": "tsx scripts/check-feeds.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -48,6 +49,7 @@
     "eslint-config-next": "^16.2.12",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

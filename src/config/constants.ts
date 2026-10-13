@@ -9,7 +9,13 @@ export const ROUTE_PATH = {
   POSTS: "/posts",
   CS: "/cs",
   GLOSSARY: "/glossary",
+  SOURCES: "/sources",
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
 } as const;
+
+// 콘텐츠 삭제 요청과 개인정보 문의를 받는 운영자 연락처
+export const CONTACT_EMAIL = "dhdbsdk33@gmail.com";
 
 // 폼 데이터
 export const FORM_DATA = {

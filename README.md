@@ -60,6 +60,13 @@ TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드�
 - **주간 리포트**: 이번 주와 지난주의 학습일, 읽기량, 퀴즈 정답률 비교
 - **학습 통계**: 누적 퀴즈 수, 정답률, 현재·최고 스트릭
 
+### 출처와 정책 안내
+
+- **출처 안내**: 외부 글을 보여 주는 범위(제목·설명 일부·원문 링크, 썸네일은 원 출처에서 직접 로드), 수집 중인 출처 목록, 삭제·수정 요청 연락처
+- **개인정보처리방침**: 처리 항목과 목적, 보유 기간, 처리 위탁과 국외 이전, 삭제 요청 방법
+- **이용약관**: 게시글의 권리, 금지 행위, 운영자 조치, 서비스 중단과 책임의 한계
+- **공통 푸터**: 모든 페이지에서 세 안내 페이지와 문의 메일로 이동
+
 ## 🛠 기술 스택
 
 ### Frontend
@@ -85,6 +92,7 @@ TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드�
 - **react-icons**
 - **Vitest** — 단위 테스트 (node·jsdom 두 프로젝트로 분리)
 - **Testing Library** — 컴포넌트 테스트
+- **tsx** — 개발 스크립트 실행 (RSS 소스 점검)
 
 ## 📁 프로젝트 구조
 
@@ -107,11 +115,14 @@ src/
 │   ├── glossary/          # IT 용어사전 (목록·검색, [id] 상세)
 │   ├── login/             # 로그인
 │   ├── posts/[id]/        # 게시글 상세
+│   ├── privacy/           # 개인정보처리방침
 │   ├── profile/           # 프로필
 │   ├── signup/            # 회원가입
+│   ├── sources/           # 출처 안내와 삭제 요청 방법
+│   ├── terms/             # 이용약관
 │   └── write/             # 글쓰기
 ├── components/            # 화면 컴포넌트
-│   ├── auth/  cs/  feed/  glossary/  profile/  quote/  write/  ui/
+│   ├── auth/  cs/  feed/  glossary/  policy/  profile/  quote/  write/  ui/
 ├── config/                # 상수, 관심 분야, RSS 소스 설정
 ├── data/                  # 정적 데이터 (퀴즈, 명언, CS 문항, IT 용어, 피드 소스)
 ├── hooks/                 # 커스텀 훅
@@ -120,6 +131,9 @@ src/
 ├── test/                  # 테스트 공용 헬퍼 (Supabase fake, 요청·렌더 헬퍼)
 ├── types/                 # 타입 정의
 └── utils/                 # 유틸리티 (날짜, 통계, 피드, 글쓰기, API 응답 등)
+
+scripts/
+└── check-feeds.ts         # RSS 소스 상태 점검 (npm run check:feeds)
 ```
 
 ## 🚀 시작하기
@@ -193,10 +207,14 @@ npm run start        # 프로덕션 서버
 npm run lint         # ESLint
 npm run type-check   # tsc --noEmit
 npm test             # Vitest 단위 테스트
+npm run check:feeds  # RSS 소스 상태 점검
 ```
 
 코드 변경 후에는 위 네 가지 검증(`lint`, `type-check`, `test`, `build`)을 모두 실행합니다.
 GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
+
+`check:feeds`는 모든 RSS 소스를 실제로 요청해 실패, 리다이렉트, 365일 이상 미갱신, 허용 목록 밖 썸네일 호스트를 보여 줍니다.
+외부 네트워크 상태에 따라 결과가 달라지므로 CI에서는 실행하지 않습니다. 소스를 추가하거나 정리할 때 직접 실행합니다.
 
 ## 📱 주요 페이지
 
@@ -211,6 +229,9 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 | `/write` | 글쓰기와 수정 |
 | `/profile` | 저장한 콘텐츠, 읽은 글, 내가 쓴 글, 퀴즈 기록, CS 복습, 명언, 학습 통계 |
 | `/login`, `/signup` | 인증 |
+| `/sources` | 외부 글 표시 범위, 수집 중인 출처, 삭제·수정 요청 방법 |
+| `/privacy` | 개인정보처리방침 |
+| `/terms` | 이용약관 |
 
 ## 🎨 UI/UX 기준
 
@@ -234,3 +255,4 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - [docs/content-data-policy.md](docs/content-data-policy.md) — 콘텐츠를 코드와 DB 중 어디에 둘지 판단하는 기준
 - [docs/testing-guide.md](docs/testing-guide.md) — API route와 컴포넌트 테스트에 쓰는 헬퍼와 작성 기준
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
+- [docs/content-sources-policy.md](docs/content-sources-policy.md) — 외부 출처 표시 범위, 소스 추가·제거 기준, 삭제 요청 처리

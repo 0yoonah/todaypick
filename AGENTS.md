@@ -267,6 +267,7 @@ npm run build
 - 개인화 결과가 부족해도 비개인화 피드를 제거하지 않고 fallback으로 유지한다.
 - 분류 키워드 변경 시 성능뿐 아니라 짧은 키워드의 오분류 가능성을 검토한다.
 - 피드 분류·정렬 규칙을 변경하면 우선순위, fallback, 동일 점수 정렬 테스트를 추가한다.
+- RSS 소스를 추가·제거하거나 표시 범위를 바꿀 때는 [docs/content-sources-policy.md](docs/content-sources-policy.md)의 기준을 따르고 `npm run check:feeds`로 확인한다.
 
 ## 릴리스
 
