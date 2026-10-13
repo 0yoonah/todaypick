@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
-import { FiEdit3, FiRss } from "react-icons/fi";
+import { FiEdit3 } from "react-icons/fi";
 import { Feed } from "@/types/feed";
 import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +17,8 @@ import { dailyActivityQueryKey } from "@/utils/dailyActivityUtils";
 import { ROUTE_PATH } from "@/config/constants";
 import { useMutation } from "@tanstack/react-query";
 import type { WritingDraft } from "@/types/writing";
-import { INTERESTS } from "@/config/interests";
-import { PlaceholderThumbnail } from "@/components/ui/placeholder-thumbnail";
-import {
-  getFeedPlaceholderTone,
-  hasDisplayableImage,
-} from "@/utils/thumbnailUtils";
+import { DEFAULT_THUMBNAIL_IMAGE } from "@/config/feedImages";
+import { hasDisplayableImage } from "@/utils/thumbnailUtils";
 
 interface FeedCardProps {
   feed: Feed;
@@ -38,8 +34,9 @@ export default function FeedCard({
 }: FeedCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageFailed, setImageFailed] = useState(false);
-  const showImage = hasDisplayableImage(feed.image_url) && !imageFailed;
-  const firstInterest = feed.interests?.[0];
+  // 보여 줄 이미지가 없거나 불러오지 못하면 기본 썸네일로 바꾼다.
+  const isExternalImage = hasDisplayableImage(feed.image_url) && !imageFailed;
+  const imageSrc = isExternalImage ? feed.image_url! : DEFAULT_THUMBNAIL_IMAGE;
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -150,39 +147,30 @@ export default function FeedCard({
         <Card className="h-full overflow-hidden border-0 bg-transparent py-0 shadow-none">
           {/* 이미지 섹션 */}
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-            {showImage ? (
-              <>
-                {imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/20 border-t-primary"></div>
-                  </div>
-                )}
-                {/* 외부 썸네일은 Vercel 이미지 최적화로 복제·캐시하지 않고 원본 서버에서 직접 불러온다. */}
-                <Image
-                  src={feed.image_url!}
-                  alt={feed.title}
-                  fill
-                  unoptimized
-                  referrerPolicy="no-referrer"
-                  className={`object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105 ${
-                    imageLoading ? "opacity-0" : "opacity-100"
-                  }`}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority={priority}
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => setImageFailed(true)}
-                />
-              </>
-            ) : (
-              <PlaceholderThumbnail
-                title={feed.source}
-                caption={
-                  INTERESTS.find(({ id }) => id === firstInterest)?.label
-                }
-                icon={FiRss}
-                tone={getFeedPlaceholderTone(firstInterest, feed.source)}
-              />
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/20 border-t-primary"></div>
+              </div>
             )}
+            {/* 외부 썸네일은 Vercel 이미지 최적화로 복제·캐시하지 않고 원본 서버에서 직접 불러온다.
+                기본 썸네일은 자체 이미지라 최적화를 쓰고, 카드 제목과 겹치므로 장식으로 둔다. */}
+            <Image
+              key={imageSrc}
+              src={imageSrc}
+              alt={isExternalImage ? feed.title : ""}
+              fill
+              unoptimized={isExternalImage}
+              referrerPolicy={isExternalImage ? "no-referrer" : undefined}
+              className={`object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105 ${
+                imageLoading ? "opacity-0" : "opacity-100"
+              }`}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
+              onLoad={() => setImageLoading(false)}
+              onError={() =>
+                isExternalImage ? setImageFailed(true) : setImageLoading(false)
+              }
+            />
           </div>
 
           <CardHeader className="px-0 pt-4 pb-2">
