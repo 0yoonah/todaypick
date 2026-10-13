@@ -2,14 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FiEdit3 } from "react-icons/fi";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlaceholderThumbnail } from "@/components/ui/placeholder-thumbnail";
 import { ROUTE_PATH } from "@/config/constants";
-import { INTERESTS } from "@/config/interests";
+import { DEFAULT_THUMBNAIL_IMAGE } from "@/config/feedImages";
 import type { WritingDraft } from "@/types/writing";
-import { getFeedPlaceholderTone } from "@/utils/thumbnailUtils";
 
 interface WrittenPostCardProps {
   draft: WritingDraft;
@@ -33,28 +30,14 @@ export default function WrittenPostCard({
       >
         <Card className="h-full w-full overflow-hidden border-0 bg-transparent py-0 shadow-none">
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-muted">
-            {draft.thumbnail_url ? (
-              <Image
-                src={draft.thumbnail_url}
-                alt={draft.title || "게시글 썸네일"}
-                fill
-                className="object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={priority}
-              />
-            ) : (
-              <PlaceholderThumbnail
-                title={draft.author_name || "TodayPick 사용자"}
-                caption={
-                  INTERESTS.find(({ id }) => id === draft.tags[0])?.label
-                }
-                icon={FiEdit3}
-                tone={getFeedPlaceholderTone(
-                  draft.tags[0],
-                  draft.author_name || draft.id
-                )}
-              />
-            )}
+            <Image
+              src={draft.thumbnail_url || DEFAULT_THUMBNAIL_IMAGE}
+              alt={draft.thumbnail_url ? draft.title || "게시글 썸네일" : ""}
+              fill
+              className="object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
+            />
           </div>
           <CardHeader className="px-0 pt-4 pb-2">
             <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
