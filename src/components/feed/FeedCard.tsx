@@ -146,10 +146,13 @@ export default function FeedCard({
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/20 border-t-primary"></div>
               </div>
             )}
+            {/* 외부 썸네일은 Vercel 이미지 최적화로 복제·캐시하지 않고 원본 서버에서 직접 불러온다. */}
             <Image
               src={feed.image_url || ""}
               alt={feed.title}
               fill
+              unoptimized
+              referrerPolicy="no-referrer"
               className={`object-cover transition-[opacity,scale] duration-500 ease-in-out group-hover:scale-105 ${
                 imageLoading ? "opacity-0" : "opacity-100"
               }`}
