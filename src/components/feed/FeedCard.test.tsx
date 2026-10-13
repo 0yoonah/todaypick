@@ -1,10 +1,11 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import FeedCard from "./FeedCard";
 import { signInTestUser, signOutTestUser } from "@/test/authState";
 import { renderWithQuery } from "@/test/renderWithQuery";
 import type { Feed } from "@/types/feed";
+import { LEGACY_DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -136,5 +137,41 @@ describe("FeedCard 썸네일", () => {
     const image = screen.getByRole("img", { name: feed.title });
     expect(image).toHaveAttribute("src", imageUrl);
     expect(image).toHaveAttribute("referrerpolicy", "no-referrer");
+  });
+
+  it("이미지가 없으면 출처와 관심 분야를 담은 대체 썸네일을 보여 준다", () => {
+    renderWithQuery(<FeedCard feed={feed} handleScrap={vi.fn()} />);
+
+    expect(screen.queryByRole("img", { name: feed.title })).toBeNull();
+    const placeholder = screen.getByTestId("placeholder-thumbnail");
+    expect(placeholder).toHaveAttribute("aria-hidden", "true");
+    expect(placeholder).toHaveTextContent("예시 소스");
+    expect(placeholder).toHaveTextContent("프론트엔드");
+  });
+
+  it("예전 기본 이미지가 저장된 스냅숏도 대체 썸네일로 보여 준다", () => {
+    renderWithQuery(
+      <FeedCard
+        feed={{ ...feed, image_url: LEGACY_DEFAULT_FEED_IMAGE_URL }}
+        handleScrap={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole("img", { name: feed.title })).toBeNull();
+    expect(screen.getByTestId("placeholder-thumbnail")).toBeInTheDocument();
+  });
+
+  it("이미지를 불러오지 못하면 대체 썸네일로 바꾼다", () => {
+    renderWithQuery(
+      <FeedCard
+        feed={{ ...feed, image_url: "https://static.toss.im/broken.png" }}
+        handleScrap={vi.fn()}
+      />
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: feed.title }));
+
+    expect(screen.queryByRole("img", { name: feed.title })).toBeNull();
+    expect(screen.getByTestId("placeholder-thumbnail")).toBeInTheDocument();
   });
 });

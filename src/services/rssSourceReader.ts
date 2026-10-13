@@ -14,12 +14,6 @@ const RSS_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const RSS_MAX_REDIRECTS = 3;
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
 
-type RssCustomFeed = {
-  image?: { url?: string };
-  icon?: string;
-  logo?: string;
-};
-
 type RssMediaField = { $?: { url?: string; type?: string } };
 
 type RssCustomItem = {
@@ -30,7 +24,7 @@ type RssCustomItem = {
   description?: string;
 };
 
-export type RssFeed = Parser.Output<RssCustomItem> & RssCustomFeed;
+export type RssFeed = Parser.Output<RssCustomItem>;
 export type RssItem = RssFeed["items"][number];
 
 export type RssSourceResult = {
@@ -39,9 +33,8 @@ export type RssSourceResult = {
 };
 
 function createRssParser() {
-  return new Parser<RssCustomFeed, RssCustomItem>({
+  return new Parser<Record<string, never>, RssCustomItem>({
     customFields: {
-      feed: ["image", "icon", "logo"],
       item: [
         "media:content",
         "media:thumbnail",
@@ -106,7 +99,9 @@ export async function readRssSource(
   return { finalUrl, feed: await createRssParser().parseString(xml) };
 }
 
-export function getRssItemImageInputs(item: RssItem, feed: RssFeed) {
+// 채널 로고(feed.image·logo·icon)는 후보로 쓰지 않는다.
+// 글마다 같은 로고가 반복되므로 화면의 대체 썸네일이 더 많은 정보를 준다.
+export function getRssItemImageInputs(item: RssItem) {
   return {
     candidates: [
       { url: item.enclosure?.url, type: item.enclosure?.type },
@@ -118,9 +113,6 @@ export function getRssItemImageInputs(item: RssItem, feed: RssFeed) {
         url: item["media:thumbnail"]?.$?.url,
         type: item["media:thumbnail"]?.$?.type,
       },
-      { url: feed.image?.url, type: "image/*" },
-      { url: feed.logo, type: "image/*" },
-      { url: feed.icon, type: "image/*" },
     ],
     htmlValues: [
       item["content:encoded"],

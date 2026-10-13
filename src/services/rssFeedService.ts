@@ -2,7 +2,6 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { FEED_CATEGORY } from "@/config/constants";
-import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { getFeedSources } from "@/data/feeds";
 import type {
   Feed,
@@ -66,10 +65,7 @@ async function fetchRSSFeed(
         if (!url) return [];
 
         const publishedAt = item.pubDate || item.isoDate || "";
-        const { candidates, htmlValues } = getRssItemImageInputs(
-          item,
-          parsedFeed
-        );
+        const { candidates, htmlValues } = getRssItemImageInputs(item);
 
         const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
@@ -85,9 +81,8 @@ async function fetchRSSFeed(
           source: source.name,
           published_at: publishedAt || new Date(0).toISOString(),
           category: source.category,
-          image_url:
-            selectFeedImageUrl(candidates, htmlValues) ||
-            DEFAULT_FEED_IMAGE_URL,
+          // 이미지가 없으면 비워 두고 화면에서 대체 썸네일을 그린다.
+          image_url: selectFeedImageUrl(candidates, htmlValues),
           author: cleanRssText(
             item.creator || source.name,
             MAX_AUTHOR_LENGTH
@@ -148,7 +143,7 @@ async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> 
 
 const getCachedCategoryFeeds = unstable_cache(
   collectCategoryFeeds,
-  ["rss-category-feeds-v6"],
+  ["rss-category-feeds-v7"],
   { revalidate: RSS_REVALIDATE_SECONDS }
 );
 
