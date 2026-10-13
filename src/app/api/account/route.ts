@@ -41,10 +41,14 @@ export async function DELETE(request: NextRequest) {
   });
   if (listError) return serverError(DELETE_FAILED_MESSAGE, listError);
 
-  // search는 부분 일치라 u1 검색에 u10의 파일도 잡힌다. 저장 규칙(`{id}-{uuid}.{ext}`)으로 다시 거른다.
+  // search는 부분 일치라 u1 검색에 u10의 파일도 잡힌다. 저장 규칙으로 다시 거른다.
+  // 현재는 `{id}-{uuid}.{ext}`, 2025-10 이전에는 `{id}.{ext}`로 저장했다.
   const ownPaths = (files ?? [])
     .map((file) => file.name)
-    .filter((name) => name.startsWith(`${user.id}-`));
+    .filter(
+      (name) =>
+        name.startsWith(`${user.id}-`) || name.startsWith(`${user.id}.`)
+    );
 
   if (ownPaths.length > 0) {
     const { error: removeError } = await avatars.remove(ownPaths);

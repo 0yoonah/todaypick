@@ -67,6 +67,17 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
+  -- rpc를 직접 불러 비밀번호 재확인을 건너뛰지 못하게, 최근 5분 안에 비밀번호로 로그인한 세션만 허용한다.
+  -- /api/account는 비밀번호를 다시 확인하며 새 세션을 받은 직후 이 함수를 부른다.
+  if not exists (
+    select 1
+    from jsonb_array_elements(coalesce(auth.jwt() -> 'amr', '[]'::jsonb)) as factor
+    where factor ->> 'method' = 'password'
+      and (factor ->> 'timestamp')::bigint >= extract(epoch from now())::bigint - 300
+  ) then
+    raise exception 'recent password sign-in required' using errcode = '42501';
+  end if;
+
   delete from auth.users where id = auth.uid();
 end;
 $$;
