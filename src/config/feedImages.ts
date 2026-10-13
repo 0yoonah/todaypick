@@ -26,7 +26,9 @@ export const FEED_IMAGE_HOSTNAMES = [
   "images.unsplash.com",
 ] as const;
 
-export const DEFAULT_FEED_IMAGE_URL =
+// v1.11.0까지 이미지 없는 글에 저장하던 기본 이미지.
+// 저장된 스크랩·읽은 글 스냅숏에 남아 있어 대체 썸네일로 바꿔 보여 줄 때 비교에 쓴다.
+export const LEGACY_DEFAULT_FEED_IMAGE_URL =
   "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=200&fit=crop&crop=center";
 
 function matchesHostname(hostname: string, pattern: string): boolean {
