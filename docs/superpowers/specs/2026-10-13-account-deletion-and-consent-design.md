@@ -85,6 +85,7 @@ revoke all on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated;
 ```
 
+- 로그인 확인에 더해 JWT `amr`에 최근 5분 안의 `password` 인증이 있어야 한다. 세션 토큰만으로 rpc를 직접 불러 비밀번호 재확인을 건너뛰지 못하게 한다(최종 리뷰 반영).
 - 사용자 기록 8개 테이블(`scraped_feeds`, `scraped_quotes`, `quiz_results`, `daily_activities`, `feed_reads`, `writing_drafts`, `writing_bookmarks`, `cs_reviews`)과 `users` 행은 `auth.users` 삭제 시 `on delete cascade`로 함께 지워진다.
 - 다른 사용자가 내 공개 글을 북마크한 행은 `writing_bookmarks.draft_id` cascade로 함께 지워진다.
 

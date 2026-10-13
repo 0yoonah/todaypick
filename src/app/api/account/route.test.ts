@@ -148,4 +148,27 @@ describe("DELETE /api/account", () => {
     ]);
     expect(fake.rpcCalls("delete_own_account")).toHaveLength(1);
   });
+
+  it("예전 형식({id}.{확장자})의 프로필 이미지도 지운다", async () => {
+    const fake = fakeSupabase({
+      user: USER,
+      auth: { signInWithPassword: {}, signOut: {} },
+      storage: {
+        list: { data: [{ name: "u1.png" }, { name: "u10.png" }, { name: "u1x.png" }] },
+        remove: {},
+      },
+      from: { users: {} },
+      rpc: { delete_own_account: {} },
+    });
+    installSupabaseMock(fake.client);
+
+    const response = await DELETE(request({ password: "pw" }));
+
+    expect(response.status).toBe(200);
+    expect(fake.storageCalls()).toContainEqual({
+      bucket: "avatars",
+      op: "remove",
+      paths: ["u1.png"],
+    });
+  });
 });
