@@ -121,6 +121,12 @@ export const feedSources: FeedSource[] = [
     rss_url: "https://aws.amazon.com/ko/blogs/tech/feed/",
     category: "tech_blog",
   },
+  {
+    id: "kakaobank",
+    name: "카카오뱅크",
+    rss_url: "https://tech.kakaobank.com/index.xml",
+    category: "tech_blog",
+  },
 
   // IT 뉴스 (국내)
   {
