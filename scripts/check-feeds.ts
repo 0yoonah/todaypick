@@ -58,7 +58,7 @@ async function checkSource(source: FeedSource, now: number): Promise<CheckResult
     const disallowedImageHosts = new Set<string>();
 
     for (const item of feed.items) {
-      const { candidates, htmlValues } = getRssItemImageInputs(item, feed);
+      const { candidates, htmlValues } = getRssItemImageInputs(item);
       const selected = selectFeedImageUrl(candidates, htmlValues);
       if (selected) {
         const url = toAbsoluteUrl(selected, finalUrl);
@@ -70,7 +70,6 @@ async function checkSource(source: FeedSource, now: number): Promise<CheckResult
       // 상대 경로는 절대 주소로 바꿔 판정해 허용 호스트의 오탐을 막는다.
       const rawImageUrl =
         candidates
-          .slice(0, 3)
           .map((candidate) => candidate.url)
           .find((url): url is string => typeof url === "string" && !!url) ??
         extractFirstImageUrl(htmlValues);
