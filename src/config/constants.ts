@@ -23,6 +23,8 @@ export const FORM_DATA = {
   PASSWORD: "password",
   CONFIRM_PASSWORD: "confirmPassword",
   NICKNAME: "nickname",
+  AGE_CONFIRMED: "ageConfirmed",
+  TERMS_AGREED: "termsAgreed",
 } as const;
 
 // Feed 카테고리

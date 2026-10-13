@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPolicyDate } from "@/config/policy";
 import Link from "next/link";
 import {
   ContactLink,
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 // 내용을 바꾸면 시행일도 함께 갱신한다.
-const EFFECTIVE_DATE = "2026년 10월 13일";
+const EFFECTIVE_DATE = formatPolicyDate();
 
 const linkClassName =
   "font-semibold text-foreground underline underline-offset-4 hover:text-primary";
