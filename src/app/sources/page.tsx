@@ -28,7 +28,7 @@ export default function SourcesPage() {
             외부 글을 다루는 방식
           </h1>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-            TodayPick은 공개 RSS로 IT 기사와 테크 블로그의 새 글을 모아
+            TodayPick은 공개 RSS로 IT 뉴스와 테크 블로그의 새 글을 모아
             원문으로 안내하는 비영리 개인 프로젝트입니다. 글의 권리는 각 원
             출처에 있습니다.
           </p>
