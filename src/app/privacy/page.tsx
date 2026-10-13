@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { CONTACT_EMAIL } from "@/config/constants";
+import {
+  ContactLink,
+  PolicySection as Section,
+} from "@/components/policy/PolicySection";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침 | TodayPick",
@@ -10,28 +12,6 @@ export const metadata: Metadata = {
 
 // 내용을 바꾸면 시행일도 함께 갱신한다.
 const EFFECTIVE_DATE = "2026년 10월 13일";
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="py-8 first:pt-0">
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
-      <div className="mt-4 space-y-3 text-base leading-relaxed text-muted-foreground">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function ContactLink() {
-  return (
-    <a
-      href={`mailto:${CONTACT_EMAIL}`}
-      className="font-semibold text-foreground underline underline-offset-4 hover:text-primary"
-    >
-      {CONTACT_EMAIL}
-    </a>
-  );
-}
 
 export default function PrivacyPage() {
   return (
