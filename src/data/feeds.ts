@@ -128,19 +128,7 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
 
-  // IT 뉴스 (국내)
-  {
-    id: "it-daily",
-    name: "IT데일리",
-    rss_url: "https://www.itdaily.kr/rss/allArticle.xml",
-    category: "it_news",
-  },
-  {
-    id: "it-donga",
-    name: "IT동아",
-    rss_url: "https://it.donga.com/feeds/rss/",
-    category: "it_news",
-  },
+  // IT 뉴스
   {
     id: "geeknews",
     name: "GeekNews",
@@ -158,8 +146,8 @@ export function getFeedSources(category: RSSFeedCategory): FeedSource[] {
 export const feedCategories = [
   {
     id: "it_news",
-    name: "IT 기사",
-    description: "최신 IT 뉴스와 업계 동향",
+    name: "IT 뉴스",
+    description: "개발자 커뮤니티가 고른 최신 IT 소식",
   },
   {
     id: "tech_blog",

@@ -14,7 +14,7 @@ describe("getValidCategory", () => {
     expect(getValidCategory(FEED_CATEGORY.IT_NEWS)).toBe(FEED_CATEGORY.IT_NEWS);
   });
 
-  it("알 수 없는 값과 게시글 카테고리는 IT 기사로 대체한다", () => {
+  it("알 수 없는 값과 게시글 카테고리는 IT 뉴스로 대체한다", () => {
     expect(getValidCategory(null)).toBe(FEED_CATEGORY.IT_NEWS);
     expect(getValidCategory("unknown")).toBe(FEED_CATEGORY.IT_NEWS);
     expect(getValidCategory(WRITING_CATEGORY)).toBe(FEED_CATEGORY.IT_NEWS);

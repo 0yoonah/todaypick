@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTE_PATH } from "@/config/constants";
-import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { useAuthStore } from "@/stores/authStore";
 import type { WritingDraft } from "@/types/writing";
 
@@ -159,15 +158,18 @@ export default function PostDetailPage() {
         </div>
 
         <div className="space-y-8">
-          <div className="relative aspect-[16/8] w-full bg-muted">
-            <Image
-              src={draft.thumbnail_url || DEFAULT_FEED_IMAGE_URL}
-              alt={draft.title || "게시글 썸네일"}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+          {/* 상세 화면은 제목과 작성자가 위에 있으므로 썸네일이 없으면 영역을 두지 않는다. */}
+          {draft.thumbnail_url && (
+            <div className="relative aspect-[16/8] w-full bg-muted">
+              <Image
+                src={draft.thumbnail_url}
+                alt={draft.title || "게시글 썸네일"}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
           <article className="max-w-none text-base leading-8 text-foreground">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}

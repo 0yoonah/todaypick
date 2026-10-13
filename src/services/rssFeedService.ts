@@ -2,7 +2,6 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { FEED_CATEGORY } from "@/config/constants";
-import { DEFAULT_FEED_IMAGE_URL } from "@/config/feedImages";
 import { getFeedSources } from "@/data/feeds";
 import type {
   Feed,
@@ -16,6 +15,7 @@ import {
   sortFeedsByInterests,
 } from "@/utils/feedInterestUtils";
 import { selectFeedImageUrl } from "@/utils/feedImageUtils";
+import { cleanRssText } from "@/utils/rssTextUtils";
 import {
   getRssItemImageInputs,
   readRssSource,
@@ -29,26 +29,6 @@ const BATCH_SIZE = 5;
 const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_AUTHOR_LENGTH = 100;
-
-function cleanText(value: unknown, maxLength: number): string {
-  if (typeof value !== "string") return "";
-
-  const cleaned = value
-    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return cleaned.length > maxLength
-    ? `${cleaned.slice(0, maxLength - 1).trimEnd()}…`
-    : cleaned;
-}
 
 function normalizeUrl(value: string): string {
   try {
@@ -85,18 +65,15 @@ async function fetchRSSFeed(
         if (!url) return [];
 
         const publishedAt = item.pubDate || item.isoDate || "";
-        const { candidates, htmlValues } = getRssItemImageInputs(
-          item,
-          parsedFeed
-        );
+        const { candidates, htmlValues } = getRssItemImageInputs(item);
 
         const feed: Feed = {
           id: url || `${source.id}-${publishedAt || index}`,
-          title: cleanText(
+          title: cleanRssText(
             item.title || "제목 없음",
             MAX_TITLE_LENGTH
           ),
-          description: cleanText(
+          description: cleanRssText(
             item.content || item.description || item.contentSnippet || "",
             MAX_DESCRIPTION_LENGTH
           ),
@@ -104,10 +81,9 @@ async function fetchRSSFeed(
           source: source.name,
           published_at: publishedAt || new Date(0).toISOString(),
           category: source.category,
-          image_url:
-            selectFeedImageUrl(candidates, htmlValues) ||
-            DEFAULT_FEED_IMAGE_URL,
-          author: cleanText(
+          // 이미지가 없으면 비워 두고 화면에서 대체 썸네일을 그린다.
+          image_url: selectFeedImageUrl(candidates, htmlValues),
+          author: cleanRssText(
             item.creator || source.name,
             MAX_AUTHOR_LENGTH
           ),
@@ -167,7 +143,7 @@ async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> 
 
 const getCachedCategoryFeeds = unstable_cache(
   collectCategoryFeeds,
-  ["rss-category-feeds-v6"],
+  ["rss-category-feeds-v7"],
   { revalidate: RSS_REVALIDATE_SECONDS }
 );
 

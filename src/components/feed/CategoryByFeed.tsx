@@ -75,14 +75,14 @@ export default function CategoryByFeed() {
           {showWritingTab
             ? "게시글"
             : activeTab === FEED_CATEGORY.IT_NEWS
-              ? "IT 기사"
+              ? "IT 뉴스"
               : "테크 블로그"}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
           {showWritingTab
             ? "TodayPick 사용자들이 공유한 글을 확인해보세요."
             : activeTab === FEED_CATEGORY.IT_NEWS
-            ? "최신 IT 뉴스와 업계 동향을 확인해보세요."
+            ? "개발자 커뮤니티가 고른 최신 IT 소식을 확인해보세요."
             : "개발자들의 기술 블로그와 튜토리얼을 확인해보세요."}
         </p>
       </div>
