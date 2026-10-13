@@ -38,8 +38,9 @@ export default function PrivacyPage() {
                 <strong className="font-semibold text-foreground">
                   회원가입 시 필수
                 </strong>
-                : 이메일, 비밀번호, 닉네임. 비밀번호는 인증 서비스가 암호화해
-                저장하며 운영자도 볼 수 없습니다.
+                : 이메일, 비밀번호, 닉네임, 만 14세 이상 확인과 약관 동의
+                일시·동의한 약관 버전. 비밀번호는 인증 서비스가 암호화해 저장하며
+                운영자도 볼 수 없습니다.
               </li>
               <li>
                 <strong className="font-semibold text-foreground">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useActionState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { signup } from "@/app/signup/action";
@@ -20,6 +21,9 @@ export function SignUpForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const consented = ageConfirmed && termsAgreed;
 
   useEffect(() => {
     if (!state.user) return;
@@ -123,6 +127,53 @@ export function SignUpForm() {
         </div>
       </div>
 
+      <fieldset className="space-y-1 rounded-lg border px-4 py-3">
+        <legend className="px-1 text-sm font-medium text-foreground">
+          필수 동의
+        </legend>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name={FORM_DATA.AGE_CONFIRMED}
+            checked={ageConfirmed}
+            onChange={(event) => setAgeConfirmed(event.target.checked)}
+            className="size-4 shrink-0 accent-primary"
+            required
+          />
+          만 14세 이상입니다. (필수)
+        </label>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name={FORM_DATA.TERMS_AGREED}
+            checked={termsAgreed}
+            onChange={(event) => setTermsAgreed(event.target.checked)}
+            className="size-4 shrink-0 accent-primary"
+            required
+          />
+          <span>
+            <Link
+              href={ROUTE_PATH.TERMS}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-4 hover:text-primary"
+            >
+              이용약관
+            </Link>
+            과{" "}
+            <Link
+              href={ROUTE_PATH.PRIVACY}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-4 hover:text-primary"
+            >
+              개인정보처리방침
+            </Link>
+            에 동의합니다. (필수)
+          </span>
+        </label>
+      </fieldset>
+
       {state.error && (
         <Alert variant="destructive">
           <AlertDescription>{state.error}</AlertDescription>
@@ -140,7 +191,7 @@ export function SignUpForm() {
       <Button
         type="submit"
         className="w-full h-12 cursor-pointer"
-        disabled={isPending}
+        disabled={isPending || !consented}
       >
         {isPending ? "가입 중..." : "회원가입"}
       </Button>
