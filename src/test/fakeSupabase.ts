@@ -14,6 +14,8 @@ type PostgrestErrorLike = {
   message?: string;
   details?: string;
   hint?: string;
+  /** Auth 오류의 HTTP 상태. 시도 제한(429)을 구분할 때 쓴다. */
+  status?: number;
 };
 
 export type FakeResult = {
@@ -47,7 +49,13 @@ export type FakeCall = {
 export type StorageCall =
   | { bucket: string; op: "upload"; path: string }
   | { bucket: string; op: "remove"; paths: string[] }
+  | { bucket: string; op: "list"; path: string; options?: unknown }
   | { bucket: string; op: "getPublicUrl"; path: string };
+
+export type AuthCall = {
+  op: "signInWithPassword" | "signUp" | "signOut";
+  args: unknown;
+};
 
 /** getPublicUrl이 만드는 주소의 앞부분. 테스트에서 그대로 비교할 수 있게 고정한다. */
 export const FAKE_STORAGE_ORIGIN = "https://storage.test";
@@ -59,7 +67,16 @@ export type FakeSupabaseOptions = {
   user?: FakeUser | null;
   from?: Record<string, FakeResult | FakeResult[]>;
   rpc?: Record<string, FakeResult | FakeResult[]>;
-  storage?: { upload?: FakeResult | FakeResult[]; remove?: FakeResult | FakeResult[] };
+  auth?: {
+    signInWithPassword?: FakeResult | FakeResult[];
+    signUp?: FakeResult | FakeResult[];
+    signOut?: FakeResult | FakeResult[];
+  };
+  storage?: {
+    upload?: FakeResult | FakeResult[];
+    remove?: FakeResult | FakeResult[];
+    list?: FakeResult | FakeResult[];
+  };
 };
 
 type QueryBuilder = {
@@ -82,13 +99,19 @@ type QueryBuilder = {
 };
 
 type FakeClient = {
-  auth: { getUser(): Promise<{ data: { user: FakeUser | null }; error: null }> };
+  auth: {
+    getUser(): Promise<{ data: { user: FakeUser | null }; error: null }>;
+    signInWithPassword(credentials: { email: string; password: string }): Promise<FakeResponse>;
+    signUp(args: unknown): Promise<FakeResponse>;
+    signOut(): Promise<FakeResponse>;
+  };
   from(table: string): QueryBuilder;
   rpc(name: string, args?: unknown): Promise<FakeResponse>;
   storage: {
     from(bucket: string): {
       upload(path: string, file: unknown, options?: unknown): Promise<FakeResponse>;
       remove(paths: string[]): Promise<FakeResponse>;
+      list(path: string, options?: unknown): Promise<FakeResponse>;
       getPublicUrl(path: string): { data: { publicUrl: string } };
     };
   };
@@ -99,6 +122,7 @@ export type FakeSupabase = {
   calls(table: string): FakeCall[];
   rpcCalls(name: string): unknown[];
   storageCalls(): StorageCall[];
+  authCalls(): AuthCall[];
 };
 
 type BuilderState = {
@@ -173,6 +197,15 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
 
   const takeUpload = createQueue(options.storage?.upload, `"storage.upload"`);
   const takeRemove = createQueue(options.storage?.remove, `"storage.remove"`);
+  const takeList = createQueue(options.storage?.list, `"storage.list"`);
+
+  const authCalls: AuthCall[] = [];
+  const takeSignIn = createQueue(
+    options.auth?.signInWithPassword,
+    `"auth.signInWithPassword"`
+  );
+  const takeSignUp = createQueue(options.auth?.signUp, `"auth.signUp"`);
+  const takeSignOut = createQueue(options.auth?.signOut, `"auth.signOut"`);
 
   function settle(state: BuilderState, terminal: Terminal): Promise<FakeResponse> {
     return (async () => {
@@ -232,6 +265,18 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
   const client: FakeClient = {
     auth: {
       getUser: async () => ({ data: { user: options.user ?? null }, error: null }),
+      signInWithPassword: async (credentials) => {
+        authCalls.push({ op: "signInWithPassword", args: credentials });
+        return toResponse(takeSignIn(), "await");
+      },
+      signUp: async (args) => {
+        authCalls.push({ op: "signUp", args });
+        return toResponse(takeSignUp(), "await");
+      },
+      signOut: async () => {
+        authCalls.push({ op: "signOut", args: undefined });
+        return toResponse(takeSignOut(), "await");
+      },
     },
     from: (table) => createBuilder({ table, filters: [], modifiers: [] }),
     rpc: async (name, args) => {
@@ -251,6 +296,11 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
           storageCalls.push({ bucket, op: "remove", paths });
           return toResponse(result, "await");
         },
+        list: async (path, listOptions) => {
+          const result = takeList();
+          storageCalls.push({ bucket, op: "list", path, options: listOptions });
+          return toResponse(result, "await");
+        },
         // 실제 Supabase처럼 동기로 주소만 만든다. 주입할 응답이 없다.
         getPublicUrl: (path) => {
           storageCalls.push({ bucket, op: "getPublicUrl", path });
@@ -267,6 +317,7 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
     calls: (table) => calls.get(table) ?? [],
     rpcCalls: (name) => rpcArgs.get(name) ?? [],
     storageCalls: () => storageCalls,
+    authCalls: () => authCalls,
   };
 }
 
