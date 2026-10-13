@@ -128,19 +128,7 @@ export const feedSources: FeedSource[] = [
     category: "tech_blog",
   },
 
-  // IT 뉴스 (국내)
-  {
-    id: "it-daily",
-    name: "IT데일리",
-    rss_url: "https://www.itdaily.kr/rss/allArticle.xml",
-    category: "it_news",
-  },
-  {
-    id: "it-donga",
-    name: "IT동아",
-    rss_url: "https://it.donga.com/feeds/rss/",
-    category: "it_news",
-  },
+  // IT 뉴스
   {
     id: "geeknews",
     name: "GeekNews",
