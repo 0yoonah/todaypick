@@ -311,4 +311,62 @@ describe("fakeSupabase", () => {
       ]);
     });
   });
+
+  describe("auth 쓰기 메서드", () => {
+    it("signInWithPassword·signUp·signOut 응답을 주입하고 호출을 기록한다", async () => {
+      const fake = fakeSupabase({
+        user: { id: "u1", email: "a@b.c" },
+        auth: {
+          signInWithPassword: {
+            error: { message: "Invalid login credentials", status: 400 },
+          },
+          signUp: { data: { user: { id: "u2" } } },
+          signOut: {},
+        },
+      });
+
+      const signIn = await fake.client.auth.signInWithPassword({
+        email: "a@b.c",
+        password: "x",
+      });
+      const signUp = await fake.client.auth.signUp({
+        email: "n@b.c",
+        password: "y",
+        options: { data: { a: 1 } },
+      });
+      const signOut = await fake.client.auth.signOut();
+
+      expect(signIn.error).toEqual({
+        message: "Invalid login credentials",
+        status: 400,
+      });
+      expect(signUp.data).toEqual({ user: { id: "u2" } });
+      expect(signOut.error).toBeNull();
+      expect(fake.authCalls()).toEqual([
+        { op: "signInWithPassword", args: { email: "a@b.c", password: "x" } },
+        {
+          op: "signUp",
+          args: { email: "n@b.c", password: "y", options: { data: { a: 1 } } },
+        },
+        { op: "signOut", args: undefined },
+      ]);
+    });
+  });
+
+  describe("storage.list", () => {
+    it("주입한 목록을 돌려주고 호출을 기록한다", async () => {
+      const fake = fakeSupabase({
+        storage: { list: { data: [{ name: "u1-a.png" }] } },
+      });
+
+      const { data } = await fake.client.storage
+        .from("avatars")
+        .list("", { search: "u1" });
+
+      expect(data).toEqual([{ name: "u1-a.png" }]);
+      expect(fake.storageCalls()).toEqual([
+        { bucket: "avatars", op: "list", path: "", options: { search: "u1" } },
+      ]);
+    });
+  });
 });
