@@ -10,6 +10,7 @@ import {
   formatAuthError,
 } from "@/utils/authUtils";
 import { FORM_DATA, ROUTE_PATH } from "@/config/constants";
+import { CONSENT_REQUIRED_MESSAGE, POLICY_EFFECTIVE_DATE } from "@/config/policy";
 
 interface SignUpData {
   email: string;
@@ -47,6 +48,14 @@ export async function signup(
   prevState: { user: User | null; error: string },
   formData: FormData
 ) {
+  // 체크박스는 체크했을 때만 "on"으로 전송된다. 화면을 거치지 않은 요청도 여기서 막는다.
+  const consented =
+    formData.get(FORM_DATA.AGE_CONFIRMED) === "on" &&
+    formData.get(FORM_DATA.TERMS_AGREED) === "on";
+  if (!consented) {
+    return { user: null, error: CONSENT_REQUIRED_MESSAGE };
+  }
+
   const supabase = await createClient();
 
   const data: SignUpData = {
@@ -71,6 +80,9 @@ export async function signup(
     options: {
       data: {
         nickname: data.nickname,
+        // 트리거가 이 플래그를 보고 동의 시각을 DB 시각으로 기록한다.
+        terms_agreed: true,
+        terms_version: POLICY_EFFECTIVE_DATE,
       },
     },
   });

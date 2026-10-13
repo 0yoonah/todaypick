@@ -19,6 +19,8 @@ export default defineConfig({
             "src/{utils,services,data}/**/*.test.ts",
             "src/app/api/**/*.test.ts",
             "src/test/**/*.test.ts",
+            "src/config/**/*.test.ts",
+            "src/app/signup/**/*.test.ts",
           ],
         },
       },
