@@ -92,6 +92,7 @@ TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드�
 - **react-icons**
 - **Vitest** — 단위 테스트 (node·jsdom 두 프로젝트로 분리)
 - **Testing Library** — 컴포넌트 테스트
+- **tsx** — 개발 스크립트 실행 (RSS 소스 점검)
 
 ## 📁 프로젝트 구조
 
@@ -130,6 +131,9 @@ src/
 ├── test/                  # 테스트 공용 헬퍼 (Supabase fake, 요청·렌더 헬퍼)
 ├── types/                 # 타입 정의
 └── utils/                 # 유틸리티 (날짜, 통계, 피드, 글쓰기, API 응답 등)
+
+scripts/
+└── check-feeds.ts         # RSS 소스 상태 점검 (npm run check:feeds)
 ```
 
 ## 🚀 시작하기
