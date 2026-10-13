@@ -238,3 +238,4 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - [docs/content-data-policy.md](docs/content-data-policy.md) — 콘텐츠를 코드와 DB 중 어디에 둘지 판단하는 기준
 - [docs/testing-guide.md](docs/testing-guide.md) — API route와 컴포넌트 테스트에 쓰는 헬퍼와 작성 기준
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
+- [docs/content-sources-policy.md](docs/content-sources-policy.md) — 외부 출처 표시 범위, 소스 추가·제거 기준, 삭제 요청 처리
