@@ -7,6 +7,8 @@ import { encodeFeedCursor } from "@/utils/feedCursorUtils";
 import type { Feed } from "@/types/feed";
 
 vi.mock("@/utils/supabase/server");
+// 관심 분야·스크랩 상태 병합(feedPageService)은 실제 코드로 확인한다.
+vi.mock("server-only", () => ({}));
 // 정렬·커서 규칙은 feedItemService.test.ts에서 확인한다. 여기서는 route의 입력·출력만 본다.
 vi.mock("@/services/feedItemService", () => ({
   getFeedItemsPage: vi.fn(),
