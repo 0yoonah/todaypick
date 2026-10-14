@@ -161,6 +161,7 @@ npm run dev
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `FEED_COLLECTOR_SECRET` | RSS 예약 수집 API 호출용 비밀값. Supabase Vault의 `feed_collector_secret`과 같은 값 ([docs/feed-collection.md](docs/feed-collection.md)) |
 
 ## 🗄 데이터베이스 스키마
 

@@ -2,135 +2,27 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { FEED_CATEGORY } from "@/config/constants";
-import { getFeedSources } from "@/data/feeds";
-import type {
-  Feed,
-  FeedCategory,
-  FeedSource,
-  RSSFeedCategory,
-} from "@/types/feed";
+import type { Feed, FeedCategory, RSSFeedCategory } from "@/types/feed";
 import type { InterestId } from "@/config/interests";
-import {
-  inferFeedInterests,
-  sortFeedsByInterests,
-} from "@/utils/feedInterestUtils";
-import { selectFeedImageUrl } from "@/utils/feedImageUtils";
-import { cleanRssText } from "@/utils/rssTextUtils";
-import {
-  getRssItemImageInputs,
-  readRssSource,
-  RSS_TIMEOUT_MS,
-} from "@/services/rssSourceReader";
+import { sortFeedsByInterests } from "@/utils/feedInterestUtils";
+import { collectSourceResults } from "@/services/feedCollector";
 
 const RSS_REVALIDATE_SECONDS = 15 * 60;
 const RSS_CATEGORY_TIMEOUT_MS = 12_000;
-const MAX_ITEMS_PER_SOURCE = 50;
-const BATCH_SIZE = 5;
-const MAX_TITLE_LENGTH = 200;
-const MAX_DESCRIPTION_LENGTH = 300;
-const MAX_AUTHOR_LENGTH = 100;
-
-function normalizeUrl(value: string): string {
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
-
-    url.hash = "";
-    url.searchParams.delete("utm_source");
-    url.searchParams.delete("utm_medium");
-    url.searchParams.delete("utm_campaign");
-    return url.toString();
-  } catch {
-    return "";
-  }
-}
-
-async function fetchRSSFeed(
-  source: FeedSource,
-  collectionSignal: AbortSignal
-): Promise<Feed[]> {
-  try {
-    const { feed: parsedFeed } = await readRssSource(
-      source.rss_url,
-      AbortSignal.any([
-        collectionSignal,
-        AbortSignal.timeout(RSS_TIMEOUT_MS),
-      ])
-    );
-
-    return (parsedFeed.items || [])
-      .slice(0, MAX_ITEMS_PER_SOURCE)
-      .flatMap((item, index) => {
-        const url = item.link ? normalizeUrl(item.link) : "";
-        if (!url) return [];
-
-        const publishedAt = item.pubDate || item.isoDate || "";
-        const { candidates, htmlValues } = getRssItemImageInputs(item);
-
-        const feed: Feed = {
-          id: url || `${source.id}-${publishedAt || index}`,
-          title: cleanRssText(
-            item.title || "제목 없음",
-            MAX_TITLE_LENGTH
-          ),
-          description: cleanRssText(
-            item.content || item.description || item.contentSnippet || "",
-            MAX_DESCRIPTION_LENGTH
-          ),
-          url,
-          source: source.name,
-          published_at: publishedAt || new Date(0).toISOString(),
-          category: source.category,
-          // 이미지가 없으면 비워 두고 화면에서 대체 썸네일을 그린다.
-          image_url: selectFeedImageUrl(candidates, htmlValues, url),
-          author: cleanRssText(
-            item.creator || source.name,
-            MAX_AUTHOR_LENGTH
-          ),
-        };
-        feed.interests = inferFeedInterests(feed);
-        return [feed];
-      });
-  } catch (error) {
-    const message =
-      error instanceof Error ? `${error.name}: ${error.message}` : "Unknown";
-    console.error(`RSS 피드 수집 실패 (${source.name}): ${message}`);
-    return [];
-  }
-}
 
 async function collectCategoryFeeds(category: RSSFeedCategory): Promise<Feed[]> {
-  const sources = getFeedSources(category);
-  const sourceResults: Feed[][] = Array.from(
-    { length: sources.length },
-    () => []
-  );
-  const collectionSignal = AbortSignal.timeout(RSS_CATEGORY_TIMEOUT_MS);
-  let nextSourceIndex = 0;
-
-  async function collectNextSource(): Promise<void> {
-    while (nextSourceIndex < sources.length && !collectionSignal.aborted) {
-      const sourceIndex = nextSourceIndex;
-      nextSourceIndex += 1;
-      sourceResults[sourceIndex] = await fetchRSSFeed(
-        sources[sourceIndex],
-        collectionSignal
-      );
-    }
-  }
-
-  await Promise.all(
-    Array.from(
-      { length: Math.min(BATCH_SIZE, sources.length) },
-      collectNextSource
-    )
+  const sourceResults = await collectSourceResults(
+    category,
+    RSS_CATEGORY_TIMEOUT_MS
   );
 
   const uniqueFeeds = new Map<string, Feed>();
-  for (const feed of sourceResults.flat()) {
-    const key = feed.url || feed.id;
-    if (!uniqueFeeds.has(key)) {
-      uniqueFeeds.set(key, feed);
+  for (const { feeds } of sourceResults) {
+    for (const feed of feeds) {
+      const key = feed.url || feed.id;
+      if (!uniqueFeeds.has(key)) {
+        uniqueFeeds.set(key, feed);
+      }
     }
   }
 
