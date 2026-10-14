@@ -34,6 +34,13 @@ export const FEED_CATEGORY = {
   SCRAPED: "scraped",
 } as const;
 
+// 회원 맞춤 정렬에서 관심 분야를 우선하는 기간(일). 이보다 오래된 글은 최신순으로 이어진다.
+// 뉴스는 빨리 낡고 기술 글은 오래 읽혀 탭마다 다르게 둔다.
+export const FEED_PERSONALIZE_WINDOW_DAYS = {
+  it_news: 3,
+  tech_blog: 30,
+} as const;
+
 // 프로필 탭
 export const PROFILE_TAB = {
   SCRAPED_FEEDS: "scraped_feeds",

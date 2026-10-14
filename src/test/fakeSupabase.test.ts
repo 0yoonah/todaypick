@@ -196,6 +196,30 @@ describe("fakeSupabase", () => {
       ]);
     });
 
+    it("커서 조회에 쓰는 필터와 limit을 기록한다", async () => {
+      const fake = fakeSupabase({ from: { feed_items: { data: [] } } });
+
+      await fake.client
+        .from("feed_items")
+        .select("*")
+        .lt("published_at", "2026-10-01")
+        .lte("published_at", "2026-10-14")
+        .contains("interests", ["backend"])
+        .ilike("title", "%리액트%")
+        .or("published_at.lt.a,id.gt.b")
+        .limit(13);
+
+      const [call] = fake.calls("feed_items");
+      expect(call.filters).toEqual([
+        ["lt", "published_at", "2026-10-01"],
+        ["lte", "published_at", "2026-10-14"],
+        ["contains", "interests", ["backend"]],
+        ["ilike", "title", "%리액트%"],
+        ["or", "published_at.lt.a,id.gt.b", undefined],
+      ]);
+      expect(call.modifiers).toEqual([["limit", 13]]);
+    });
+
     it("호출하지 않은 테이블은 빈 배열을 준다", () => {
       const fake = fakeSupabase({});
 
@@ -252,10 +276,12 @@ describe("fakeSupabase", () => {
 
       // 타입에 없는 메서드를 런타임에 불렀을 때의 동작을 확인한다.
       const builder = client.from("users").select("*") as unknown as {
-        limit(count: number): unknown;
+        textSearch(column: string, query: string): unknown;
       };
 
-      expect(() => builder.limit(1)).toThrow(/limit.*지원하지 않는/);
+      expect(() => builder.textSearch("title", "q")).toThrow(
+        /textSearch.*지원하지 않는/
+      );
     });
   });
 
