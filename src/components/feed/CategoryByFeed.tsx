@@ -5,7 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { CursorFeedPage, FeedCategory, RSSFeedCategory } from "@/types/feed";
 import { FEED_CATEGORY, FEED_PAGE_SIZE } from "@/config/constants";
 import { getValidCategory, isWritingCategory } from "@/utils/feedUtils";
-import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
+import {
+  shouldLoadImageEagerly,
+  shouldPrioritizeImage,
+} from "@/utils/imagePriorityUtils";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
@@ -161,6 +164,7 @@ export default function CategoryByFeed({ initialFeedPage }: CategoryByFeedProps 
                   feed={feed}
                   handleScrap={handleScrap}
                   priority={shouldPrioritizeImage(index)}
+                  eager={shouldLoadImageEagerly(index)}
                 />
               ))
             )}

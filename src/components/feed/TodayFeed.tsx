@@ -10,7 +10,10 @@ import {
   getHomePreviewItems,
   HOME_PREVIEW_COUNT,
 } from "@/utils/homeFeedUtils";
-import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
+import {
+  shouldLoadImageEagerly,
+  shouldPrioritizeImage,
+} from "@/utils/imagePriorityUtils";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
@@ -89,6 +92,7 @@ export default function TodayFeed({ initialPage }: TodayFeedProps = {}) {
                 feed={feed}
                 handleScrap={handleScrap}
                 priority={shouldPrioritizeImage(index)}
+                eager={shouldLoadImageEagerly(index)}
               />
             ))
           )}

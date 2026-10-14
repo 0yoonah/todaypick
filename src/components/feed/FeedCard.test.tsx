@@ -187,3 +187,27 @@ describe("FeedCard 썸네일", () => {
     expect(thumbnail(container)).not.toHaveAttribute("referrerpolicy");
   });
 });
+
+describe("FeedCard 첫 줄 이미지", () => {
+  const imageUrl = "https://static.toss.im/thumb.png";
+  const image = () => screen.getByRole("img", { name: feed.title });
+
+  it("첫 줄 카드는 지연 로딩하지 않고 처음부터 보이게 그린다", () => {
+    renderWithQuery(
+      <FeedCard feed={{ ...feed, image_url: imageUrl }} handleScrap={vi.fn()} eager />
+    );
+
+    expect(image()).toHaveAttribute("loading", "eager");
+    expect(image()).not.toHaveClass("opacity-0");
+  });
+
+  it("그 밖의 카드는 지연 로딩하고 받은 뒤에 보인다", () => {
+    renderWithQuery(
+      <FeedCard feed={{ ...feed, image_url: imageUrl }} handleScrap={vi.fn()} />
+    );
+
+    expect(image()).toHaveAttribute("loading", "lazy");
+    expect(image()).toHaveClass("opacity-0");
+  });
+});
+
