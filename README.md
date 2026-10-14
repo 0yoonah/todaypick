@@ -185,6 +185,7 @@ Dashboard에서 직접 스키마를 변경했다면 `npx supabase db diff -f <mi
 | `users` | 사용자 프로필, 관심 분야, 하루 읽기 목표, 가입 동의 기록 |
 | `daily_activities` | 날짜별 학습 활동과 읽기 목표 달성 상태 |
 | `feed_reads` | 읽은 글 히스토리(서울 날짜 기준, 재방문 횟수 포함) |
+| `feed_items` | 예약 수집한 RSS 글(카드 표시 범위만, 발행 후 1년 보관) |
 | `scraped_feeds` | 스크랩한 RSS 피드 |
 | `scraped_quotes` | 스크랩한 명언 |
 | `quiz_results` | 퀴즈 답안과 정답 여부 |
@@ -198,6 +199,7 @@ Dashboard에서 직접 스키마를 변경했다면 `npx supabase db diff -f <mi
 | --- | --- |
 | `record_feed_read` | 읽은 글 기록과 일일 목표 달성 상태 갱신 |
 | `cleanup_feed_read_history` | 30일·100개 보관 정책에 따른 기록 정리 (`pg_cron`) |
+| `upsert_feed_items` | 수집 API가 비밀값을 확인받고 RSS 글을 저장, 1년 지난 글 정리 (`pg_cron` `collect-feeds`가 3시간마다 수집 API 호출) |
 | `get_public_writing_drafts` | 공개 게시글 조회 |
 | `handle_new_user` | 가입 시 프로필 생성 |
 | `delete_own_account` | 로그인한 본인 계정 삭제 (기록은 cascade로 함께 삭제) |
@@ -260,3 +262,4 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - [docs/testing-guide.md](docs/testing-guide.md) — API route와 컴포넌트 테스트에 쓰는 헬퍼와 작성 기준
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
 - [docs/content-sources-policy.md](docs/content-sources-policy.md) — 외부 출처 표시 범위, 소스 추가·제거 기준, 삭제 요청 처리
+- [docs/feed-collection.md](docs/feed-collection.md) — RSS 예약 수집 구조, 비밀값 등록, 첫 수집과 결과 확인, 되돌리기
