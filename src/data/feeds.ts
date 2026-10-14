@@ -127,6 +127,54 @@ export const feedSources: FeedSource[] = [
     rss_url: "https://tech.kakaobank.com/index.xml",
     category: "tech_blog",
   },
+  {
+    id: "flex",
+    name: "flex",
+    rss_url: "https://flex.team/blog/category/tech/rss.xml",
+    category: "tech_blog",
+  },
+  {
+    id: "samsung",
+    name: "삼성전자",
+    rss_url: "https://techblog.samsung.com/rss",
+    category: "tech_blog",
+  },
+  {
+    id: "miridih",
+    name: "미리디",
+    rss_url: "https://medium.com/feed/miridih",
+    category: "tech_blog",
+  },
+  {
+    id: "bbros",
+    name: "비브로스",
+    rss_url: "https://boostbrothers.github.io/rss.xml",
+    category: "tech_blog",
+  },
+  {
+    id: "hyperaccel",
+    name: "하이퍼엑셀",
+    rss_url: "https://hyper-accel.github.io/posts/index.xml",
+    category: "tech_blog",
+  },
+  {
+    id: "hancom",
+    name: "한글과컴퓨터",
+    rss_url: "https://tech.hancom.com/feed/",
+    category: "tech_blog",
+  },
+  {
+    id: "cj-onstyle",
+    name: "CJ온스타일",
+    rss_url: "https://medium.com/feed/cj-onstyle",
+    category: "tech_blog",
+  },
+  {
+    id: "skplanet",
+    name: "SK플래닛",
+    rss_url: "https://techtopic.skplanet.com/rss.xml",
+    category: "tech_blog",
+  },
 
   // IT 뉴스
   {
