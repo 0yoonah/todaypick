@@ -25,14 +25,20 @@ interface FeedCardProps {
   handleScrap: (feed: Feed) => void;
   /** 첫 화면의 LCP 후보 이미지에만 사용한다. */
   priority?: boolean;
+  /** 첫 줄 카드. 지연 로딩하지 않는다. */
+  eager?: boolean;
 }
 
 export default function FeedCard({
   feed,
   handleScrap,
   priority = false,
+  eager = false,
 }: FeedCardProps) {
-  const [imageLoading, setImageLoading] = useState(true);
+  // 첫 화면 이미지는 처음부터 보이게 둔다. 투명한 이미지는 LCP로 잡히지 않아,
+  // 숨겨 두면 서버에서 그린 HTML이 일찍 와도 JS 실행과 onLoad 뒤에야 LCP가 기록된다.
+  const showImmediately = priority || eager;
+  const [imageLoading, setImageLoading] = useState(!showImmediately);
   const [imageFailed, setImageFailed] = useState(false);
   // 보여 줄 이미지가 없거나 불러오지 못하면 기본 썸네일로 바꾼다.
   const isExternalImage = hasDisplayableImage(feed.image_url) && !imageFailed;
@@ -166,6 +172,7 @@ export default function FeedCard({
               }`}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority={priority}
+              loading={eager && !priority ? "eager" : undefined}
               onLoad={() => setImageLoading(false)}
               onError={() =>
                 isExternalImage ? setImageFailed(true) : setImageLoading(false)
