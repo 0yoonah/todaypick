@@ -267,4 +267,4 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
 - [docs/content-sources-policy.md](docs/content-sources-policy.md) — 외부 출처 표시 범위, 소스 추가·제거 기준, 삭제 요청 처리
 - [docs/feed-collection.md](docs/feed-collection.md) — RSS 예약 수집 구조, 비밀값 등록, 첫 수집과 결과 확인, 되돌리기
-- [docs/feed-performance-v1.13.md](docs/feed-performance-v1.13.md) — v1.13 전후 피드 첫 로드 성능 측정 기록(Production 기준)과 측정 방법
+- [docs/performance/](docs/performance/README.md) — 성능 개선 전후 측정 기록(Production 기준)과 측정 방법
