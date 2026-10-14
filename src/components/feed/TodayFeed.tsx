@@ -4,19 +4,28 @@ import Link from "next/link";
 import { useState } from "react";
 import { FEED_CATEGORY } from "@/config/constants";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
+import type { CursorFeedPage } from "@/types/feed";
 import {
   getFeedOverviewHref,
   getHomePreviewItems,
   HOME_PREVIEW_COUNT,
 } from "@/utils/homeFeedUtils";
-import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
+import {
+  shouldLoadImageEagerly,
+  shouldPrioritizeImage,
+} from "@/utils/imagePriorityUtils";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 import FeedListState from "@/components/feed/FeedListState";
 import WrittenPostsTab from "@/components/feed/WrittenPostsTab";
 
-export default function TodayFeed() {
+interface TodayFeedProps {
+  /** 서버에서 미리 조회한 IT 뉴스 첫 3개. 없으면 브라우저에서 조회한다. */
+  initialPage?: CursorFeedPage | null;
+}
+
+export default function TodayFeed({ initialPage }: TodayFeedProps = {}) {
   const [viewTab, setViewTab] = useState<"feed" | "writing">("feed");
   const {
     isLoading,
@@ -28,7 +37,8 @@ export default function TodayFeed() {
     refetch,
   } = useInfiniteFeed({
     category: FEED_CATEGORY.IT_NEWS,
-    limit: 3,
+    limit: HOME_PREVIEW_COUNT,
+    initialPage: initialPage ?? undefined,
   });
 
   const showWritingTab = viewTab === "writing";
@@ -82,6 +92,7 @@ export default function TodayFeed() {
                 feed={feed}
                 handleScrap={handleScrap}
                 priority={shouldPrioritizeImage(index)}
+                eager={shouldLoadImageEagerly(index)}
               />
             ))
           )}

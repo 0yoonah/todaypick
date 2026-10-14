@@ -11,3 +11,13 @@ export const LCP_PRIORITY_CARD_COUNT = 1;
  */
 export const shouldPrioritizeImage = (index: number, enabled = true): boolean =>
   enabled && index >= 0 && index < LCP_PRIORITY_CARD_COUNT;
+
+/**
+ * 지연 로딩하지 않을 카드 이미지 개수. 데스크톱 첫 줄(3열)이 첫 화면에 함께 보이므로
+ * 첫 카드가 아닌 이미지가 LCP가 되는 경우에도 늦게 시작하지 않게 한다.
+ * 우선순위 힌트(preload)는 첫 카드에만 둔다.
+ */
+export const EAGER_IMAGE_CARD_COUNT = 3;
+
+export const shouldLoadImageEagerly = (index: number, enabled = true): boolean =>
+  enabled && index >= 0 && index < EAGER_IMAGE_CARD_COUNT;
