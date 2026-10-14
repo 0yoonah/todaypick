@@ -32,8 +32,10 @@
 
 ## 재현 명령
 
+> v1.13.0부터 RSS는 예약 수집(`src/services/feedCollector.ts`)으로 저장하고 피드는 DB에서 읽는다. 아래 경로는 v1.13.0 기준으로 바꿨다. 현재 구조는 [feed-collection.md](feed-collection.md)를 본다.
+
 ```bash
-npm test -- src/services/rssFeedService.test.ts
+npm test -- src/services/feedCollector.test.ts src/services/feedItemService.test.ts
 npm run lint
 npm run type-check
 npm test
@@ -44,7 +46,7 @@ npm run build
 
 1. `src/data/feeds.ts`에서 장애 또는 삭제 요청 대상 소스를 찾는다.
 2. 해당 항목에 `enabled: false`를 추가한다.
-3. `npm test -- src/data/feeds.test.ts src/services/rssFeedService.test.ts`를 실행한다.
+3. `npm test -- src/data/feeds.test.ts src/services/feedCollector.test.ts`를 실행한다.
 4. 배포 후 일반 피드에서 대상 소스가 제외됐는지 확인한다.
 5. 복구할 때는 `enabled`를 제거하거나 `true`로 변경하고 같은 검증을 반복한다.
 

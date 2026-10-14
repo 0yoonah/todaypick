@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
   try {
     const { items, okCount, failedSourceIds } = await collectFeedItems();
 
+    // 모든 출처가 실패하면 네트워크나 설정 문제다. 성공처럼 보이지 않게 알린다.
+    if (okCount === 0) {
+      return serverError(
+        "RSS를 하나도 수집하지 못했습니다.",
+        `실패한 출처: ${failedSourceIds.join(", ")}`
+      );
+    }
+
     // 서비스 롤 키 대신 같은 비밀값을 DB 함수가 Vault 값과 다시 확인한다.
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("upsert_feed_items", {

@@ -28,7 +28,8 @@ export default function FeedSearchInput({ onSearch }: FeedSearchInputProps) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      const query = nextValue.trim();
+      // 서버(PostgREST)가 *를 와일드카드로 다루므로 글자에서 빼고 길이를 본다.
+      const query = nextValue.replace(/\*/g, "").trim();
       onSearch(query.length >= MIN_QUERY_LENGTH ? query : "");
     }, FEED_SEARCH_DEBOUNCE_MS);
   };

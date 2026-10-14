@@ -72,6 +72,12 @@ describe("feed cursor", () => {
   });
 });
 
+it("느슨하게 파싱되는 날짜는 ISO로 맞춰 DB에 형식이 다른 값이 가지 않게 한다", () => {
+  const decoded = decodeFeedCursor(encodeRaw({ v: 1, m: "d", t: "1", id: "a" }));
+
+  expect(decoded.m === "d" && decoded.t).toBe(new Date("1").toISOString());
+});
+
 describe("comparePersonalKey", () => {
   const key = (sc: number, t: string, id: string) => ({ sc, t, id });
 
