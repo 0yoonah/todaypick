@@ -118,6 +118,51 @@ describe("GET /api/feeds 커서 검증", () => {
   );
 });
 
+describe("GET /api/feeds 검색어", () => {
+  it.each([["a"], [" a "], ["가".repeat(51)]])(
+    "검색어가 2자 미만이거나 50자를 넘으면 400 (%s)",
+    async (q) => {
+      installSupabaseMock(fakeSupabase({ user: null }).client);
+
+      const response = await GET(
+        getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent(q)}`)
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "검색어는 2자 이상 50자 이하로 입력해 주세요.",
+      });
+      expect(rssService).not.toHaveBeenCalled();
+    }
+  );
+
+  it("앞뒤 공백을 뺀 검색어를 조회에 넘긴다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent("  리액트 ")}`));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: "리액트" })
+    );
+  });
+
+  it("빈 검색어는 검색하지 않는다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest("/api/feeds?category=tech_blog&q=%20%20"));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: undefined })
+    );
+  });
+});
+
 describe("GET /api/feeds 스크랩 카테고리", () => {
   it("비로그인이면 규약 문구로 401을 준다", async () => {
     const { client } = fakeSupabase({ user: null });
@@ -220,6 +265,7 @@ describe("GET /api/feeds RSS 카테고리", () => {
       cursor: undefined,
       interests: [],
       filterInterest: undefined,
+      query: undefined,
       now: expect.any(Date),
     });
     // 비로그인은 스크랩 상태를 조회하지 않는다.
@@ -250,6 +296,7 @@ describe("GET /api/feeds RSS 카테고리", () => {
       cursor: VALID_CURSOR,
       interests: ["frontend"],
       filterInterest: "frontend",
+      query: undefined,
       now: expect.any(Date),
     });
     expect(body.feeds).toEqual([
