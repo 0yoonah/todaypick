@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { FeedCategory, RSSFeedCategory } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import { FEED_CATEGORY } from "@/config/constants";
-import { getFeedItemsPage } from "@/services/feedItemService";
+import { loadFeedPage } from "@/services/feedPageService";
 import { decodeFeedCursor } from "@/utils/feedCursorUtils";
-import { isInterestId, parseInterestIds } from "@/config/interests";
-import type { InterestId } from "@/config/interests";
+import { isInterestId } from "@/config/interests";
 import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
 
 const parseFeedParams = (request: NextRequest) => {
@@ -94,28 +93,6 @@ const getScrapedFeeds = async (
   };
 };
 
-const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
-  if (feedIds.length === 0) return new Set<string>();
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("scraped_feeds")
-    .select("feed->>id")
-    .eq("user_id", userId)
-    .in("feed->>id", [...new Set(feedIds)]);
-
-  if (error) {
-    console.error(`스크랩 상태 조회 실패 (${error.code}): ${error.message}`);
-    throw new Error("스크랩 상태를 불러오지 못했습니다.");
-  }
-
-  return new Set(
-    data
-      ?.map(({ id }) => id)
-      .filter((id): id is string => typeof id === "string") ?? []
-  );
-};
-
 export async function GET(request: NextRequest) {
   try {
     const { category, page, limit, interest, sourceCategory, cursor, query } =
@@ -133,44 +110,15 @@ export async function GET(request: NextRequest) {
       const result = await getScrapedFeeds(user.id, page, limit, sourceCategory);
       return NextResponse.json(result, { status: 200 });
     } else {
-      let interests: InterestId[] = [];
-      if (user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("interests")
-          .eq("id", user.id)
-          .maybeSingle();
-        interests = parseInterestIds(profile?.interests);
-      }
-
-      const result = await getFeedItemsPage(supabase, {
+      const result = await loadFeedPage(supabase, user?.id ?? null, {
         category,
         limit,
         cursor,
-        interests,
-        filterInterest: interest,
+        interest,
         query,
-        now: new Date(),
       });
 
-      if (!user) {
-        return NextResponse.json({
-          ...result,
-          feeds: result.feeds.map((feed) => ({ ...feed, is_scraped: false })),
-        });
-      }
-
-      const scrapedFeedIds = await getScrapedFeedIds(
-        user.id,
-        result.feeds.map(({ id }) => id)
-      );
-
-      const feedsWithStatus = result.feeds.map((feed) => ({
-        ...feed,
-        is_scraped: scrapedFeedIds.has(feed.id),
-      }));
-
-      return NextResponse.json({ ...result, feeds: feedsWithStatus });
+      return NextResponse.json(result);
     }
   } catch (error) {
     console.error("피드 API 오류:", error);

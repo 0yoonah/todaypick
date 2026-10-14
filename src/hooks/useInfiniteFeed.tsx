@@ -7,7 +7,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Feed, FeedCategory, RSSFeedCategory } from "@/types/feed";
+import { CursorFeedPage, Feed, FeedCategory, RSSFeedCategory } from "@/types/feed";
 import type { InterestId } from "@/config/interests";
 import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
@@ -28,6 +28,11 @@ interface UseInfiniteFeedProps {
   sourceCategory?: RSSFeedCategory;
   /** 제목 검색어. IT 뉴스·테크 블로그에서만 쓴다. */
   query?: string;
+  /**
+   * 서버에서 미리 조회한 첫 페이지. 호출하는 쪽이 category·interest·limit이 같을 때만 넘긴다.
+   * 있으면 첫 페이지를 다시 요청하지 않고, 다음 페이지부터 커서로 요청한다.
+   */
+  initialPage?: CursorFeedPage;
   enabled?: boolean;
 }
 
@@ -72,6 +77,7 @@ export const useInfiniteFeed = ({
   interest,
   sourceCategory,
   query,
+  initialPage,
   enabled = true,
 }: UseInfiniteFeedProps) => {
   const [activeTab, setActiveTab] = useState<FeedCategory>(category);
@@ -112,6 +118,11 @@ export const useInfiniteFeed = ({
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     getNextPageParam: getNextFeedPageParam,
+    // 탭을 바꾸거나 검색하면 다른 목록이라 서버에서 받은 첫 페이지를 쓰지 않는다.
+    initialData:
+      initialPage && activeTab === category && !query
+        ? { pages: [initialPage], pageParams: [null] }
+        : undefined,
   });
 
   const uniqueFeeds = useMemo(() => {
