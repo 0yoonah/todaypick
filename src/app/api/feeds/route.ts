@@ -47,8 +47,10 @@ const parseFeedParams = (request: NextRequest) => {
   if (cursor) decodeFeedCursor(cursor);
 
   // 제목 검색어. 비어 있으면 검색하지 않는다.
-  const query = searchParams.get("q")?.trim() || undefined;
-  if (query && (query.length < 2 || query.length > 50)) {
+  // PostgREST는 like 패턴의 *를 %처럼 다루고 이스케이프할 방법이 없어 글자에서 뺀다.
+  const rawQuery = searchParams.get("q")?.trim() || undefined;
+  const query = rawQuery?.replace(/\*/g, "").trim();
+  if (rawQuery && (!query || query.length < 2 || query.length > 50)) {
     throw new TypeError("검색어는 2자 이상 50자 이하로 입력해 주세요.");
   }
 

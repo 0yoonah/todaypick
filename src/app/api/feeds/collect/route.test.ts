@@ -112,6 +112,24 @@ describe("POST /api/feeds/collect", () => {
     });
   });
 
+  it("모든 출처가 실패하면 500으로 알리고 저장하지 않는다", async () => {
+    const fake = fakeSupabase({});
+    installSupabaseMock(fake.client);
+    testState.collectFeedItems.mockResolvedValue({
+      items: [],
+      okCount: 0,
+      failedSourceIds: ["a", "b"],
+    });
+
+    const response = await POST(request(`Bearer ${SECRET}`));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "RSS를 하나도 수집하지 못했습니다.",
+    });
+    expect(fake.rpcCalls("upsert_feed_items")).toEqual([]);
+  });
+
   it("수집 중 예외가 나면 500", async () => {
     installSupabaseMock(fakeSupabase({}).client);
     testState.collectFeedItems.mockRejectedValue(new Error("boom"));

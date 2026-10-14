@@ -52,6 +52,19 @@ describe("FeedSearchInput", () => {
     expect(onSearch).toHaveBeenLastCalledWith("");
   });
 
+  it("별표(*)는 빼고 검사해 서버에서 와일드카드로 쓰이지 않게 한다", () => {
+    const onSearch = vi.fn();
+    render(<FeedSearchInput onSearch={onSearch} />);
+
+    type("**");
+    act(() => vi.advanceTimersByTime(FEED_SEARCH_DEBOUNCE_MS));
+    expect(onSearch).toHaveBeenLastCalledWith("");
+
+    type("리*액트");
+    act(() => vi.advanceTimersByTime(FEED_SEARCH_DEBOUNCE_MS));
+    expect(onSearch).toHaveBeenLastCalledWith("리액트");
+  });
+
   it("50자를 넘게 입력할 수 없다", () => {
     render(<FeedSearchInput onSearch={vi.fn()} />);
 
