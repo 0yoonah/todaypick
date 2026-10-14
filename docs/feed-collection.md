@@ -18,9 +18,14 @@ pg_cron collect-feeds (5 */3 * * *, UTC)
 - 비밀값은 Vault(`feed_collector_secret`)와 Vercel 환경 변수(`FEED_COLLECTOR_SECRET`) 두 곳에 **같은 값**으로 둡니다. 코드와 migration에는 넣지 않습니다.
 - 서비스 롤 키는 쓰지 않습니다. `feed_items`에 쓰는 길은 비밀값을 확인하는 `upsert_feed_items` 하나뿐입니다.
 
+## 운영 적용 현황
+
+- 2026-10-14 v1.13.0 릴리스 때 운영에 적용했습니다. migration, Vault 비밀값, Vercel 환경 변수(Production, Preview) 등록과 첫 수집까지 마쳤습니다.
+- 아래 "처음 설정"은 새 환경을 만들거나 비밀값을 바꿀 때 씁니다.
+
 ## 처음 설정
 
-릴리스 PR을 병합하기 전에 한 번 합니다.
+새 환경에서 릴리스 PR을 병합하기 전에 한 번 합니다.
 
 1. 비밀값을 만듭니다. 출력은 어디에도 붙여 넣지 말고 아래 두 곳에만 씁니다.
 
@@ -29,19 +34,20 @@ pg_cron collect-feeds (5 */3 * * *, UTC)
    ```
 
 2. Supabase SQL Editor에서 migration `supabase/migrations/20261014090000_add_feed_items.sql`을 적용합니다.
-3. 같은 SQL Editor에서 Vault에 비밀값을 등록합니다.
+3. Supabase 대시보드에서 Vault에 비밀값을 등록합니다.
+   - 왼쪽 메뉴 **Integrations → Vault**(예전 화면은 **Project Settings → Vault**) → **Secrets** 탭 → **Add new secret**
+   - Name: `feed_collector_secret` (철자가 정확히 같아야 합니다), Secret: 1번에서 만든 값
+   - 대시보드를 쓸 수 없으면 SQL Editor에서 `select vault.create_secret('<비밀값>', 'feed_collector_secret', 'RSS 수집 API 호출용');`를 실행합니다. 이때는 실행 뒤 에디터 내용을 지우고, 저장된 쿼리가 있으면 삭제합니다. 비밀값이 쿼리 기록에 남기 때문입니다.
 
-   ```sql
-   select vault.create_secret('<비밀값>', 'feed_collector_secret', 'RSS 수집 API 호출용');
-   ```
-
-   등록한 값을 함수가 읽을 수 있는지 확인합니다. `1`이 나와야 합니다. 값 자체는 출력하지 않습니다.
+   등록한 값을 함수가 읽을 수 있는지 SQL Editor에서 확인합니다. `1`이 나와야 합니다. 값 자체는 출력하지 않습니다.
 
    ```sql
    select count(*) from vault.decrypted_secrets where name = 'feed_collector_secret';
    ```
 
 4. Vercel 프로젝트 환경 변수 `FEED_COLLECTOR_SECRET`에 같은 값을 Production과 Preview로 등록합니다.
+   - 위치: 프로젝트 **Settings → Environment Variables** (`https://vercel.com/<팀>/<프로젝트>/settings/environment-variables`). 팀 설정이 아니라 프로젝트 설정 안에 있습니다.
+   - 환경 변수는 다음 배포부터 적용됩니다. 이미 배포된 상태라면 다시 배포합니다.
 
 migration 적용 후 릴리스 전까지는 예약 작업이 아직 배포되지 않은 수집 주소를 불러 404가 납니다. 해는 없습니다.
 
