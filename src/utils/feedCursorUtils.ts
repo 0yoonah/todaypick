@@ -40,11 +40,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// Date.parse는 "1" 같은 값도 받아들인다. ISO로 맞춰 DB에는 같은 형식만 보낸다.
 function readTime(value: unknown): string {
   if (typeof value !== "string" || !Number.isFinite(Date.parse(value))) {
     invalid();
   }
-  return value;
+  return new Date(value).toISOString();
 }
 
 function readId(value: unknown): string {

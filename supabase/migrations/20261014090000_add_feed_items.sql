@@ -33,7 +33,8 @@ create policy feed_items_select_all on public.feed_items
   for select to anon, authenticated
   using (true);
 
-revoke insert, update, delete on public.feed_items from anon, authenticated;
+revoke all on public.feed_items from anon, authenticated;
+grant select on public.feed_items to anon, authenticated;
 
 -- 2. 수집 API가 부르는 쓰기 함수
 -- 서비스 롤 키 대신 Vault에 둔 비밀값을 확인한다. 비밀값이 이 함수의 권한 전부다.
@@ -90,7 +91,8 @@ begin
     and item ->> 'category' in ('it_news', 'tech_blog')
     and coalesce(item ->> 'title', '') <> ''
     and coalesce(item ->> 'source_id', '') <> ''
-    and coalesce(item ->> 'published_at', '') <> ''
+    -- 수집 API는 toISOString() 형식만 보낸다. 형식이 다른 값 하나가 요청 전체를 실패시키지 않게 거른다.
+    and coalesce(item ->> 'published_at', '') ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
   order by item ->> 'id'
   on conflict (id) do update set
     title = excluded.title,
@@ -98,7 +100,10 @@ begin
     image_url = excluded.image_url,
     author = excluded.author,
     interests = excluded.interests,
-    updated_at = now();
+    updated_at = now()
+  -- 바뀐 것이 없는 글은 다시 쓰지 않는다. 3시간마다 같은 행을 모두 다시 쓰지 않게 한다.
+  where (f.title, f.description, f.image_url, f.author, f.interests)
+    is distinct from (excluded.title, excluded.description, excluded.image_url, excluded.author, excluded.interests);
   -- published_at, source_id, collected_at은 처음 값을 유지한다. 발행 시각이 바뀌어 글이 위로 튀지 않게 한다.
 
   get diagnostics upserted_count = row_count;

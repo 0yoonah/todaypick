@@ -112,11 +112,16 @@ async function readNewest(
     count: number;
     after?: FeedSortKey;
     before?: string;
+    /** 맞춤 모드에서 첫 요청 뒤에 수집된 글을 빼는 기준 */
+    collectedUntil?: string;
     filterInterest?: InterestId;
     query?: string;
   }
 ): Promise<{ records: FeedItemRecord[]; hasMore: boolean }> {
   let query = baseQuery(context, FEED_COLUMNS);
+  if (options.collectedUntil) {
+    query = query.lte("collected_at", options.collectedUntil);
+  }
   if (options.before) query = query.lt("published_at", options.before);
   if (options.filterInterest) {
     query = query.contains("interests", [options.filterInterest]);
@@ -186,11 +191,21 @@ async function getPersonalPage(
   const feeds: Feed[] = [];
 
   if (!cursor || cursor.ph === 1) {
+    // 첫 요청 뒤에 수집된 글은 빼서 페이지마다 같은 집합을 읽는다.
+    // collected_at은 upsert가 바꾸지 않아 스크롤 동안 고정된다.
     const { data, error } = await baseQuery(context, WINDOW_COLUMNS)
+      .lte("collected_at", until)
       .gte("published_at", since)
       .lte("published_at", until)
+      .order("published_at", { ascending: false })
+      .order("id", { ascending: true })
       .limit(MAX_WINDOW_ROWS);
     if (error) failed(error);
+    if (data && data.length >= MAX_WINDOW_ROWS) {
+      console.warn(
+        `맞춤 기간 글이 ${MAX_WINDOW_ROWS}개 상한에 닿았습니다 (${context.category}). 오래된 기간 글 일부가 빠집니다.`
+      );
+    }
 
     const selected = new Set(options.interests);
     const keys: PersonalSortKey[] = ((data ?? []) as unknown as WindowRecord[])
@@ -238,6 +253,7 @@ async function getPersonalPage(
   const { records, hasMore } = await readNewest(context, {
     count,
     before: since,
+    collectedUntil: until,
     after: after ? { t: after.t, id: after.id } : undefined,
   });
   feeds.push(...records.map((record) => toFeed(record, context.sourceNames)));

@@ -34,6 +34,12 @@ pg_cron collect-feeds (5 */3 * * *, UTC)
    select vault.create_secret('<비밀값>', 'feed_collector_secret', 'RSS 수집 API 호출용');
    ```
 
+   등록한 값을 함수가 읽을 수 있는지 확인합니다. `1`이 나와야 합니다. 값 자체는 출력하지 않습니다.
+
+   ```sql
+   select count(*) from vault.decrypted_secrets where name = 'feed_collector_secret';
+   ```
+
 4. Vercel 프로젝트 환경 변수 `FEED_COLLECTOR_SECRET`에 같은 값을 Production과 Preview로 등록합니다.
 
 migration 적용 후 릴리스 전까지는 예약 작업이 아직 배포되지 않은 수집 주소를 불러 404가 납니다. 해는 없습니다.
@@ -57,7 +63,8 @@ select net.http_post(
 ## 결과 확인
 
 ```sql
--- 최근 호출 응답 (6시간 보관). status_code 200과 content의 upserted 수를 봅니다.
+-- 최근 호출 응답 (6시간 보관). status_code 200과 content를 봅니다.
+-- upserted는 새로 넣었거나 내용이 바뀐 글 수입니다. 바뀐 것이 없으면 0일 수 있습니다.
 select created, status_code, error_msg, left(content, 300) as content
 from net._http_response
 order by created desc
@@ -81,6 +88,7 @@ group by category;
 | `status_code` 401 | Vault와 Vercel의 비밀값이 다르거나 Vercel 값이 없음 | 두 값을 같게 맞추고 Vercel 재배포 |
 | `status_code` 500, 응답 `수집 설정이 없습니다` | Vercel `FEED_COLLECTOR_SECRET` 없음 | 환경 변수 등록 후 재배포 |
 | `status_code` 500, 응답 `수집한 글을 저장하지 못했습니다` | `upsert_feed_items` 오류 (Vault 값 불일치 포함) | Vercel 함수 로그에서 원인 확인 |
+| `status_code` 500, 응답 `RSS를 하나도 수집하지 못했습니다` | 모든 출처 요청 실패 (Vercel 네트워크 장애 등) | 함수 로그의 실패 출처 확인, 다음 예약 실행 결과 확인 |
 | `error_msg`에 timeout | 수집이 60초를 넘음 | 함수 로그에서 느린 출처 확인 |
 | 응답의 `failed`에 출처 id | 해당 출처 RSS 실패 | `npm run check:feeds`로 확인. 다른 출처는 정상 저장됨 |
 

@@ -136,6 +136,28 @@ describe("GET /api/feeds 검색어", () => {
     }
   );
 
+  it("별표(*)는 와일드카드가 되므로 빼고 길이를 다시 검사한다", async () => {
+    installSupabaseMock(fakeSupabase({ user: null }).client);
+
+    const response = await GET(getRequest("/api/feeds?category=tech_blog&q=**"));
+
+    expect(response.status).toBe(400);
+    expect(rssService).not.toHaveBeenCalled();
+  });
+
+  it("별표를 뺀 검색어를 조회에 넘긴다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent("리*액트*")}`));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: "리액트" })
+    );
+  });
+
   it("앞뒤 공백을 뺀 검색어를 조회에 넘긴다", async () => {
     const fake = fakeSupabase({ user: null });
     installSupabaseMock(fake.client);
