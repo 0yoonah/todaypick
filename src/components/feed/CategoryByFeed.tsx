@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY } from "@/config/constants";
 import { getValidCategory, isWritingCategory } from "@/utils/feedUtils";
@@ -15,6 +15,7 @@ import FeedListState from "@/components/feed/FeedListState";
 import ReadingGoalProgress from "@/components/ReadingGoalProgress";
 import WrittenPostsTab from "@/components/feed/WrittenPostsTab";
 import InterestFilter from "@/components/feed/InterestFilter";
+import FeedSearchInput from "@/components/feed/FeedSearchInput";
 import { INTERESTS, isInterestId, type InterestId } from "@/config/interests";
 
 export default function CategoryByFeed() {
@@ -26,6 +27,14 @@ export default function CategoryByFeed() {
   const validCategory = getValidCategory(category);
   const router = useRouter();
   const showWritingTab = isWritingCategory(category);
+  // 제목 검색어는 입력한 탭에만 적용한다. 탭이 바뀌면 빈 검색어로 본다.
+  // 2글자 미만이면 빈 값이라 원래 목록을 보여 준다.
+  const [search, setSearch] = useState({ category: validCategory, query: "" });
+  const searchQuery = search.category === validCategory ? search.query : "";
+  const handleSearch = useCallback(
+    (query: string) => setSearch({ category: validCategory, query }),
+    [validCategory]
+  );
 
   const {
     isLoading,
@@ -42,6 +51,7 @@ export default function CategoryByFeed() {
     category: validCategory,
     limit: 12,
     interest,
+    query: searchQuery || undefined,
     enabled: !showWritingTab,
   });
 
@@ -97,6 +107,11 @@ export default function CategoryByFeed() {
         handleChangeWritingTab={() => updateQuery("writing", interest)}
       />
 
+      {!showWritingTab && (
+        // 탭마다 새로 그려 입력값도 함께 비운다.
+        <FeedSearchInput key={validCategory} onSearch={handleSearch} />
+      )}
+
       <InterestFilter
         value={interest}
         onChange={(nextInterest) =>
@@ -116,7 +131,11 @@ export default function CategoryByFeed() {
             ) : error ? (
               <FeedListState type="error" onRetry={() => void refetch()} />
             ) : feeds.length === 0 ? (
-              <FeedListState type="empty" interestLabel={interestLabel} />
+              <FeedListState
+                type="empty"
+                interestLabel={interestLabel}
+                searchQuery={searchQuery || undefined}
+              />
             ) : (
               feeds.map((feed, index) => (
                 <FeedCard

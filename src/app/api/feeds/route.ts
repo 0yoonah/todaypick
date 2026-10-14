@@ -46,8 +46,14 @@ const parseFeedParams = (request: NextRequest) => {
   const cursor = searchParams.get("cursor") || undefined;
   if (cursor) decodeFeedCursor(cursor);
 
+  // 제목 검색어. 비어 있으면 검색하지 않는다.
+  const query = searchParams.get("q")?.trim() || undefined;
+  if (query && (query.length < 2 || query.length > 50)) {
+    throw new TypeError("검색어는 2자 이상 50자 이하로 입력해 주세요.");
+  }
+
   const category = categoryValue as FeedCategory;
-  return { category, page, limit, interest, sourceCategory, cursor };
+  return { category, page, limit, interest, sourceCategory, cursor, query };
 };
 
 const getScrapedFeeds = async (
@@ -110,7 +116,7 @@ const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
 
 export async function GET(request: NextRequest) {
   try {
-    const { category, page, limit, interest, sourceCategory, cursor } =
+    const { category, page, limit, interest, sourceCategory, cursor, query } =
       parseFeedParams(request);
     const supabase = await createClient();
     const {
@@ -141,6 +147,7 @@ export async function GET(request: NextRequest) {
         cursor,
         interests,
         filterInterest: interest,
+        query,
         now: new Date(),
       });
 
