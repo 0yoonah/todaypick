@@ -21,6 +21,22 @@ export type Feed = {
   interests?: InterestId[];
 };
 
+/** IT 뉴스·테크 블로그 응답. 다음 페이지는 nextCursor로 이어 읽는다. */
+export type CursorFeedPage = {
+  feeds: Feed[];
+  nextCursor: string | null;
+};
+
+/** 스크랩 탭 응답. 페이지 번호로 읽는다. */
+export type ScrapedFeedPage = {
+  feeds: Feed[];
+  currentPage: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+export type FeedPage = CursorFeedPage | ScrapedFeedPage;
+
 export type FeedSource = {
   id: string;
   name: string;

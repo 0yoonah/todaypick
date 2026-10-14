@@ -8,10 +8,12 @@ TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드�
 
 ### 오늘의 피드
 
-- **IT 뉴스·테크 블로그**: 개발자 커뮤니티가 고른 IT 소식과 기업 기술 블로그의 RSS를 모아 최신 콘텐츠를 제공
+- **IT 뉴스·테크 블로그**: 개발자 커뮤니티가 고른 IT 소식과 기업 기술 블로그의 RSS를 3시간마다 수집해 저장하고, 피드는 저장된 글을 바로 보여 줌 (발행 후 1년 보관)
+- **맞춤 정렬**: 관심 분야를 고른 회원은 최근 글(테크 블로그 30일, IT 뉴스 3일) 중 관심 분야가 많이 맞는 글을 먼저 보고, 그보다 오래된 글은 최신순으로 이어서 봄
+- **제목 검색**: IT 뉴스·테크 블로그 탭에서 2글자 이상 입력하면 제목에 그 단어가 든 글을 최신순으로 보여 줌 (관심 분야 필터와 함께 사용 가능)
 - **관심 분야 필터**: 프론트엔드, 백엔드, AI·데이터, 인프라·DevOps, 보안, 커리어
 - **스크랩**: 관심 있는 글을 저장하고 프로필에서 다시 확인
-- **무한 스크롤**: 중복 제거와 결정적 정렬을 마친 뒤 12개씩 페이지 로딩
+- **무한 스크롤**: 마지막으로 받은 글을 기준으로 12개씩 이어 읽어, 스크롤 중 새 글이 수집돼도 이미 본 글이 다시 나오지 않음 (새로 수집된 글은 새로고침하면 보임)
 - **썸네일**: 글 이미지가 없으면 RSS 본문의 첫 이미지를 쓰고, 그래도 없으면 TodayPick 기본 이미지를 표시
 
 ### 읽기 기록과 목표
@@ -161,6 +163,7 @@ npm run dev
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `FEED_COLLECTOR_SECRET` | RSS 예약 수집 API 호출용 비밀값. Supabase Vault의 `feed_collector_secret`과 같은 값 ([docs/feed-collection.md](docs/feed-collection.md)) |
 
 ## 🗄 데이터베이스 스키마
 
@@ -185,6 +188,7 @@ Dashboard에서 직접 스키마를 변경했다면 `npx supabase db diff -f <mi
 | `users` | 사용자 프로필, 관심 분야, 하루 읽기 목표, 가입 동의 기록 |
 | `daily_activities` | 날짜별 학습 활동과 읽기 목표 달성 상태 |
 | `feed_reads` | 읽은 글 히스토리(서울 날짜 기준, 재방문 횟수 포함) |
+| `feed_items` | 예약 수집한 RSS 글(카드 표시 범위만, 발행 후 1년 보관) |
 | `scraped_feeds` | 스크랩한 RSS 피드 |
 | `scraped_quotes` | 스크랩한 명언 |
 | `quiz_results` | 퀴즈 답안과 정답 여부 |
@@ -198,6 +202,7 @@ Dashboard에서 직접 스키마를 변경했다면 `npx supabase db diff -f <mi
 | --- | --- |
 | `record_feed_read` | 읽은 글 기록과 일일 목표 달성 상태 갱신 |
 | `cleanup_feed_read_history` | 30일·100개 보관 정책에 따른 기록 정리 (`pg_cron`) |
+| `upsert_feed_items` | 수집 API가 비밀값을 확인받고 RSS 글을 저장, 1년 지난 글 정리 (`pg_cron` `collect-feeds`가 3시간마다 수집 API 호출) |
 | `get_public_writing_drafts` | 공개 게시글 조회 |
 | `handle_new_user` | 가입 시 프로필 생성 |
 | `delete_own_account` | 로그인한 본인 계정 삭제 (기록은 cascade로 함께 삭제) |
@@ -250,7 +255,7 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - **Supabase Auth**: 이메일/비밀번호 인증
 - **Row Level Security**: 사용자 데이터는 본인만 접근, 공개 게시글은 제한된 함수로 조회
 - **미들웨어**: 인증 상태 확인과 리다이렉션
-- **RSS 수집**: 허용 목록 기반 수집, 원문 본문과 HTML은 저장하지 않음
+- **RSS 수집**: 허용 목록 기반 수집, 카드에 보이는 값만 저장하고 원문 본문과 HTML은 저장하지 않음. 수집 API는 비밀값으로 보호하고 DB 쓰기는 비밀값을 다시 확인하는 함수로만 함
 
 ## 📚 문서
 
@@ -260,3 +265,4 @@ GitHub Actions `CI / verify`가 같은 명령을 실행합니다.
 - [docs/testing-guide.md](docs/testing-guide.md) — API route와 컴포넌트 테스트에 쓰는 헬퍼와 작성 기준
 - [docs/rss-validation-v1.5.0.md](docs/rss-validation-v1.5.0.md) — RSS 수집 검증 기록
 - [docs/content-sources-policy.md](docs/content-sources-policy.md) — 외부 출처 표시 범위, 소스 추가·제거 기준, 삭제 요청 처리
+- [docs/feed-collection.md](docs/feed-collection.md) — RSS 예약 수집 구조, 비밀값 등록, 첫 수집과 결과 확인, 되돌리기

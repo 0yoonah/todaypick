@@ -2,16 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 import { getRequest } from "@/test/apiRequest";
 import { fakeSupabase, installSupabaseMock } from "@/test/fakeSupabase";
-import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
+import { getFeedItemsPage } from "@/services/feedItemService";
+import { encodeFeedCursor } from "@/utils/feedCursorUtils";
 import type { Feed } from "@/types/feed";
 
 vi.mock("@/utils/supabase/server");
-// 외부 RSS를 실제로 받아오지 않는다. 테스트가 네트워크 상태에 의존하면 안 된다.
-vi.mock("@/services/rssFeedService", () => ({
-  getRSSFeedsWithPagination: vi.fn(),
+// 정렬·커서 규칙은 feedItemService.test.ts에서 확인한다. 여기서는 route의 입력·출력만 본다.
+vi.mock("@/services/feedItemService", () => ({
+  getFeedItemsPage: vi.fn(),
 }));
 
-const rssService = vi.mocked(getRSSFeedsWithPagination);
+const rssService = vi.mocked(getFeedItemsPage);
 
 const DENIED = {
   code: "42501",
@@ -30,14 +31,16 @@ function feed(id: string): Feed {
   };
 }
 
-function rssResult(feedIds: string[]) {
-  return {
-    feeds: feedIds.map(feed),
-    totalCount: feedIds.length,
-    totalPages: 1,
-    currentPage: 1,
-  };
+function rssResult(feedIds: string[], nextCursor: string | null = null) {
+  return { feeds: feedIds.map(feed), nextCursor };
 }
+
+const VALID_CURSOR = encodeFeedCursor({
+  v: 1,
+  m: "d",
+  t: "2026-10-13T00:00:00.000Z",
+  id: "https://example.com/f1",
+});
 
 beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -95,6 +98,90 @@ describe("GET /api/feeds 검증", () => {
     expect(await response.json()).toEqual({
       error: "limit은 1 이상 50 이하의 정수여야 합니다.",
     });
+  });
+});
+
+describe("GET /api/feeds 커서 검증", () => {
+  it.each([["not-a-cursor!"], ["a".repeat(5000)], [Buffer.from("{}").toString("base64url")]])(
+    "잘못된 커서는 400을 주고 조회하지 않는다 (%s)",
+    async (cursor) => {
+      installSupabaseMock(fakeSupabase({ user: null }).client);
+
+      const response = await GET(
+        getRequest(`/api/feeds?category=tech_blog&cursor=${encodeURIComponent(cursor)}`)
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "유효하지 않은 커서입니다." });
+      expect(rssService).not.toHaveBeenCalled();
+    }
+  );
+});
+
+describe("GET /api/feeds 검색어", () => {
+  it.each([["a"], [" a "], ["가".repeat(51)]])(
+    "검색어가 2자 미만이거나 50자를 넘으면 400 (%s)",
+    async (q) => {
+      installSupabaseMock(fakeSupabase({ user: null }).client);
+
+      const response = await GET(
+        getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent(q)}`)
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "검색어는 2자 이상 50자 이하로 입력해 주세요.",
+      });
+      expect(rssService).not.toHaveBeenCalled();
+    }
+  );
+
+  it("별표(*)는 와일드카드가 되므로 빼고 길이를 다시 검사한다", async () => {
+    installSupabaseMock(fakeSupabase({ user: null }).client);
+
+    const response = await GET(getRequest("/api/feeds?category=tech_blog&q=**"));
+
+    expect(response.status).toBe(400);
+    expect(rssService).not.toHaveBeenCalled();
+  });
+
+  it("별표를 뺀 검색어를 조회에 넘긴다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent("리*액트*")}`));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: "리액트" })
+    );
+  });
+
+  it("앞뒤 공백을 뺀 검색어를 조회에 넘긴다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest(`/api/feeds?category=tech_blog&q=${encodeURIComponent("  리액트 ")}`));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: "리액트" })
+    );
+  });
+
+  it("빈 검색어는 검색하지 않는다", async () => {
+    const fake = fakeSupabase({ user: null });
+    installSupabaseMock(fake.client);
+    rssService.mockResolvedValue(rssResult([]));
+
+    await GET(getRequest("/api/feeds?category=tech_blog&q=%20%20"));
+
+    expect(rssService).toHaveBeenCalledWith(
+      fake.client,
+      expect.objectContaining({ query: undefined })
+    );
   });
 });
 
@@ -178,25 +265,36 @@ describe("GET /api/feeds 스크랩 카테고리", () => {
 });
 
 describe("GET /api/feeds RSS 카테고리", () => {
-  it("비로그인이면 관심 분야 없이 수집하고 is_scraped를 모두 false로 준다", async () => {
+  it("비로그인이면 관심 분야 없이 조회하고 is_scraped를 모두 false로 준다", async () => {
     const fake = fakeSupabase({ user: null });
     installSupabaseMock(fake.client);
-    rssService.mockResolvedValue(rssResult(["f1", "f2"]));
+    rssService.mockResolvedValue(rssResult(["f1", "f2"], VALID_CURSOR));
 
     const response = await GET(getRequest("/api/feeds?category=it_news"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.feeds).toEqual([
-      { ...feed("f1"), is_scraped: false },
-      { ...feed("f2"), is_scraped: false },
-    ]);
-    expect(rssService).toHaveBeenCalledWith("it_news", 1, 12, [], undefined);
+    expect(body).toEqual({
+      feeds: [
+        { ...feed("f1"), is_scraped: false },
+        { ...feed("f2"), is_scraped: false },
+      ],
+      nextCursor: VALID_CURSOR,
+    });
+    expect(rssService).toHaveBeenCalledWith(fake.client, {
+      category: "it_news",
+      limit: 12,
+      cursor: undefined,
+      interests: [],
+      filterInterest: undefined,
+      query: undefined,
+      now: expect.any(Date),
+    });
     // 비로그인은 스크랩 상태를 조회하지 않는다.
     expect(fake.calls("scraped_feeds")).toEqual([]);
   });
 
-  it("로그인 사용자의 관심 분야를 수집에 전달하고 스크랩 상태를 병합한다", async () => {
+  it("로그인 사용자의 관심 분야와 커서를 조회에 전달하고 스크랩 상태를 병합한다", async () => {
     const fake = fakeSupabase({
       user: { id: "u1" },
       from: {
@@ -208,17 +306,21 @@ describe("GET /api/feeds RSS 카테고리", () => {
     rssService.mockResolvedValue(rssResult(["f1", "f2"]));
 
     const response = await GET(
-      getRequest("/api/feeds?category=it_news&interest=frontend")
+      getRequest(
+        `/api/feeds?category=it_news&interest=frontend&limit=6&cursor=${VALID_CURSOR}`
+      )
     );
     const body = await response.json();
 
-    expect(rssService).toHaveBeenCalledWith(
-      "it_news",
-      1,
-      12,
-      ["frontend"],
-      "frontend"
-    );
+    expect(rssService).toHaveBeenCalledWith(fake.client, {
+      category: "it_news",
+      limit: 6,
+      cursor: VALID_CURSOR,
+      interests: ["frontend"],
+      filterInterest: "frontend",
+      query: undefined,
+      now: expect.any(Date),
+    });
     expect(body.feeds).toEqual([
       { ...feed("f1"), is_scraped: false },
       { ...feed("f2"), is_scraped: true },
@@ -229,7 +331,7 @@ describe("GET /api/feeds RSS 카테고리", () => {
     ]);
   });
 
-  it("수집 결과가 없으면 스크랩 상태를 조회하지 않는다", async () => {
+  it("조회 결과가 없으면 스크랩 상태를 조회하지 않는다", async () => {
     const fake = fakeSupabase({
       user: { id: "u1" },
       from: { users: { data: { interests: [] } } },
@@ -243,7 +345,7 @@ describe("GET /api/feeds RSS 카테고리", () => {
     expect(fake.calls("scraped_feeds")).toEqual([]);
   });
 
-  it("RSS 수집 실패는 500을 주고 내부 문구를 담지 않는다", async () => {
+  it("피드 조회 실패는 500을 주고 내부 문구를 담지 않는다", async () => {
     const fake = fakeSupabase({ user: null });
     installSupabaseMock(fake.client);
     rssService.mockRejectedValue(new Error("ETIMEDOUT https://example.com/rss"));

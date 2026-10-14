@@ -82,8 +82,8 @@ route가 실제로 쓰는 것만 지원합니다. 목록에 없는 메서드를 
 | 종류 | 지원 |
 | --- | --- |
 | 변경 | `insert`, `update`, `upsert`, `delete` |
-| 필터 | `eq`, `in`, `gte` |
-| 수정자 | `order`, `range` |
+| 필터 | `eq`, `in`, `gte`, `lt`, `lte`, `contains`, `ilike`, `or`(문자열 그대로 기록) |
+| 수정자 | `order`, `range`, `limit` |
 
 ### 같은 테이블을 여러 번 읽을 때
 
@@ -176,18 +176,18 @@ installSupabaseMock(supabase.client);
 
 ### server-only 의존
 
-`src/services/rssFeedService.ts`처럼 `import "server-only"`를 쓰는 모듈을 route가 전이 의존으로 끌고 옵니다.
+`src/services/feedItemService.ts`처럼 `import "server-only"`를 쓰는 모듈을 route가 전이 의존으로 끌고 옵니다.
 이 패키지는 Next 번들러만 해석하므로 그냥 두면 `Cannot find package 'server-only'`로 실패합니다.
 
 두 가지로 해결합니다.
 
-- 그 모듈 자체를 모킹한다. 외부 RSS를 다루는 서비스라면 어차피 모킹해야 하므로 이쪽이 먼저다.
-- 실제 모듈이 필요하면 `vi.mock("server-only", () => ({}))`를 함께 선언한다. `src/services/rssFeedService.test.ts`가 쓰는 방식이다.
+- 그 모듈 자체를 모킹한다. route 테스트에서 서비스 규칙까지 다시 확인할 필요가 없다면 이쪽이 먼저다.
+- 실제 모듈이 필요하면 `vi.mock("server-only", () => ({}))`를 함께 선언한다. `src/services/feedItemService.test.ts`와 `src/services/feedCollector.test.ts`가 쓰는 방식이다.
 
 ```ts
 // 서비스를 모킹하면 server-only도 함께 사라진다.
-vi.mock("@/services/rssFeedService", () => ({
-  getRSSFeedsWithPagination: vi.fn(),
+vi.mock("@/services/feedItemService", () => ({
+  getFeedItemsPage: vi.fn(),
 }));
 ```
 
@@ -197,7 +197,7 @@ route가 `NextRequest`를 받으므로 실제 인스턴스를 만듭니다. `src
 
 ```ts
 const res = await POST(jsonRequest("POST", "/api/cs-reviews", { answer: "" }));
-const res = await GET(getRequest("/api/feeds?page=2"));
+const res = await GET(getRequest("/api/feeds?category=scraped&page=2"));
 ```
 
 ### 오류 응답 검증

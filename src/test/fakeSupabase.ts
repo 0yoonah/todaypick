@@ -88,8 +88,15 @@ type QueryBuilder = {
   eq(column: string, value: unknown): QueryBuilder;
   in(column: string, values: unknown[]): QueryBuilder;
   gte(column: string, value: unknown): QueryBuilder;
+  lt(column: string, value: unknown): QueryBuilder;
+  lte(column: string, value: unknown): QueryBuilder;
+  contains(column: string, value: unknown): QueryBuilder;
+  ilike(column: string, pattern: string): QueryBuilder;
+  /** PostgREST or 필터. 문자열 그대로 기록한다. */
+  or(filters: string): QueryBuilder;
   order(column: string, options?: unknown): QueryBuilder;
   range(from: number, to: number): QueryBuilder;
+  limit(count: number): QueryBuilder;
   single(): Promise<FakeResponse>;
   maybeSingle(): Promise<FakeResponse>;
   then<TResult1 = FakeResponse, TResult2 = never>(
@@ -241,9 +248,17 @@ export function fakeSupabase(options: FakeSupabaseOptions): FakeSupabase {
       eq: (column, value) => next({ filters: [...state.filters, ["eq", column, value]] }),
       in: (column, values) => next({ filters: [...state.filters, ["in", column, values]] }),
       gte: (column, value) => next({ filters: [...state.filters, ["gte", column, value]] }),
+      lt: (column, value) => next({ filters: [...state.filters, ["lt", column, value]] }),
+      lte: (column, value) => next({ filters: [...state.filters, ["lte", column, value]] }),
+      contains: (column, value) =>
+        next({ filters: [...state.filters, ["contains", column, value]] }),
+      ilike: (column, pattern) =>
+        next({ filters: [...state.filters, ["ilike", column, pattern]] }),
+      or: (expression) => next({ filters: [...state.filters, ["or", expression, undefined]] }),
       order: (column, opts) =>
         next({ modifiers: [...state.modifiers, ["order", column, opts]] }),
       range: (from, to) => next({ modifiers: [...state.modifiers, ["range", from, to]] }),
+      limit: (count) => next({ modifiers: [...state.modifiers, ["limit", count]] }),
       single: () => settle(state, "single"),
       maybeSingle: () => settle(state, "maybeSingle"),
       then: (onFulfilled, onRejected) => settle(state, "await").then(onFulfilled, onRejected),

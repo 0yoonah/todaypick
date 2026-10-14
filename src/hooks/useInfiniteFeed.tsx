@@ -9,12 +9,15 @@ import {
 } from "@tanstack/react-query";
 import { Feed, FeedCategory, RSSFeedCategory } from "@/types/feed";
 import type { InterestId } from "@/config/interests";
-import { ROUTE_PATH } from "@/config/constants";
+import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { feedService } from "@/services/feedService";
 import {
   type InfiniteFeedData,
   type FeedPage,
+  type FeedPageParam,
+  buildFeedRequestParams,
+  getNextFeedPageParam,
   updateFeedScrapCache,
 } from "@/utils/feedCacheUtils";
 
@@ -23,6 +26,8 @@ interface UseInfiniteFeedProps {
   limit: number;
   interest?: InterestId;
   sourceCategory?: RSSFeedCategory;
+  /** 제목 검색어. IT 뉴스·테크 블로그에서만 쓴다. */
+  query?: string;
   enabled?: boolean;
 }
 
@@ -34,20 +39,23 @@ const fetchFeeds = async ({
   limit,
   interest,
   sourceCategory,
+  query,
 }: {
   category: FeedCategory;
-  pageParam: number;
+  pageParam: FeedPageParam;
   limit: number;
   interest?: InterestId;
   sourceCategory?: RSSFeedCategory;
+  query?: string;
 }) => {
-  const params = new URLSearchParams({
-    category: category,
-    page: pageParam.toString(),
-    limit: limit.toString(),
+  const params = buildFeedRequestParams({
+    category,
+    limit,
+    pageParam,
+    interest,
+    sourceCategory,
+    query,
   });
-  if (interest) params.set("interest", interest);
-  if (sourceCategory) params.set("sourceCategory", sourceCategory);
 
   const response = await fetch(`/api/feeds?${params}`);
   if (!response.ok) {
@@ -63,6 +71,7 @@ export const useInfiniteFeed = ({
   limit,
   interest,
   sourceCategory,
+  query,
   enabled = true,
 }: UseInfiniteFeedProps) => {
   const [activeTab, setActiveTab] = useState<FeedCategory>(category);
@@ -86,6 +95,7 @@ export const useInfiniteFeed = ({
       user?.id,
       interest ?? "all",
       sourceCategory ?? "all",
+      query ?? "",
     ],
     queryFn: ({ pageParam }) =>
       fetchFeeds({
@@ -94,16 +104,14 @@ export const useInfiniteFeed = ({
         limit,
         interest,
         sourceCategory,
+        query,
       }),
     enabled,
-    initialPageParam: 1,
+    // 스크랩 탭은 페이지 번호, IT 뉴스·테크 블로그는 커서로 이어 읽는다. 첫 커서는 없음(null)이다.
+    initialPageParam: (activeTab === FEED_CATEGORY.SCRAPED ? 1 : null) as FeedPageParam,
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    getNextPageParam: (lastPage) => {
-      return lastPage.currentPage < lastPage.totalPages
-        ? lastPage.currentPage + 1
-        : undefined;
-    },
+    getNextPageParam: getNextFeedPageParam,
   });
 
   const uniqueFeeds = useMemo(() => {
