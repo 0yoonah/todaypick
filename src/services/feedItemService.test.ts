@@ -187,6 +187,59 @@ describe("최신순", () => {
   });
 });
 
+describe("제목 검색", () => {
+  it("검색어가 있으면 회원이어도 제목에 검색어가 든 글만 최신순으로 읽는다", async () => {
+    const { fake, client } = setup({ data: [] });
+
+    await getFeedItemsPage(client, {
+      category: "tech_blog",
+      limit: 12,
+      interests: ["backend"],
+      query: "리액트",
+      now: NOW,
+    });
+
+    const calls = fake.calls("feed_items");
+    expect(calls).toHaveLength(1);
+    expect(calls[0].filters).toContainEqual(["ilike", "title", "%리액트%"]);
+  });
+
+  it("검색어의 %, _, \\는 글자 그대로 찾도록 이스케이프한다", async () => {
+    const { fake, client } = setup({ data: [] });
+
+    await getFeedItemsPage(client, {
+      category: "tech_blog",
+      limit: 12,
+      interests: [],
+      query: "100%_a\\b",
+      now: NOW,
+    });
+
+    expect(fake.calls("feed_items")[0].filters).toContainEqual([
+      "ilike",
+      "title",
+      "%100\\%\\_a\\\\b%",
+    ]);
+  });
+
+  it("검색과 관심 분야 칩을 함께 쓰면 두 조건을 모두 건다", async () => {
+    const { fake, client } = setup({ data: [] });
+
+    await getFeedItemsPage(client, {
+      category: "tech_blog",
+      limit: 12,
+      interests: [],
+      filterInterest: "frontend",
+      query: "리액트",
+      now: NOW,
+    });
+
+    const { filters } = fake.calls("feed_items")[0];
+    expect(filters).toContainEqual(["contains", "interests", ["frontend"]]);
+    expect(filters).toContainEqual(["ilike", "title", "%리액트%"]);
+  });
+});
+
 describe("회원 맞춤", () => {
   const backend2 = row("w-backend2", "2026-10-01T00:00:00+00:00", ["backend", "infra_devops"]);
   const backend1 = row("w-backend1", "2026-10-13T00:00:00+00:00", ["backend"]);

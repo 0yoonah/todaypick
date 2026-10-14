@@ -24,6 +24,8 @@ export type FeedItemsPageOptions = {
   interests: InterestId[];
   /** 관심 분야 칩. 고르면 맞춤 정렬 없이 그 분야 글만 최신순으로 보여 준다. */
   filterInterest?: InterestId;
+  /** 제목 검색어. 있으면 맞춤 정렬 없이 최신순이다. 길이 검증은 route가 한다. */
+  query?: string;
   now: Date;
 };
 
@@ -66,6 +68,11 @@ function quote(value: string): string {
   return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
+// LIKE 패턴의 와일드카드(%, _)와 이스케이프 문자(\)를 글자 그대로 찾게 한다.
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
 /** 최신순(published_at desc, id asc)에서 key 다음 글을 고르는 조건 */
 function afterKeyFilter({ t, id }: FeedSortKey): string {
   return `published_at.lt.${quote(t)},and(published_at.eq.${quote(t)},id.gt.${quote(id)})`;
@@ -106,12 +113,16 @@ async function readNewest(
     after?: FeedSortKey;
     before?: string;
     filterInterest?: InterestId;
+    query?: string;
   }
 ): Promise<{ records: FeedItemRecord[]; hasMore: boolean }> {
   let query = baseQuery(context, FEED_COLUMNS);
   if (options.before) query = query.lt("published_at", options.before);
   if (options.filterInterest) {
     query = query.contains("interests", [options.filterInterest]);
+  }
+  if (options.query) {
+    query = query.ilike("title", `%${escapeLikePattern(options.query)}%`);
   }
   if (options.after) query = query.or(afterKeyFilter(options.after));
 
@@ -138,6 +149,7 @@ async function getNewestPage(
     count: options.limit,
     after,
     filterInterest: options.filterInterest,
+    query: options.query,
   });
   const last = records.at(-1);
 
@@ -262,7 +274,7 @@ export async function getFeedItemsPage(
   // 커서가 있으면 커서의 모드를 따른다. 스크롤 중 관심 분야가 바뀌어도 이어 읽기가 깨지지 않는다.
   const personal = cursor
     ? cursor.m === "p"
-    : options.interests.length > 0 && !options.filterInterest;
+    : options.interests.length > 0 && !options.filterInterest && !options.query;
 
   if (personal) {
     return getPersonalPage(context, options, cursor as PersonalCursor | undefined);

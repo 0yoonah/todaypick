@@ -126,4 +126,15 @@ describe("buildFeedRequestParams", () => {
       }).toString()
     ).toBe("category=scraped&limit=12&page=2&sourceCategory=it_news");
   });
+
+  it("검색어가 있으면 q로 보낸다", () => {
+    expect(
+      buildFeedRequestParams({
+        category: "it_news",
+        limit: 12,
+        pageParam: null,
+        query: "리액트",
+      }).get("q")
+    ).toBe("리액트");
+  });
 });
