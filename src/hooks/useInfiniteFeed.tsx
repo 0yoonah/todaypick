@@ -26,6 +26,8 @@ interface UseInfiniteFeedProps {
   limit: number;
   interest?: InterestId;
   sourceCategory?: RSSFeedCategory;
+  /** 제목 검색어. IT 뉴스·테크 블로그에서만 쓴다. */
+  query?: string;
   enabled?: boolean;
 }
 
@@ -37,12 +39,14 @@ const fetchFeeds = async ({
   limit,
   interest,
   sourceCategory,
+  query,
 }: {
   category: FeedCategory;
   pageParam: FeedPageParam;
   limit: number;
   interest?: InterestId;
   sourceCategory?: RSSFeedCategory;
+  query?: string;
 }) => {
   const params = buildFeedRequestParams({
     category,
@@ -50,6 +54,7 @@ const fetchFeeds = async ({
     pageParam,
     interest,
     sourceCategory,
+    query,
   });
 
   const response = await fetch(`/api/feeds?${params}`);
@@ -66,6 +71,7 @@ export const useInfiniteFeed = ({
   limit,
   interest,
   sourceCategory,
+  query,
   enabled = true,
 }: UseInfiniteFeedProps) => {
   const [activeTab, setActiveTab] = useState<FeedCategory>(category);
@@ -89,6 +95,7 @@ export const useInfiniteFeed = ({
       user?.id,
       interest ?? "all",
       sourceCategory ?? "all",
+      query ?? "",
     ],
     queryFn: ({ pageParam }) =>
       fetchFeeds({
@@ -97,6 +104,7 @@ export const useInfiniteFeed = ({
         limit,
         interest,
         sourceCategory,
+        query,
       }),
     enabled,
     // 스크랩 탭은 페이지 번호, IT 뉴스·테크 블로그는 커서로 이어 읽는다. 첫 커서는 없음(null)이다.

@@ -69,12 +69,14 @@ export function buildFeedRequestParams({
   pageParam,
   interest,
   sourceCategory,
+  query,
 }: {
   category: FeedCategory;
   limit: number;
   pageParam: FeedPageParam;
   interest?: string;
   sourceCategory?: string;
+  query?: string;
 }): URLSearchParams {
   const params = new URLSearchParams({
     category,
@@ -84,5 +86,6 @@ export function buildFeedRequestParams({
   if (typeof pageParam === "string") params.set("cursor", pageParam);
   if (interest) params.set("interest", interest);
   if (sourceCategory) params.set("sourceCategory", sourceCategory);
+  if (query) params.set("q", query);
   return params;
 }
