@@ -2,6 +2,7 @@
 
 RSS 글을 3시간마다 수집해 `feed_items`에 저장하는 구조와 운영 절차입니다.
 설계 배경은 [설계 문서](superpowers/specs/2026-10-14-feed-db-collection-design.md)를 봅니다.
+전환 전후 성능 측정은 [feed-performance-v1.13.md](feed-performance-v1.13.md)에 있습니다.
 
 ## 구조
 
