@@ -102,26 +102,3 @@ export function inferFeedInterests(
     )
     .map(([interest]) => interest);
 }
-
-export function sortFeedsByInterests(
-  feeds: Feed[],
-  selectedInterests: InterestId[]
-): Feed[] {
-  if (selectedInterests.length === 0) return feeds;
-
-  const selected = new Set(selectedInterests);
-  const score = (feed: Feed) =>
-    feed.interests?.reduce(
-      (total, interest) => total + Number(selected.has(interest)),
-      0
-    ) ?? 0;
-
-  return [...feeds].sort((a, b) => {
-    const interestDiff = score(b) - score(a);
-    if (interestDiff) return interestDiff;
-
-    const publishedDiff =
-      new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-    return publishedDiff || a.id.localeCompare(b.id);
-  });
-}

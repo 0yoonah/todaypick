@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { FeedCategory, RSSFeedCategory } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import { FEED_CATEGORY } from "@/config/constants";
-import { getRSSFeedsWithPagination } from "@/services/rssFeedService";
+import { getFeedItemsPage } from "@/services/feedItemService";
+import { decodeFeedCursor } from "@/utils/feedCursorUtils";
 import { isInterestId, parseInterestIds } from "@/config/interests";
 import type { InterestId } from "@/config/interests";
 import { badRequest, serverError, unauthorized } from "@/utils/apiResponse";
@@ -41,8 +42,12 @@ const parseFeedParams = (request: NextRequest) => {
     throw new TypeError("limit은 1 이상 50 이하의 정수여야 합니다.");
   }
 
+  // IT 뉴스·테크 블로그는 커서로 이어 읽는다. 형식은 조회 전에 확인해 400으로 돌려준다.
+  const cursor = searchParams.get("cursor") || undefined;
+  if (cursor) decodeFeedCursor(cursor);
+
   const category = categoryValue as FeedCategory;
-  return { category, page, limit, interest, sourceCategory };
+  return { category, page, limit, interest, sourceCategory, cursor };
 };
 
 const getScrapedFeeds = async (
@@ -105,7 +110,8 @@ const getScrapedFeedIds = async (userId: string, feedIds: string[]) => {
 
 export async function GET(request: NextRequest) {
   try {
-    const { category, page, limit, interest, sourceCategory } = parseFeedParams(request);
+    const { category, page, limit, interest, sourceCategory, cursor } =
+      parseFeedParams(request);
     const supabase = await createClient();
     const {
       data: { user },
@@ -129,13 +135,14 @@ export async function GET(request: NextRequest) {
         interests = parseInterestIds(profile?.interests);
       }
 
-      const result = await getRSSFeedsWithPagination(
+      const result = await getFeedItemsPage(supabase, {
         category,
-        page,
         limit,
+        cursor,
         interests,
-        interest
-      );
+        filterInterest: interest,
+        now: new Date(),
+      });
 
       if (!user) {
         return NextResponse.json({
