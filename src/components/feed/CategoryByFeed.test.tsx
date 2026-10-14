@@ -85,3 +85,77 @@ describe("CategoryByFeed 제목 검색", () => {
     expect(screen.queryByRole("searchbox", { name: "피드 제목 검색" })).toBeNull();
   });
 });
+
+describe("CategoryByFeed 서버에서 받은 첫 페이지", () => {
+  // jsdom에는 IntersectionObserver가 없다. 무한 스크롤 트리거를 직접 부르려고 콜백을 모은다.
+  const observerCallbacks: IntersectionObserverCallback[] = [];
+  beforeEach(() => {
+    observerCallbacks.length = 0;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          observerCallbacks.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+  });
+
+  const initialFeed = {
+    id: "https://example.com/a",
+    url: "https://example.com/a",
+    title: "서버에서 그린 글",
+    description: "설명",
+    source: "토스",
+    published_at: "2026-10-13T00:00:00.000Z",
+    category: "tech_blog" as const,
+    interests: [],
+    is_scraped: false,
+  };
+
+  it("현재 탭의 첫 페이지를 받으면 다시 요청하지 않고 바로 보여 준다", async () => {
+    renderWithQuery(
+      <CategoryByFeed
+        initialFeedPage={{
+          category: "tech_blog",
+          page: { feeds: [initialFeed], nextCursor: "next" },
+        }}
+      />
+    );
+
+    expect(screen.getByText("서버에서 그린 글")).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+    expect(feedRequests()).toHaveLength(0);
+
+    // 다음 페이지는 서버가 준 커서로 요청한다.
+    act(() => {
+      observerCallbacks.at(-1)?.(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver
+      );
+    });
+    await waitFor(() => expect(feedRequests()).toHaveLength(1));
+    expect(feedRequests()[0].searchParams.get("cursor")).toBe("next");
+  });
+
+  it("다른 관심 분야의 첫 페이지면 쓰지 않고 다시 요청한다", async () => {
+    navigation.params = new URLSearchParams("category=tech_blog&interest=backend");
+
+    renderWithQuery(
+      <CategoryByFeed
+        initialFeedPage={{
+          category: "tech_blog",
+          page: { feeds: [initialFeed], nextCursor: null },
+        }}
+      />
+    );
+
+    await waitFor(() => expect(feedRequests()).toHaveLength(1));
+    expect(feedRequests()[0].searchParams.get("interest")).toBe("backend");
+  });
+});
+

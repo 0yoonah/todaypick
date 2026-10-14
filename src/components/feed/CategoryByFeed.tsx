@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { FeedCategory } from "@/types/feed";
-import { FEED_CATEGORY } from "@/config/constants";
+import { CursorFeedPage, FeedCategory, RSSFeedCategory } from "@/types/feed";
+import { FEED_CATEGORY, FEED_PAGE_SIZE } from "@/config/constants";
 import { getValidCategory, isWritingCategory } from "@/utils/feedUtils";
 import { shouldPrioritizeImage } from "@/utils/imagePriorityUtils";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
@@ -18,7 +18,18 @@ import InterestFilter from "@/components/feed/InterestFilter";
 import FeedSearchInput from "@/components/feed/FeedSearchInput";
 import { INTERESTS, isInterestId, type InterestId } from "@/config/interests";
 
-export default function CategoryByFeed() {
+/** 서버에서 미리 조회한 첫 페이지와 그 조건 */
+export type InitialFeedPage = {
+  category: RSSFeedCategory;
+  interest?: InterestId;
+  page: CursorFeedPage;
+};
+
+interface CategoryByFeedProps {
+  initialFeedPage?: InitialFeedPage | null;
+}
+
+export default function CategoryByFeed({ initialFeedPage }: CategoryByFeedProps = {}) {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
   const interestParam = searchParams.get("interest");
@@ -49,9 +60,16 @@ export default function CategoryByFeed() {
     error,
   } = useInfiniteFeed({
     category: validCategory,
-    limit: 12,
+    limit: FEED_PAGE_SIZE,
     interest,
     query: searchQuery || undefined,
+    // 주소의 탭·관심 분야와 서버가 조회한 조건이 같을 때만 쓴다.
+    initialPage:
+      initialFeedPage &&
+      initialFeedPage.category === validCategory &&
+      initialFeedPage.interest === interest
+        ? initialFeedPage.page
+        : undefined,
     enabled: !showWritingTab,
   });
 
