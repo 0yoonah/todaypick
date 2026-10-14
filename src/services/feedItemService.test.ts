@@ -279,11 +279,19 @@ describe("회원 맞춤", () => {
 
     const [windowCall, rowsCall] = fake.calls("feed_items");
     expect(windowCall.columns).toBe("id, published_at, interests");
+    // 첫 요청 뒤에 수집된 글은 발행 시각과 상관없이 이 스크롤에 넣지 않는다.
     expect(windowCall.filters).toEqual([
       ["eq", "category", "tech_blog"],
       ["in", "source_id", ["toss", "kakao"]],
+      ["lte", "collected_at", NOW.toISOString()],
       ["gte", "published_at", SINCE_30D],
       ["lte", "published_at", NOW.toISOString()],
+    ]);
+    // 상한에 닿아도 매번 같은 부분 집합을 읽도록 정렬한다.
+    expect(windowCall.modifiers).toEqual([
+      ["order", "published_at", { ascending: false }],
+      ["order", "id", { ascending: true }],
+      ["limit", 1000],
     ]);
     expect(rowsCall.filters).toContainEqual([
       "in",
@@ -331,6 +339,7 @@ describe("회원 맞춤", () => {
     // now가 달라도 커서의 기간을 쓴다.
     expect(calls[0].filters).toContainEqual(["gte", "published_at", SINCE_30D]);
     expect(calls[2].filters).toContainEqual(["lt", "published_at", SINCE_30D]);
+    expect(calls[2].filters).toContainEqual(["lte", "collected_at", NOW.toISOString()]);
     expect(calls[2].modifiers).toContainEqual(["limit", 2]);
   });
 
