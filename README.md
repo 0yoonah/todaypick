@@ -83,7 +83,8 @@ TodayPick은 매일 IT 콘텐츠를 읽고 기록하며 학습 습관을 만드�
 
 ### Backend & Database
 
-- **Supabase** — PostgreSQL, 인증, Storage, Row Level Security
+- **Supabase** — PostgreSQL, 인증, Storage, Row Level Security (서울 리전)
+- **Vercel** — 배포. 함수는 DB와 같은 서울(`icn1`)에서 실행 (`vercel.json`)
 
 ### 상태 관리 & 데이터 페칭
 
